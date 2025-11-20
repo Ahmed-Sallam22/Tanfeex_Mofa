@@ -112,7 +112,7 @@ export const segmentConfigurationApi = createApi({
     loadSegmentsValues: builder.mutation<LoadSegmentsResponse, void>({
       query: () => ({
         url: '/accounts-entities/load-segments/',
-        method: 'POST',
+        method: 'GET',
       }),
       invalidatesTags: ['SegmentTypes'],
     }),
