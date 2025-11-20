@@ -107,7 +107,7 @@ function ErrorState({ message = "Failed to load data" }: { message?: string }) {
         <p className="text-gray-500 mb-4">{message}</p>
         <button
           onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-[#00B7AD] text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-[#4E8476] text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           Retry
         </button>
@@ -232,7 +232,7 @@ export default function Home() {
           year === "2025"
             ? accountWiseData.data.Copex.summary.total_fy25_budget
             : accountWiseData.data.Copex.summary.total_fy24_budget,
-        color: "#00B7AD",
+        color: "#4E8476",
       },
     ];
   }, [accountWiseData, year]);
@@ -297,7 +297,7 @@ export default function Home() {
       return [
         { name: "Approved", value: 0, color: "#007E77" },
         { name: "Pending", value: 0, color: "#6BE6E4" },
-        { name: "Rejected", value: 0, color: "#00B7AD" },
+        { name: "Rejected", value: 0, color: "#4E8476" },
       ];
     }
 
@@ -315,7 +315,7 @@ export default function Home() {
       {
         name: "Rejected",
         value: normalData.rejected_transfers,
-        color: "#00B7AD",
+        color: "#4E8476",
       },
     ];
   }, [dashboardData?.normal]);

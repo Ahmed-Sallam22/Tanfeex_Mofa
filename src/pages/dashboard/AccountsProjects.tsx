@@ -366,7 +366,7 @@ export default function AccountsProjects() {
         <h1 className="text-2xl font-medium tracking-wide">{getPageTitle()}</h1>
         <button
           onClick={handleCreateRequest}
-          className="px-4 flex items-center gap-2 py-2 bg-[#00B7AD] text-white rounded-md hover:bg-blue-700 transition-colors"
+          className="px-4 flex items-center gap-2 py-2 bg-[#4E8476] text-white rounded-md hover:bg-blue-700 transition-colors"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path
@@ -497,7 +497,7 @@ export default function AccountsProjects() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#00B7AD] border border-[#00B7AD] rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#00B7AD]"
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#4E8476]"
             >
               {primaryBtnText}
             </button>

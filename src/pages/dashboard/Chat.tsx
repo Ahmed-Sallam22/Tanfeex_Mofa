@@ -300,7 +300,7 @@ export default function Chat({
           {/* + button (NEW) */}
           <button
             onClick={() => setShowNewChat(true)}
-            className="w-9 h-9 rounded-full bg-[#00B7AD] text-white flex items-center justify-center hover:bg-[#005B5D] active:scale-95 transition"
+            className="w-9 h-9 rounded-full bg-[#4E8476] text-white flex items-center justify-center hover:bg-[#2d5147] active:scale-95 transition"
             title="Start new chat"
           >
             +
@@ -325,7 +325,7 @@ export default function Chat({
                 key={p.user_id}
                 className={`group relative p-4 cursor-pointer rounded-lg transition-all duration-200  ${
                   isActive
-                    ? "bg-[#00B7AD] text-white shadow-md"
+                    ? "bg-[#4E8476] text-white shadow-md"
                     : "bg-white hover:shadow-sm border border-gray-100"
                 }`}
                 onClick={() => handleSelectParticipant(p)}
@@ -361,7 +361,7 @@ export default function Chat({
                         <span
                           className={`min-w-[18px] h-4 px-1.5 rounded-full text-xs font-bold flex items-center justify-center ${
                             isActive
-                              ? "bg-white text-[#00B7AD]"
+                              ? "bg-white text-[#4E8476]"
                               : "bg-red-500 text-white"
                           }`}
                         >
@@ -396,7 +396,7 @@ export default function Chat({
 
                 {threadFetching && (
                   <div className="flex items-center gap-2 ">
-                    <span className="text-xs text-[#00B7AD] font-medium">
+                    <span className="text-xs text-[#4E8476] font-medium">
                       Syncing messages…
                     </span>
                   </div>
@@ -455,14 +455,14 @@ export default function Chat({
                     <div
                       className={`relative rounded-2xl px-2 py-3 shadow-sm ${
                         isOwn
-                          ? "bg-[#00B7AD] text-white rounded-br-md"
+                          ? "bg-[#4E8476] text-white rounded-br-md"
                           : "bg-white text-gray-900 border border-gray-200 rounded-bl-md"
                       }`}
                     >
                       {menuOpenForId === msg.id && canModify && (
                         <div className="absolute right-0 top-8 z-50 w-36 rounded-lg border border-gray-200 bg-white shadow-lg">
                           <button
-                            className="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-[#d5f0ef] hover:text-[#00B7AD] transition-colors rounded-t-lg flex items-center gap-2"
+                            className="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-[#e8f2ef] hover:text-[#4E8476] transition-colors rounded-t-lg flex items-center gap-2"
                             onClick={() => startEdit(msg)}
                           >
                             ✏️ Edit
@@ -481,13 +481,13 @@ export default function Chat({
                           <textarea
                             value={editingText}
                             onChange={(e) => setEditingText(e.target.value)}
-                            className="w-full rounded-lg border border-gray-200 p-3 text-sm focus:ring-2 focus:ring-[#00B7AD] focus:border-transparent resize-none"
+                            className="w-full rounded-lg border border-gray-200 p-3 text-sm focus:ring-2 focus:ring-[#4E8476] focus:border-transparent resize-none"
                             rows={2}
                             autoFocus
                           />
                           <div className="flex gap-2">
                             <button
-                              className="px-4 py-2 rounded-lg bg-[#00B7AD] text-white text-xs font-medium hover:bg-[#00B7AD] disabled:opacity-60"
+                              className="px-4 py-2 rounded-lg bg-[#4E8476] text-white text-xs font-medium hover:bg-[#4E8476] disabled:opacity-60"
                               onClick={saveEdit}
                               disabled={updating || !editingText.trim()}
                             >
@@ -588,7 +588,7 @@ export default function Chat({
                 <input
                   ref={composeInputRef} // NEW
                   type="text"
-                  className="w-full px-4 py-3 pr-12 rounded-2xl border-gray-200 bg-gray-50 border-0 focus:ring-2 focus:ring-[#00B7AD] focus:border-transparent focus:bg-white placeholder-gray-500 transition-all duration-200"
+                  className="w-full px-4 py-3 pr-12 rounded-2xl border-gray-200 bg-gray-50 border-0 focus:ring-2 focus:ring-[#4E8476] focus:border-transparent focus:bg-white placeholder-gray-500 transition-all duration-200"
                   placeholder="Type your message..."
                   value={compose}
                   onChange={(e) => setCompose(e.target.value)}
@@ -601,7 +601,7 @@ export default function Chat({
                 />
                 {compose && (
                   <button
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#00B7AD] text-white hover:bg-[#00B7AD] hover:scale-110 transition-all duration-200 shadow-md flex items-center justify-center"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#4E8476] text-white hover:bg-[#4E8476] hover:scale-110 transition-all duration-200 shadow-md flex items-center justify-center"
                     onClick={handleSend}
                     disabled={sending || !compose.trim()}
                     title="Send message"
@@ -616,7 +616,7 @@ export default function Chat({
               </div>
               {!compose && (
                 <button
-                  className="px-6 py-3 bg-[#00B7AD] text-white rounded-2xl font-medium hover:bg-[#00B7AD] hover:shadow-md transition-all duration-200 disabled:opacity-60"
+                  className="px-6 py-3 bg-[#4E8476] text-white rounded-2xl font-medium hover:bg-[#4E8476] hover:shadow-md transition-all duration-200 disabled:opacity-60"
                   onClick={handleSend}
                   disabled={sending || !compose.trim() || !selectedUserId}
                   title={
@@ -657,7 +657,7 @@ export default function Chat({
             <div className="p-4">
               <input
                 type="text"
-                className="w-full rounded-lg border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-[#00B7AD] focus:border-transparent"
+                className="w-full rounded-lg border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-[#4E8476] focus:border-transparent"
                 placeholder="Search users…"
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
@@ -687,7 +687,7 @@ export default function Chat({
                         className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition"
                         onClick={() => startChatWithUser(u)}
                       >
-                        <div className="w-9 h-9 rounded-full bg-[#00B7AD] text-white flex items-center justify-center font-semibold text-sm">
+                        <div className="w-9 h-9 rounded-full bg-[#4E8476] text-white flex items-center justify-center font-semibold text-sm">
                           {(u.username || `User ${u.id}`)
                             .charAt(0)
                             .toUpperCase()}

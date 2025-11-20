@@ -37,7 +37,7 @@ export default function TokenRefreshButton({
 
     switch (variant) {
       case "primary":
-        return `${base} bg-[#00B7AD] text-white hover:bg-[#00B7AD] disabled:bg-gray-400`;
+        return `${base} bg-[#4E8476] text-white hover:bg-[#4E8476] disabled:bg-gray-400`;
       case "secondary":
         return `${base} bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:bg-gray-100`;
       case "minimal":

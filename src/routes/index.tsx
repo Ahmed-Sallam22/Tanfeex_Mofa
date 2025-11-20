@@ -26,6 +26,7 @@ import Chat from "@/pages/dashboard/Chat";
 import DocumentIO from "@/pages/dashboard/DocumentIO";
 import InvoiceDetails from "@/pages/dashboard/InvoiceDetails";
 import UploadInvoice from "@/pages/dashboard/UploadInvoice";
+import SegmentConfiguration from "@/pages/dashboard/SegmentConfiguration";
 
 const SignIn = lazy(() => import("../pages/auth/SignIn"));
 const AppLayout = lazy(() => import("../components/layout/AppLayout"));
@@ -296,6 +297,14 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute allowedRoles={["superadmin"]}>
                 <Users />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="segment-configuration"
+            element={
+              <RoleProtectedRoute allowedRoles={["superadmin"]}>
+                <SegmentConfiguration />
               </RoleProtectedRoute>
             }
           />

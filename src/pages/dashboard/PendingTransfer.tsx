@@ -411,7 +411,7 @@ export default function PendingTransfer() {
         {!isDelegateMode ? (
           <button
             onClick={handleDelegateClick}
-            className="flex items-center gap-2 px-3 py-2 bg-[#00B7AD] hover:bg-[#0e837d] text-white rounded-md transition-colors font-medium"
+            className="flex items-center gap-2 px-3 py-2 bg-[#4E8476] hover:bg-[#3d6b5f] text-white rounded-md transition-colors font-medium"
           >
             <svg
               width="24"
@@ -433,13 +433,13 @@ export default function PendingTransfer() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleCancelDelegate}
-              className="flex items-center gap-2 px-3 py-2 bg-transparent border border-[#00B7AD] text-[#00B7AD] hover:bg-[#00B7AD] hover:text-white  rounded-md transition-colors font-medium"
+              className="flex items-center gap-2 px-3 py-2 bg-transparent border border-[#4E8476] text-[#4E8476] hover:bg-[#4E8476] hover:text-white  rounded-md transition-colors font-medium"
             >
               Cancel
             </button>
             <button
               onClick={handleOpenDelegateModal}
-              className="flex items-center gap-2 px-3 py-2 bg-[#00B7AD] hover:bg-[#0e837d] text-white rounded-md transition-colors font-medium"
+              className="flex items-center gap-2 px-3 py-2 bg-[#4E8476] hover:bg-[#3d6b5f] text-white rounded-md transition-colors font-medium"
               disabled={selectedTransfers.size === 0}
             >
               Proceed to Delegate
@@ -730,7 +730,7 @@ export default function PendingTransfer() {
                             ? "bg-yellow-500 border-yellow-200"
                             : stage.status === "rejected"
                             ? "bg-red-500 border-red-200"
-                            : "bg-[#00B7AD] border-blue-200"
+                            : "bg-[#4E8476] border-blue-200"
                         }`}
                       >
                         {stage.status === "approved" ||
@@ -971,7 +971,7 @@ export default function PendingTransfer() {
             <button
               onClick={handleConfirmDelegate}
               disabled={!delegateUser}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#00B7AD] border border-[#00B7AD] rounded-md hover:bg-[#0e837d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#3d6b5f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Confirm Delegation
             </button>

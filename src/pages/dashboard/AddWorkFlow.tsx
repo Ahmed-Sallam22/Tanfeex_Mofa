@@ -279,7 +279,7 @@ export default function AddWorkFlow() {
   if (isEditMode && isLoadingWorkflow) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00B7AD]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4E8476]"></div>
         <span className="ml-2 text-gray-600">Loading workflow...</span>
       </div>
     );
@@ -377,7 +377,7 @@ export default function AddWorkFlow() {
                 !stageForm.requiredUserLevel ||
                 !stageForm.slaHours
               }
-              className="px-4 py-2 text-sm font-medium text-white bg-[#00B7AD] border border-[#00B7AD] rounded-md hover:bg-[#00B7AD] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#4E8476] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isStageEditMode ? "Update Stage" : "Create Stage"}
             </button>
@@ -389,7 +389,7 @@ export default function AddWorkFlow() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleBack}
-            className="flex items-center gap-2  cursor-pointer py-2 text-md text-[#00B7AD] hover:text-[#174ec4] "
+            className="flex items-center gap-2  cursor-pointer py-2 text-md text-[#4E8476] hover:text-[#4E8476] "
           >
             Workflows
           </button>
@@ -417,7 +417,7 @@ export default function AddWorkFlow() {
               isCreating ||
               isUpdating
             }
-            className="flex items-center gap-2 cursor-pointer p-1 text-md bg-[#00B7AD] text-white px-4 py-2 rounded-md hover:bg-[#00B7AD] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 cursor-pointer p-1 text-md bg-[#4E8476] text-white px-4 py-2 rounded-md hover:bg-[#4E8476] transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {(isCreating || isUpdating) && (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -502,7 +502,7 @@ export default function AddWorkFlow() {
                   description: e.target.value,
                 }))
               }
-              className={`w-full px-3 py-3 mt-3 border border-[#E2E2E2] resize-none placeholder:text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00B7AD] focus:border-transparent`}
+              className={`w-full px-3 py-3 mt-3 border border-[#E2E2E2] resize-none placeholder:text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4E8476] focus:border-transparent`}
               name="description"
               id="description"
             />
@@ -516,7 +516,7 @@ export default function AddWorkFlow() {
 
           <button
             onClick={handleCreateWorkFlow}
-            className="flex items-center gap-2 text-sm  cursor-pointer p-1   text-md bg-[#00B7AD] text-white px-4 py-2 rounded-md hover:bg-[#00B7AD] transition"
+            className="flex items-center gap-2 text-sm  cursor-pointer p-1   text-md bg-[#4E8476] text-white px-4 py-2 rounded-md hover:bg-[#4E8476] transition"
           >
             Add Stage
           </button>
@@ -533,11 +533,11 @@ export default function AddWorkFlow() {
                 key={index}
                 className="grid grid-cols-12 gap-4 h-full items-center"
               >
-                <div className="col-span-1 flex items-center h-full justify-center font-semibold text-xl text-[#00B7AD] bg-[#F6F6F6] rounded-md p-4">
+                <div className="col-span-1 flex items-center h-full justify-center font-semibold text-xl text-[#4E8476] bg-[#F6F6F6] rounded-md p-4">
                   #{stage.order_index}
                 </div>
                 <div className="col-span-11 bg-[#F6F6F6] rounded-md p-4 flex flex-col gap-4">
-                  <h2 className="text-md font-semibold text-[#00B7AD]">
+                  <h2 className="text-md font-semibold text-[#4E8476]">
                     {stage.name}
                   </h2>
                   <div className="flex  gap-2 justify-between ">
@@ -557,7 +557,7 @@ export default function AddWorkFlow() {
                       {/* Edit Icon */}
                       <button
                         onClick={() => handleEditStage(index)}
-                        className="p-1.5 text-[#00B7AD] hover:bg-[#00B7AD] rounded-md transition-colors"
+                        className="p-1.5 text-[#4E8476] hover:bg-[#4E8476] rounded-md transition-colors"
                         title="Edit stage"
                       >
                         <svg

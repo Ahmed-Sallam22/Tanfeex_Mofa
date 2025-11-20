@@ -1560,7 +1560,7 @@ export default function TransferDetails() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleBack}
-            className="flex items-center gap-2  cursor-pointer py-2 text-lg text-[#00B7AD] hover:text-[#174ec4] "
+            className="flex items-center gap-2  cursor-pointer py-2 text-lg text-[#4E8476] hover:text-[#4E8476] "
           >
             Fund Adjustments
           </button>
@@ -1681,7 +1681,7 @@ export default function TransferDetails() {
               className={`px-6 py-2 text-sm rounded-lg transition-colors inline-flex items-center gap-2 ${
                 isSubmitDisabled() || isSubmitting
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-[#00B7AD] text-white hover:bg-blue-700"
+                  : "bg-[#4E8476] text-white hover:bg-blue-700"
               }`}
               title={
                 isSubmitting
@@ -1867,7 +1867,7 @@ export default function TransferDetails() {
                     onClick={() =>
                       document.getElementById("file-upload")?.click()
                     }
-                    className="text-[#00B7AD] underline hover:text-blue-700 transition-colors"
+                    className="text-[#4E8476] underline hover:text-blue-700 transition-colors"
                   >
                     browse
                   </button>
@@ -1910,7 +1910,7 @@ export default function TransferDetails() {
             className={`px-4 py-2 text-sm font-medium border rounded-md transition-colors inline-flex items-center gap-2 ${
               !selectedFile || isUploading
                 ? "bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed"
-                : "text-white bg-[#00B7AD] border-[#00B7AD] hover:bg-blue-700"
+                : "text-white bg-[#4E8476] border-[#4E8476] hover:bg-blue-700"
             }`}
           >
             {isUploading ? (

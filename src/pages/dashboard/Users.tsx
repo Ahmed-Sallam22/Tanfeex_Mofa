@@ -41,7 +41,7 @@ function UserChip({ name }: { name: string }) {
   const initial = (name?.trim()?.[0] ?? "?").toUpperCase();
   return (
     <div className="inline-flex items-center gap-2 rounded-full bg-[#EEEEEE]  px-2 py-1 shadow-sm ring-1 ring-black/5">
-      <span className="grid place-items-center h-6 w-6 rounded-full bg-[white] text-[#00B7AD] text-xs font-bold">
+      <span className="grid place-items-center h-6 w-6 rounded-full bg-[white] text-[#4E8476] text-xs font-bold">
         {initial}
       </span>
       <span className="text-sm text-gray-700">{name}</span>
@@ -358,7 +358,7 @@ export default function Users() {
         {shouldShowAddButton() && (
           <button
             onClick={handleAddUser}
-            className="flex items-center cursor-pointer  gap-1 text-sm  bg-[#00B7AD] text-white px-2 py-1.5 rounded-md hover:bg-[#00B7AD] transition"
+            className="flex items-center cursor-pointer  gap-1 text-sm  bg-[#4E8476] text-white px-2 py-1.5 rounded-md hover:bg-[#4E8476] transition"
           >
             <svg
               width="24"
@@ -520,7 +520,7 @@ export default function Users() {
                 disabled={
                   !assignmentForm.selectedUser || !assignmentForm.selectedLevel
                 }
-                className="w-full px-4 py-2 bg-[#00B7AD] text-white rounded-md hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2 bg-[#4E8476] text-white rounded-md hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
                 Assign
               </button>
@@ -658,7 +658,7 @@ export default function Users() {
                 !userForm.role.trim() ||
                 (!editingUser && !userForm.password.trim())
               }
-              className="px-4 py-2 text-sm font-medium text-white bg-[#00B7AD] border border-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-blue-600 rounded-md hover:bg-blue-700 transition-colors"
             >
               {(isCreating || isUpdating) && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -736,7 +736,7 @@ export default function Users() {
             </button>
             <button
               onClick={handleSaveUserLevel}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#00B7AD] border border-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-blue-600 rounded-md hover:bg-blue-700 transition-colors"
             >
               {editingUserLevel ? "Update Level" : "Add Level"}
             </button>

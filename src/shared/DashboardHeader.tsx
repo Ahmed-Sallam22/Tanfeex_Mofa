@@ -55,7 +55,7 @@ export default function DashboardHeader() {
     <header className="flex items-start justify-between gap-4">
       {/* Left: greeting */}
       <div className="flex flex-col gap-1">
-        <h2 className="text-xl sm:text-3xl font-semibold text-[#00B7AD]">
+        <h2 className="text-xl sm:text-3xl font-semibold text-[#4E8476]">
           {greeting}, {userName}
         </h2>
         <p className="text-[#757575] text-sm">{formatted}</p>

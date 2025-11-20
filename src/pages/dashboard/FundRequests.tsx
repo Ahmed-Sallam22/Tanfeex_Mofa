@@ -136,7 +136,7 @@ export default function FundRequests() {
       accessor: "code",
       render: (value, row) => (
         <span
-          className="font-medium bg-[#F6F6F6] p-2  rounded-md cursor-pointer hover:bg-[#d5f0ef] transition"
+          className="font-medium bg-[#F6F6F6] p-2  rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
           onClick={() => handleCodeClick(row)}
         >
           {safeValue(value)}
@@ -191,7 +191,7 @@ export default function FundRequests() {
       accessor: "track",
       render: (_value, row) => (
         <span
-          className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#d5f0ef] transition"
+          className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
           onClick={() => handleTrackClick(row)}
         >
           Track
@@ -227,7 +227,7 @@ export default function FundRequests() {
       accessor: "attachment",
       render: (_value, row) => (
         <span
-          className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#d5f0ef] transition"
+          className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
           onClick={() => handleAttachmentsClick(row)}
         >
           Attachments
@@ -609,7 +609,7 @@ export default function FundRequests() {
         <h1 className="text-2xl font-bold tracking-wide">Fund Adjuments</h1>
         <button
           onClick={handleCreateRequest}
-          className="px-4 py-2 bg-[#00B7AD] text-white rounded-md hover:bg-[#00B7AD] transition-colors font-medium"
+          className="px-4 py-2 bg-[#4E8476] text-white rounded-md hover:bg-[#4E8476] transition-colors font-medium"
         >
           Create Request
         </button>
@@ -639,7 +639,7 @@ export default function FundRequests() {
             <div className="text-red-500 text-lg mb-2">⚠️</div>
             <p className="text-gray-600">Failed to load Fund Adjuments</p>
             <button
-              className="mt-2 px-4 py-2 bg-[#00B7AD] text-white rounded hover:bg-[#00B7AD]"
+              className="mt-2 px-4 py-2 bg-[#4E8476] text-white rounded hover:bg-[#4E8476]"
               onClick={() => window.location.reload()}
             >
               Retry
@@ -716,7 +716,7 @@ export default function FundRequests() {
             <textarea
               value={reason}
               onChange={(e) => setreason(e.target.value)}
-              className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#00B7AD] focus:border-transparent ${
+              className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4E8476] focus:border-transparent ${
                 validationErrors.reason ? "border-red-500" : "border-[#E2E2E2]"
               }`}
               placeholder="Enter notes for FundAdjuments"
@@ -746,7 +746,7 @@ export default function FundRequests() {
                 !time_period.trim() ||
                 !reason.trim()
               }
-              className="px-4 py-2 text-sm font-medium text-white bg-[#00B7AD] border border-[#00B7AD] rounded-md hover:bg-[#00B7AD] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#4E8476] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {(isCreating || isUpdating) && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -807,7 +807,7 @@ export default function FundRequests() {
                   onClick={() =>
                     document.getElementById("file-upload")?.click()
                   }
-                  className="text-[#00B7AD] underline hover:text-[#00B7AD] transition-colors"
+                  className="text-[#4E8476] underline hover:text-[#4E8476] transition-colors"
                   disabled={isUploading}
                 >
                   browse
@@ -941,12 +941,12 @@ export default function FundRequests() {
         <div className="flex flex-col items-center gap-6 py-8">
           {/* Loading Spinner */}
           <div className="relative bg-[#F6F6F6] p-2 rounded-full">
-            <div className="w-16 h-16 border-4 border-[#EFEFEF] border-t-[#00B7AD] rounded-full animate-spin"></div>
+            <div className="w-16 h-16 border-4 border-[#EFEFEF] border-t-[#4E8476] rounded-full animate-spin"></div>
           </div>
 
           {/* Status Text */}
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-[#00B7AD] mb-2">
+            <h3 className="text-lg font-semibold text-[#4E8476] mb-2">
               Waiting to connect to ERP...
             </h3>
             <p className="text-xs text-[#AFAFAF] max-w-sm">
@@ -1004,7 +1004,7 @@ export default function FundRequests() {
                             ? "bg-yellow-500 border-yellow-200"
                             : stage.status === "rejected"
                             ? "bg-red-500 border-red-200"
-                            : "bg-[#00B7AD] border-blue-200"
+                            : "bg-[#4E8476] border-blue-200"
                         }`}
                       >
                         {stage.status === "approved" ||
@@ -1144,8 +1144,8 @@ export default function FundRequests() {
                                 <span className="font-medium">Rejected</span>
                               </div>
                             ) : (
-                              <div className="flex items-center text-[#00B7AD]">
-                                <div className="w-4 h-4 bg-[#00B7AD] rounded-full mr-1"></div>
+                              <div className="flex items-center text-[#4E8476]">
+                                <div className="w-4 h-4 bg-[#4E8476] rounded-full mr-1"></div>
                                 <span className="font-medium">In Progress</span>
                               </div>
                             )}

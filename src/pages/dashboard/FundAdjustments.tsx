@@ -137,7 +137,7 @@ export default function FundAdjustments() {
       accessor: "code",
       render: (value, row) => (
         <span
-          className="font-medium bg-[#F6F6F6] p-2  rounded-md cursor-pointer hover:bg-[#d5f0ef] transition"
+          className="font-medium bg-[#F6F6F6] p-2  rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
           onClick={() => handleCodeClick(row)}
         >
           {safeValue(value)}
@@ -192,7 +192,7 @@ export default function FundAdjustments() {
       accessor: "track",
       render: (_value, row) => (
         <span
-          className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#d5f0ef] transition"
+          className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
           onClick={() => handleTrackClick(row)}
         >
           Track
@@ -228,7 +228,7 @@ export default function FundAdjustments() {
       accessor: "attachment",
       render: (_value, row) => (
         <span
-          className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#d5f0ef] transition"
+          className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
           onClick={() => handleAttachmentsClick(row)}
         >
           Attachments
@@ -608,7 +608,7 @@ export default function FundAdjustments() {
         <h1 className="text-2xl font-bold text-gray-900">Fund Adjustments</h1>
         <button
           onClick={handleCreateRequest}
-          className="px-4 py-2 bg-[#00B7AD] text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-[#4E8476] text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           Create Fund Adjustment
         </button>
@@ -640,7 +640,7 @@ export default function FundAdjustments() {
             <div className="text-red-500 text-lg mb-2">⚠️</div>
             <p className="text-gray-600">Failed to load Fund Adjustments</p>
             <button
-              className="mt-2 px-4 py-2 bg-[#00B7AD] text-white rounded hover:bg-blue-700"
+              className="mt-2 px-4 py-2 bg-[#4E8476] text-white rounded hover:bg-blue-700"
               onClick={() => window.location.reload()}
             >
               Retry
@@ -741,7 +741,7 @@ export default function FundAdjustments() {
                 !hasData ||
                 Object.keys(validationErrors).length > 0
               }
-              className="px-4 py-2 text-sm font-medium text-white bg-[#00B7AD] border border-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSubmitting && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -801,7 +801,7 @@ export default function FundAdjustments() {
                   onClick={() =>
                     document.getElementById("file-upload")?.click()
                   }
-                  className="text-[#00B7AD] underline hover:text-blue-700 transition-colors"
+                  className="text-[#4E8476] underline hover:text-blue-700 transition-colors"
                   disabled={isUploading}
                 >
                   browse
@@ -935,12 +935,12 @@ export default function FundAdjustments() {
         <div className="flex flex-col items-center gap-6 py-8">
           {/* Loading Spinner */}
           <div className="relative bg-[#F6F6F6] p-2 rounded-full">
-            <div className="w-16 h-16 border-4 border-[#EFEFEF] border-t-[#00B7AD] rounded-full animate-spin"></div>
+            <div className="w-16 h-16 border-4 border-[#EFEFEF] border-t-[#4E8476] rounded-full animate-spin"></div>
           </div>
 
           {/* Status Text */}
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-[#00B7AD] mb-2">
+            <h3 className="text-lg font-semibold text-[#4E8476] mb-2">
               Waiting to connect to ERP...
             </h3>
             <p className="text-xs text-[#AFAFAF] max-w-sm">
@@ -1000,7 +1000,7 @@ export default function FundAdjustments() {
                             ? "bg-yellow-500 border-yellow-200"
                             : stage.status === "rejected"
                             ? "bg-red-500 border-red-200"
-                            : "bg-[#00B7AD] border-blue-200"
+                            : "bg-[#4E8476] border-blue-200"
                         }`}
                       >
                         {stage.status === "approved" ||

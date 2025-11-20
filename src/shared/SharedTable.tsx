@@ -742,7 +742,7 @@ export function SharedTable({
               ) : showSaveButton && onSave ? (
                 <button
                   onClick={onSave}
-                  className="px-6 py-1.5 bg-[#00B7AD] hover:bg-[#0e837d] text-white rounded-sm cursor-pointer  text-sm  transition-colors"
+                  className="px-6 py-1.5 bg-[#4E8476] hover:bg-[#3d6b5f] text-white rounded-sm cursor-pointer  text-sm  transition-colors"
                 >
                   Save
                 </button>
@@ -938,7 +938,7 @@ export function SharedTable({
                         className={cn(
                           "absolute top-1/4 right-1 w-0.5 h-1/2 bg-gray-300 transition-colors",
                           "group-hover:bg-blue-400 group-hover:w-1",
-                          isResizing === "actions" && "bg-[#00B7AD] w-1"
+                          isResizing === "actions" && "bg-[#4E8476] w-1"
                         )}
                       />
 
@@ -1244,7 +1244,7 @@ export function SharedTable({
           <div className="mt-4 flex items-center justify-center">
             <button
               onClick={onAddNewRow}
-              className="inline-flex text-sm items-center justify-center  gap-2 px-4 bg-[#00B7AD] hover:bg-[#0e837d] py-2  rounded-lg text-white transition-colors"
+              className="inline-flex text-sm items-center justify-center  gap-2 px-4 bg-[#4E8476] hover:bg-[#3d6b5f] py-2  rounded-lg text-white transition-colors"
             >
               <svg
                 className="w-4 h-4"
@@ -1279,7 +1279,7 @@ export function SharedTable({
                 <button
                   onClick={() => onPageChange?.(1)}
                   disabled={!canGoFirst}
-                  className="flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#00B7AD] hover:border-[#00B7AD] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
+                  className="flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
                 >
                   <ArrowLeftIcon className="w-4 h-4" />
                   First
@@ -1289,7 +1289,7 @@ export function SharedTable({
                 <button
                   onClick={() => onPageChange?.(currentPage - 1)}
                   disabled={!canGoPrevious}
-                  className="flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#00B7AD] hover:border-[#00B7AD] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
+                  className="flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
                 >
                   <ArrowLeftIcon className="w-4 h-4" />
                   Back
@@ -1308,8 +1308,8 @@ export function SharedTable({
                         className={cn(
                           "px-3 py-2 text-sm border rounded-sm transition-colors",
                           currentPage === page
-                            ? "bg-[#00B7AD] border-[#00B7AD] text-white"
-                            : "border-[#EEEEEE] text-[#282828] hover:bg-[#00B7AD] hover:border-[#00B7AD] hover:text-white"
+                            ? "bg-[#4E8476] border-[#4E8476] text-white"
+                            : "border-[#EEEEEE] text-[#282828] hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white"
                         )}
                       >
                         {page}
@@ -1322,7 +1322,7 @@ export function SharedTable({
                 <button
                   onClick={() => onPageChange?.(currentPage + 1)}
                   disabled={!canGoNext}
-                  className="flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#00B7AD] hover:border-[#00B7AD] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
+                  className="flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
                 >
                   Next
                   <ArrowRightIcon className="w-4 h-4" />
@@ -1332,7 +1332,7 @@ export function SharedTable({
                 <button
                   onClick={() => onPageChange?.(totalPages)}
                   disabled={!canGoLast}
-                  className="flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#00B7AD] hover:border-[#00B7AD] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
+                  className="flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
                 >
                   Last
                   <ArrowRightIcon className="w-4 h-4" />

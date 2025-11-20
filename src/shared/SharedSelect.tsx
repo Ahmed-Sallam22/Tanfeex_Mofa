@@ -167,10 +167,10 @@ export function SharedSelect({
           disabled={disabled}
           className={cn(
             "relative w-full px-3 py-4 text-left bg-white border border-[#E2E2E2] rounded-md cursor-pointer",
-            "focus:outline-none focus:ring-2 focus:ring-[#00B7AD] focus:border-transparent",
+            "focus:outline-none focus:ring-2 focus:ring-[#4E8476] focus:border-transparent",
             "disabled:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50",
             error ? "border-red-300" : "border-gray-300",
-            isOpen && !error && "ring-2 ring-[#00B7AD] border-transparent"
+            isOpen && !error && "ring-2 ring-[#4E8476] border-transparent"
           )}
         >
           <span
@@ -215,7 +215,7 @@ export function SharedSelect({
                     value={searchTerm}
                     onChange={handleSearchChange}
                     placeholder={searchPlaceholder}
-                    className="w-full pl-1 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00B7AD] focus:border-transparent"
+                    className="w-full pl-1 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4E8476] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -238,14 +238,14 @@ export function SharedSelect({
                       "relative w-full capitalize px-3 py-2 text-left text-sm hover:bg-gray-100",
                       "focus:outline-none focus:bg-gray-100",
                       "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent",
-                      value === option.value && "bg-[#f7f7f7] text-[#00B7AD]"
+                      value === option.value && "bg-[#f7f7f7] text-[#4E8476]"
                     )}
                   >
                     <span className="block truncate">{option.label}</span>
 
                     {value === option.value && (
                       <span className="absolute inset-y-0 right-0 flex items-center pr-3">
-                        <CheckIcon className="text-[#00B7AD]" />
+                        <CheckIcon className="text-[#4E8476]" />
                       </span>
                     )}
                   </button>

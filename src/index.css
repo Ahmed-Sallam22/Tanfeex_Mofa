@@ -38,22 +38,22 @@ body{
 
 /* Chrome / Edge / Safari */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 8px;               /* سماكة */
+  width: 8px;           
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;  /* أو #E5E7EB لو عايز خلفية */
+  background: transparent; 
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #00B7AD;      /* اللون المطلوب */
+  background: #4E8476;      /* اللون المطلوب */
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #1f4fff;      /* درجة أغمق عند الهوفر (اختياري) */
+  background: #3d6b5f;      /* درجة أغمق عند الهوفر (اختياري) */
 }
 
 /* Firefox */
 .custom-scrollbar{
   scrollbar-width: thin;
-  scrollbar-color: #00B7AD transparent; /* thumb ثم track */
+  scrollbar-color: #4E8476 transparent; /* thumb ثم track */
 }

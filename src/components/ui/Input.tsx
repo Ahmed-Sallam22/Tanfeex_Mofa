@@ -52,7 +52,7 @@ export function Input({
           id={inputId}
           placeholder={placeholder}
           className={cn(
-            'block w-full rounded-md border border-gray-300 px-3 py-4 text-sm placeholder-gray-400 focus:border-[#00B7AD] focus:outline-none focus:ring-1 focus:ring-[#00B7AD]',
+            'block w-full rounded-md border border-gray-300 px-3 py-4 text-sm placeholder-gray-400 focus:border-[#4E8476] focus:outline-none focus:ring-1 focus:ring-[#4E8476]',
             error && 'border-red-500 focus:border-red-500 focus:ring-red-500',
             paddingX,
             className

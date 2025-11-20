@@ -467,7 +467,7 @@ export default function Reports() {
             <div className="text-red-500 text-lg mb-2">⚠️</div>
             <p className="text-gray-600">Failed to load report data</p>
             <button
-              className="mt-2 px-4 py-2 bg-[#00B7AD] text-white rounded hover:bg-blue-700"
+              className="mt-2 px-4 py-2 bg-[#4E8476] text-white rounded hover:bg-blue-700"
               onClick={() => window.location.reload()}
             >
               Retry

@@ -180,7 +180,7 @@ export default function WorkFlow() {
 
         <button
           onClick={handleCreateNewWorkflow}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-[#00B7AD] text-white text-sm font-medium rounded-lg hover:bg-[#03958d] transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-[#4E8476] text-white text-sm font-medium rounded-lg hover:bg-[#3d6b5f] transition-colors"
         >
           <svg
             width="16"

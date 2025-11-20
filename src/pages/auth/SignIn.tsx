@@ -14,7 +14,8 @@ import {
   Checkbox,
   FormField,
 } from "../../components/ui";
-import Animation from "../../assets/Animation.png";
+// import Animation from "../../assets/Animation.png";
+import bgDesigne from "../../assets/bgDesigne.jpg";
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
@@ -69,23 +70,17 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex lg:flex-row flex-col">
-      <div className="h-[20vh] flex lg:hidden items-center justify-center bg-gradient-to-r from-[#0773FF] to-[#00377E]">
-        <svg
-          width="100"
-          height="49"
-          viewBox="0 0 100 49"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M92.8933 2.72147C88.8666 4.63151 83.4921 5.77586 79.3298 6.42376H4.05211L0 14.7286C19.4976 18.9358 39.7073 27.7119 51.1939 49C47.8623 37.119 34.214 19.8866 24.3635 14.9053L83.7973 17.1351L93.9699 6.42376C98.3442 1.84639 105.524 -3.26949 92.8933 2.72147Z"
-            fill="white"
-          />
-        </svg>
+    <div className="relative flex min-h-screen items-center justify-center px-4">
+      {/* Background Design Layer */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src={bgDesigne} 
+          alt="Background Design" 
+          className="w-full h-full object-cover "
+        />
       </div>
-      {/* Left Panel - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 rounded-t-3xl">
+     
+      <div className="relative z-10 flex h-[80vh] w-full max-w-xl items-center justify-center rounded-3xl bg-white px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center lg:text-start">
             <h2 className="mt-6  text-2xl lg:text-3xl font-extrabold text-[gray-900]">
@@ -167,10 +162,6 @@ export default function SignIn() {
         </div>
       </div>
 
-      {/* Right Panel - Hero */}
-      <div className="hidden   lg:block lg:w-1/2 bg-gradient-to-br from-[#00B7AD] to-[#005B5D] relative">
-        <img src={Animation} className="w-full h-screen object-center" alt="" />
-      </div>
     </div>
   );
 }

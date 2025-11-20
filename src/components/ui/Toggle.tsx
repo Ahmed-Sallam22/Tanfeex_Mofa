@@ -51,10 +51,10 @@ export const Toggle: React.FC<ToggleProps> = ({
           ${sizeClasses[size]}
           relative inline-flex items-center rounded-full border-2 border-transparent
           transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2
-          focus:ring-[#00B7AD] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
+          focus:ring-[#4E8476] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
           ${
             checked
-              ? "bg-[#00B7AD] hover:bg-[#00B7AD]"
+              ? "bg-[#4E8476] hover:bg-[#4E8476]"
               : "bg-gray-200 hover:bg-gray-300"
           }
         `}
