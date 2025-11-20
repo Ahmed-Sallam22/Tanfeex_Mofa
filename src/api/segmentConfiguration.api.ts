@@ -111,7 +111,7 @@ export const segmentConfigurationApi = createApi({
     // Load segments values from control budgets
     loadSegmentsValues: builder.mutation<LoadSegmentsResponse, void>({
       query: () => ({
-        url: '/accounts-entities/segments/load-segments/',
+        url: '/accounts-entities/segments/load_Segments_oracle/',
         method: 'GET',
       }),
       invalidatesTags: ['SegmentTypes'],
