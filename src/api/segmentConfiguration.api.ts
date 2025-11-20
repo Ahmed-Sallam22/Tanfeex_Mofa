@@ -14,6 +14,15 @@ export interface SegmentType {
   total_segments: number;
 }
 
+export interface CreateSegmentTypeRequest {
+  segment_name: string;
+  oracle_segment_number: number;
+  is_required: string; // "True" or "False"
+  has_hierarchy: string; // "True" or "False"
+  display_order: number;
+  description: string;
+}
+
 export interface SegmentTypesResponse {
   message: string;
   total_types: number;
@@ -34,23 +43,23 @@ export const segmentConfigurationApi = createApi({
       providesTags: ['SegmentTypes'],
     }),
 
-    // Create segment type (if needed in the future)
-    createSegmentType: builder.mutation<SegmentType, Partial<SegmentType>>({
+    // Create segment type
+    createSegmentType: builder.mutation<SegmentType, CreateSegmentTypeRequest>({
       query: (segmentType) => ({
-        url: '/accounts-entities/segment-types/',
+        url: '/accounts-entities/segment-types/create/',
         method: 'POST',
         body: segmentType,
       }),
       invalidatesTags: ['SegmentTypes'],
     }),
 
-    // Update segment type (if needed in the future)
+    // Update segment type
     updateSegmentType: builder.mutation<
       SegmentType,
-      { id: number; data: Partial<SegmentType> }
+      { id: number; data: CreateSegmentTypeRequest }
     >({
       query: ({ id, data }) => ({
-        url: `/accounts-entities/segment-types/${id}/`,
+        url: `/accounts-entities/segment-types/${id}/update/`,
         method: 'PUT',
         body: data,
       }),

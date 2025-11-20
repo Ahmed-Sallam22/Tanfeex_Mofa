@@ -10,20 +10,47 @@ import {
   useDeleteSegmentTypeMutation,
   useToggleSegmentRequiredMutation,
   useToggleSegmentHierarchyMutation,
+  useCreateSegmentTypeMutation,
+  useUpdateSegmentTypeMutation,
   type SegmentType,
+  type CreateSegmentTypeRequest,
 } from "@/api/segmentConfiguration.api";
 import toast from "react-hot-toast";
+import SharedModal from "@/shared/SharedModal";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 
 type ViewMode = "list" | "card";
 
 export default function SegmentConfiguration() {
   const [viewMode, setViewMode] = useState<ViewMode>("card");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingSegment, setEditingSegment] = useState<SegmentType | null>(
+    null
+  );
+
+  // Form state
+  const [formData, setFormData] = useState<CreateSegmentTypeRequest>({
+    segment_name: "",
+    oracle_segment_number: 0,
+    is_required: "False",
+    has_hierarchy: "False",
+    display_order: 0,
+    description: "",
+  });
 
   // Fetch segment types data from API
   const { data: segmentData, isLoading } = useGetSegmentTypesQuery();
 
-  // Delete segment mutation
+  // Mutations
   const [deleteSegmentType] = useDeleteSegmentTypeMutation();
+  const [createSegmentType, { isLoading: isCreating }] =
+    useCreateSegmentTypeMutation();
+  const [updateSegmentType, { isLoading: isUpdating }] =
+    useUpdateSegmentTypeMutation();
 
   // Toggle mutations
   const [toggleRequired] = useToggleSegmentRequiredMutation();
@@ -32,13 +59,79 @@ export default function SegmentConfiguration() {
   const segments = segmentData?.data || [];
 
   const handleAddSegment = () => {
-    console.log("Add segment clicked");
-    // TODO: Implement add segment modal
+    setIsAddModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsAddModalOpen(false);
+    setIsEditModalOpen(false);
+    setEditingSegment(null);
+    // Reset form
+    setFormData({
+      segment_name: "",
+      oracle_segment_number: 0,
+      is_required: "False",
+      has_hierarchy: "False",
+      display_order: 0,
+      description: "",
+    });
+  };
+
+  const handleSubmitSegment = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validation
+    if (!formData.segment_name.trim()) {
+      toast.error("Segment name is required");
+      return;
+    }
+
+    if (formData.oracle_segment_number <= 0) {
+      toast.error("Oracle segment number must be greater than 0");
+      return;
+    }
+
+    if (formData.display_order <= 0) {
+      toast.error("Display order must be greater than 0");
+      return;
+    }
+
+    try {
+      if (editingSegment) {
+        // Update existing segment
+        await updateSegmentType({
+          id: editingSegment.segment_id,
+          data: formData,
+        }).unwrap();
+        toast.success("Segment type updated successfully");
+      } else {
+        // Create new segment
+        await createSegmentType(formData).unwrap();
+        toast.success("Segment type created successfully");
+      }
+      handleCloseModal();
+    } catch (error) {
+      console.error("Failed to save segment type:", error);
+      toast.error(
+        editingSegment
+          ? "Failed to update segment type"
+          : "Failed to create segment type"
+      );
+    }
   };
 
   const handleEditSegment = (segment: SegmentType) => {
-    console.log("Edit segment:", segment);
-    // TODO: Implement edit segment modal
+    setEditingSegment(segment);
+    // Pre-fill form with segment data
+    setFormData({
+      segment_name: segment.segment_name,
+      oracle_segment_number: segment.segment_type_oracle_number,
+      is_required: segment.segment_type_is_required ? "True" : "False",
+      has_hierarchy: segment.segment_type_has_hierarchy ? "True" : "False",
+      display_order: segment.segment_type_display_order,
+      description: segment.description || "",
+    });
+    setIsEditModalOpen(true);
   };
 
   const handleDeleteSegmentClick = async (segment: SegmentType) => {
@@ -211,8 +304,6 @@ export default function SegmentConfiguration() {
       </div>
     );
   }
-
-
 
   return (
     <div className="p-2 space-y-6">
@@ -544,6 +635,125 @@ export default function SegmentConfiguration() {
           />
         )}
       </div>
+
+      {/* Add/Edit Segment Modal */}
+      <SharedModal
+        isOpen={isAddModalOpen || isEditModalOpen}
+        onClose={handleCloseModal}
+        title={editingSegment ? "Edit Segment" : "Add New Segment"}
+        size="lg"
+      >
+        <form onSubmit={handleSubmitSegment} className="p-6 space-y-6">
+          {/* Segment Name */}
+          <Input
+            label="Segment Name"
+            placeholder="Enter segment name (e.g., مستقبلي 1)"
+            value={formData.segment_name}
+            onChange={(e) =>
+              setFormData({ ...formData, segment_name: e.target.value })
+            }
+            required
+          />
+
+          {/* Oracle Segment Number */}
+          <Input
+            label="Oracle Segment Number"
+            type="number"
+            placeholder="Enter oracle segment number"
+            value={formData.oracle_segment_number || ""}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                oracle_segment_number: parseInt(e.target.value) || 0,
+              })
+            }
+            required
+            min={1}
+          />
+
+          {/* Display Order */}
+          <Input
+            label="Display Order"
+            type="number"
+            placeholder="Enter display order"
+            value={formData.display_order || ""}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                display_order: parseInt(e.target.value) || 0,
+              })
+            }
+            required
+            min={1}
+          />
+
+          {/* Description */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-[#282828]">
+              Description
+            </label>
+            <RichTextEditor
+              value={formData.description}
+              onChange={(value) =>
+                setFormData({ ...formData, description: value })
+              }
+              placeholder="Enter segment description..."
+              height={150}
+            />
+          </div>
+
+          {/* Checkboxes */}
+          <div className="grid grid-cols-2 gap-4">
+            <Checkbox
+              label="Is Required"
+              checked={formData.is_required === "True"}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  is_required: e.target.checked ? "True" : "False",
+                })
+              }
+            />
+
+            <Checkbox
+              label="Has Hierarchy"
+              checked={formData.has_hierarchy === "True"}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  has_hierarchy: e.target.checked ? "True" : "False",
+                })
+              }
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCloseModal}
+              disabled={isCreating || isUpdating}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              loading={isCreating || isUpdating}
+              disabled={isCreating || isUpdating}
+            >
+              {isCreating || isUpdating
+                ? editingSegment
+                  ? "Updating..."
+                  : "Creating..."
+                : editingSegment
+                ? "Update Segment"
+                : "Create Segment"}
+            </Button>
+          </div>
+        </form>
+      </SharedModal>
     </div>
   );
 }
