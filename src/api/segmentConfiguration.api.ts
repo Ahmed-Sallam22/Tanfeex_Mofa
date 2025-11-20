@@ -29,6 +29,13 @@ export interface SegmentTypesResponse {
   data: SegmentType[];
 }
 
+export interface LoadSegmentsResponse {
+  message: string;
+  created_count: number;
+  skipped_count: number;
+  total_records: number;
+}
+
 export const segmentConfigurationApi = createApi({
   reducerPath: 'segmentConfigurationApi',
   baseQuery: customBaseQuery,
@@ -100,6 +107,15 @@ export const segmentConfigurationApi = createApi({
       }),
       invalidatesTags: ['SegmentTypes'],
     }),
+
+    // Load segments values from control budgets
+    loadSegmentsValues: builder.mutation<LoadSegmentsResponse, void>({
+      query: () => ({
+        url: '/accounts-entities/load-segments/',
+        method: 'POST',
+      }),
+      invalidatesTags: ['SegmentTypes'],
+    }),
   }),
 });
 
@@ -110,4 +126,5 @@ export const {
   useDeleteSegmentTypeMutation,
   useToggleSegmentRequiredMutation,
   useToggleSegmentHierarchyMutation,
+  useLoadSegmentsValuesMutation,
 } = segmentConfigurationApi;
