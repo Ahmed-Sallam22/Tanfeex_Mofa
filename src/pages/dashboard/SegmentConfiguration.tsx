@@ -28,7 +28,11 @@ export default function SegmentConfiguration() {
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingSegment, setEditingSegment] = useState<SegmentType | null>(
+    null
+  );
+  const [deletingSegment, setDeletingSegment] = useState<SegmentType | null>(
     null
   );
 
@@ -134,14 +138,28 @@ export default function SegmentConfiguration() {
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteSegmentClick = async (segment: SegmentType) => {
+  const handleDeleteSegmentClick = (segment: SegmentType) => {
+    setDeletingSegment(segment);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingSegment) return;
+
     try {
-      await deleteSegmentType(segment.segment_id).unwrap();
+      await deleteSegmentType(deletingSegment.segment_id).unwrap();
       toast.success("Segment type deleted successfully");
+      setIsDeleteModalOpen(false);
+      setDeletingSegment(null);
     } catch (error) {
       console.error("Failed to delete segment type:", error);
       toast.error("Failed to delete segment type");
     }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setDeletingSegment(null);
   };
 
   const handleToggleRequired = async (segment: SegmentType) => {
@@ -753,6 +771,74 @@ export default function SegmentConfiguration() {
             </Button>
           </div>
         </form>
+      </SharedModal>
+
+      {/* Delete Confirmation Modal */}
+      <SharedModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCancelDelete}
+        title="Delete Segment"
+        size="md"
+      >
+        <div className="p-6 space-y-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Are you sure you want to delete this segment?
+              </h3>
+              {deletingSegment && (
+                <p className="text-sm text-gray-600 mb-4">
+                  You are about to delete{" "}
+                  <span className="font-semibold text-gray-900">
+                    "{deletingSegment.segment_name}"
+                  </span>
+                  . This action cannot be undone.
+                </p>
+              )}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-sm text-yellow-800">
+                  <strong>Warning:</strong> Deleting this segment may affect
+                  related data and configurations.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCancelDelete}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete Segment
+            </Button>
+          </div>
+        </div>
       </SharedModal>
     </div>
   );

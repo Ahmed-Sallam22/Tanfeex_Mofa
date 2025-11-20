@@ -66,10 +66,10 @@ export const segmentConfigurationApi = createApi({
       invalidatesTags: ['SegmentTypes'],
     }),
 
-    // Delete segment type (if needed in the future)
+    // Delete segment type
     deleteSegmentType: builder.mutation<void, number>({
       query: (id) => ({
-        url: `/accounts-entities/segment-types/${id}/`,
+        url: `/accounts-entities/segment-types/${id}/delete/`,
         method: 'DELETE',
       }),
       invalidatesTags: ['SegmentTypes'],
