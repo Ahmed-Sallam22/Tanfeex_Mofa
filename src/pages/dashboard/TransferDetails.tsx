@@ -607,30 +607,40 @@ export default function TransferDetails() {
         )
         .unwrap();
 
-      console.log(
-        `Row ${rowId}: Financial data fetched:`,
-        result.data?.data[0]
-      );
+      console.log(`Row ${rowId}: Financial data fetched:`, result);
 
-      // Get the first record from the response data array
-      const record = result.data?.data?.[0];
+      // The API returns an array directly in result.data
+      const record = result.data?.[0];
+
+      if (!record) {
+        console.log(`Row ${rowId}: No financial data found in API response`);
+        return {};
+      }
+
+      console.log(`Row ${rowId}: Using record:`, record);
 
       // Calculate cost value (قيمة التكاليف) - funds_available / 2 for MOFA_COST_2
-      const controlBudgetName = record?.control_budget_name || "";
-      const fundsAvailable = record?.funds_available || 0;
-      const costValue = controlBudgetName === "MOFA_COST_2" ? fundsAvailable / 2 : 0;
+      const controlBudgetName = record.control_budget_name || "";
+      const fundsAvailable = record.funds_available || 0;
+      const costValue =
+        controlBudgetName === "MOFA_COST_2" ? fundsAvailable / 2 : 0;
 
       // Apply financial data to the row using new response structure
       const financialUpdates = {
-        encumbrance: record?.encumbrance || 0,
+        encumbrance: record.encumbrance || 0,
         availableBudget: fundsAvailable,
-        actual: record?.actual || 0,
-        approvedBudget: record?.budget || 0,
-        other_ytd: record?.other || 0,
-        period: record?.period_name || "",
+        actual: record.actual || 0,
+        approvedBudget: record.budget || 0,
+        other_ytd: record.other || 0,
+        period: record.period_name || "",
         control_budget_name: controlBudgetName,
         costValue: costValue,
       };
+
+      console.log(
+        `Row ${rowId}: Applying financial updates:`,
+        financialUpdates
+      );
 
       return financialUpdates;
     } catch (error) {

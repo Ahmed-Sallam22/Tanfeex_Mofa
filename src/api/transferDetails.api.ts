@@ -118,6 +118,10 @@ export interface FinancialDataParams {
 }
 
 export interface FinancialDataRecord {
+  id: number;
+  segment5?: string;
+  segment9?: string;
+  segment11?: string;
   budget: number;
   encumbrance: number;
   funds_available: number;
@@ -127,16 +131,15 @@ export interface FinancialDataRecord {
   other: number;
   period_name: string;
   control_budget_name: string;
+  created_at?: string;
 }
 
 export interface FinancialDataResponse {
   message: string;
-  data: {
-    success: boolean;
-    data: FinancialDataRecord[];
-    message: string;
-    total_records: number;
-  };
+  count: number;
+  total_records_in_db?: number;
+  filters_applied?: Record<string, string>;
+  data: FinancialDataRecord[]; // Direct array, not nested
 }
 
 export const transferDetailsApi = createApi({
