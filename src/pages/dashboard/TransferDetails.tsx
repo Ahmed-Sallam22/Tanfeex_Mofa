@@ -611,7 +611,10 @@ export default function TransferDetails() {
 
       // The API returns an array directly in result.data
       const record = result.data?.[0];
+    console.log(`Row ${rowId}: Retrieved record:`, record);
 
+    console.log("Ayman",result);
+    
       if (!record) {
         console.log(`Row ${rowId}: No financial data found in API response`);
         return {};
