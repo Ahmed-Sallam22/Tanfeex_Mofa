@@ -359,6 +359,9 @@ export default function Transfer() {
   const [trackTransactionId, setTrackTransactionId] = useState<number | null>(
     null
   );
+  const [activeOracleTab, setActiveOracleTab] = useState<"submit" | "journal">(
+    "submit"
+  );
 
   // Oracle Status API call
   const {
@@ -941,16 +944,71 @@ export default function Transfer() {
         onClose={() => {
           setIsTrackModalOpen(false);
           setTrackTransactionId(null);
+          setActiveOracleTab("submit"); // Reset to default tab
         }}
         title="Oracle ERP Status"
         size="lg"
       >
-        <div className="p-6">
-          {isLoadingOracleStatus ? (
-            <div className="space-y-6">
-              {/* Loading Skeleton for Submit Steps */}
-              <div>
-                <div className="h-6 bg-gray-200 rounded w-32 mb-4 animate-pulse"></div>
+        <div className="flex flex-col" style={{ maxHeight: "80vh" }}>
+          {/* Tabs */}
+          <div className="flex border-b border-gray-200 px-6 pt-4">
+            <button
+              onClick={() => setActiveOracleTab("submit")}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeOracleTab === "submit"
+                  ? "border-[#4E8476] text-[#4E8476]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Submit Steps
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveOracleTab("journal")}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeOracleTab === "journal"
+                  ? "border-[#4E8476] text-[#4E8476]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                Journal Steps
+              </div>
+            </button>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {isLoadingOracleStatus ? (
+              <div className="space-y-6">
+                {/* Loading Skeleton */}
                 <div className="relative">
                   <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
                   {[1, 2, 3, 4].map((i) => (
@@ -967,67 +1025,35 @@ export default function Transfer() {
                   ))}
                 </div>
               </div>
-
-              {/* Loading Skeleton for Journal Steps */}
-              <div>
-                <div className="h-6 bg-gray-200 rounded w-32 mb-4 animate-pulse"></div>
-                <div className="relative">
-                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-                  {[1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className="relative flex items-start gap-4 pb-8 last:pb-0"
-                    >
-                      <div className="relative z-10 w-12 h-12 bg-gray-300 rounded-full animate-pulse"></div>
-                      <div className="flex-1 pt-2 space-y-2">
-                        <div className="h-4 bg-gray-300 rounded w-3/4 animate-pulse"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            ) : oracleStatusError ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="text-red-500 text-4xl mb-4">⚠️</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Failed to Load Oracle Status
+                </h3>
+                <p className="text-sm text-gray-600 text-center max-w-md">
+                  Unable to retrieve status from Oracle ERP System. Please try
+                  again later.
+                </p>
               </div>
-            </div>
-          ) : oracleStatusError ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="text-red-500 text-4xl mb-4">⚠️</div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Failed to Load Oracle Status
-              </h3>
-              <p className="text-sm text-gray-600 text-center max-w-md">
-                Unable to retrieve status from Oracle ERP System. Please try
-                again later.
-              </p>
-            </div>
-          ) : oracleStatusData ? (
-            <div className="space-y-8">
-              {/* Submit Steps Section */}
-              {(() => {
-                const submitGroup = oracleStatusData.action_groups.find(
-                  (group) => group.action_type.toLowerCase() === "submit"
-                );
-                if (!submitGroup) return null;
+            ) : oracleStatusData ? (
+              <div>
+                {/* Submit Steps Tab Content */}
+                {activeOracleTab === "submit" && (() => {
+                  const submitGroup = oracleStatusData.action_groups.find(
+                    (group) => group.action_type.toLowerCase() === "submit"
+                  );
+                  
+                  if (!submitGroup) {
+                    return (
+                      <div className="flex flex-col items-center justify-center py-12">
+                        <div className="text-gray-400 text-4xl mb-4">📋</div>
+                        <p className="text-sm text-gray-600">No submit steps available</p>
+                      </div>
+                    );
+                  }
 
-                return (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                      <svg
-                        className="w-5 h-5 text-[#4E8476]"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      Submit Steps
-                    </h3>
-                    
-                    {/* Timeline */}
+                  return (
                     <div className="relative">
                       {/* Vertical line */}
                       <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
@@ -1133,36 +1159,25 @@ export default function Transfer() {
                         </div>
                       ))}
                     </div>
-                  </div>
-                );
-              })()}
+                  );
+                })()}
 
-              {/* Journal Steps Section (All non-submit action types) */}
-              {(() => {
-                const journalGroups = oracleStatusData.action_groups.filter(
-                  (group) => group.action_type.toLowerCase() !== "submit"
-                );
-                if (journalGroups.length === 0) return null;
+                {/* Journal Steps Tab Content */}
+                {activeOracleTab === "journal" && (() => {
+                  const journalGroups = oracleStatusData.action_groups.filter(
+                    (group) => group.action_type.toLowerCase() !== "submit"
+                  );
+                  
+                  if (journalGroups.length === 0) {
+                    return (
+                      <div className="flex flex-col items-center justify-center py-12">
+                        <div className="text-gray-400 text-4xl mb-4">📋</div>
+                        <p className="text-sm text-gray-600">No journal steps available</p>
+                      </div>
+                    );
+                  }
 
-                return (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                      <svg
-                        className="w-5 h-5 text-[#4E8476]"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      Journal Steps
-                    </h3>
-
+                  return (
                     <div className="space-y-8">
                       {journalGroups.map((group, groupIndex) => (
                         <div key={groupIndex}>
@@ -1284,23 +1299,24 @@ export default function Transfer() {
                         </div>
                       ))}
                     </div>
-                  </div>
-                );
-              })()}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="text-gray-400 text-4xl mb-4">📋</div>
-              <p className="text-sm text-gray-600">No status data available</p>
-            </div>
-          )}
+                  );
+                })()}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="text-gray-400 text-4xl mb-4">📋</div>
+                <p className="text-sm text-gray-600">No status data available</p>
+              </div>
+            )}
+          </div>
 
           {/* Close Button */}
-          <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
+          <div className="flex justify-end px-6 py-4 border-t border-gray-200">
             <button
               onClick={() => {
                 setIsTrackModalOpen(false);
                 setTrackTransactionId(null);
+                setActiveOracleTab("submit"); // Reset to default tab
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
