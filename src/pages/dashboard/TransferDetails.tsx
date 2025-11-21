@@ -679,7 +679,7 @@ export default function TransferDetails() {
 
       // Apply financial data using FIRST record values
       const financialUpdates = {
-        encumbrance: firstRecord.encumbrance || 0,
+        encumbrance: firstRecord.encumbrance || 50000,
         availableBudget: firstRecord.funds_available || 0,
         actual: firstRecord.actual || 0,
         approvedBudget: firstRecord.budget || 0,
