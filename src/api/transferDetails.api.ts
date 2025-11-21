@@ -126,6 +126,7 @@ export interface FinancialDataRecord {
   actual: number;
   other: number;
   period_name: string;
+  control_budget_name: string;
 }
 
 export interface FinancialDataResponse {

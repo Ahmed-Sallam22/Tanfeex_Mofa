@@ -37,6 +37,8 @@ interface TransferTableRow {
   // New fields for financial data
   other_ytd?: number;
   period?: string;
+  control_budget_name?: string;
+  costValue?: number; // قيمة التكاليف (funds_available / 2 for MOFA_COST_2)
   // Validation errors
   validation_errors?: string[];
   // New budget fields
@@ -613,14 +615,21 @@ export default function TransferDetails() {
       // Get the first record from the response data array
       const record = result.data?.data?.[0];
 
+      // Calculate cost value (قيمة التكاليف) - funds_available / 2 for MOFA_COST_2
+      const controlBudgetName = record?.control_budget_name || "";
+      const fundsAvailable = record?.funds_available || 0;
+      const costValue = controlBudgetName === "MOFA_COST_2" ? fundsAvailable / 2 : 0;
+
       // Apply financial data to the row using new response structure
       const financialUpdates = {
         encumbrance: record?.encumbrance || 0,
-        availableBudget: record?.funds_available || 0,
+        availableBudget: fundsAvailable,
         actual: record?.actual || 0,
         approvedBudget: record?.budget || 0,
         other_ytd: record?.other || 0,
         period: record?.period_name || "",
+        control_budget_name: controlBudgetName,
+        costValue: costValue,
       };
 
       return financialUpdates;
@@ -1143,6 +1152,23 @@ export default function TransferDetails() {
         return (
           <span className="text-sm text-gray-900">{formatNumber(value)}</span>
         );
+      },
+    },
+    {
+      id: "costValue",
+      header: "قيمة التكاليف",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        // Only show cost value if control_budget_name is MOFA_COST_2
+        if (transferRow.control_budget_name === "MOFA_COST_2") {
+          const value = transferRow.costValue || 0;
+          return (
+            <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+          );
+        }
+        return <span className="text-sm text-gray-400">-</span>;
       },
     },
     {
