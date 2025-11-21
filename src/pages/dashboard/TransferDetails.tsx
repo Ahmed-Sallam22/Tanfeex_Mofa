@@ -609,7 +609,44 @@ export default function TransferDetails() {
 
       console.log(`Row ${rowId}: Financial data fetched:`, result);
 
-      // The API returns an array with multiple budget records (MOFA_CASH, MOFA_COST_2, etc.)
+      // 🧪 MOCK DATA FOR TESTING - TODO: Remove after testing
+      // Uncomment the lines below to test with mock data
+      /*
+      const mockResult = {
+        message: "Retrieved 2 segment funds",
+        count: 2,
+        data: [
+          {
+            id: 1099,
+            control_budget_name: "MOFA_CASH",
+            period_name: "1-25",
+            budget: 12500688.82,
+            encumbrance: 500688.82,
+            funds_available: 11247398.93,
+            commitment: 0,
+            obligation: 0,
+            actual: 251912.25,
+            other: 0,
+          },
+          {
+            id: 1221,
+            control_budget_name: "MOFA_COST_2",
+            period_name: "1-25",
+            budget: 12539796.42,
+            encumbrance: 539796.42,
+            funds_available: 10928291.33,
+            commitment: 0,
+            obligation: 0,
+            actual: 531912.25,
+            other: -300.0,
+          }
+        ]
+      };
+      // Use mock data instead of API result
+      const records = mockResult.data || [];
+      */
+
+      // The API returns an array with multiple budget records
       const records = result.data || [];
 
       if (records.length === 0) {
@@ -622,51 +659,42 @@ export default function TransferDetails() {
         records
       );
 
-      // Sum up values from all budget records
-      let totalEncumbrance = 0;
-      let totalFundsAvailable = 0;
-      let totalActual = 0;
-      let totalBudget = 0;
-      let totalOther = 0;
-      let costValue = 0;
-      let periodName = "";
-      const controlBudgetNames: string[] = [];
+      // Use the FIRST record (MOFA_CASH) for main column values
+      const firstRecord = records[0];
 
-      records.forEach((record) => {
-        totalEncumbrance += record.encumbrance || 0;
-        totalFundsAvailable += record.funds_available || 0;
-        totalActual += record.actual || 0;
-        totalBudget += record.budget || 0;
-        totalOther += record.other || 0;
+      // Find MOFA_COST_2 record for cost value calculation
+      const mofaCost2Record = records.find(
+        (r) => r.control_budget_name === "MOFA_COST_2"
+      );
 
-        if (record.period_name) {
-          periodName = record.period_name;
-        }
+      // Calculate cost value from MOFA_COST_2 (funds_available / 2)
+      const costValue = mofaCost2Record
+        ? (mofaCost2Record.funds_available || 0) / 2
+        : 0;
 
-        if (record.control_budget_name) {
-          controlBudgetNames.push(record.control_budget_name);
+      // Collect all budget names
+      const controlBudgetNames = records
+        .map((r) => r.control_budget_name)
+        .filter(Boolean);
 
-          // Calculate cost value from MOFA_COST_2 budget
-          if (record.control_budget_name === "MOFA_COST_2") {
-            costValue = (record.funds_available || 0) / 2;
-          }
-        }
-      });
-
-      // Apply financial data to the row using aggregated values
+      // Apply financial data using FIRST record values
       const financialUpdates = {
-        encumbrance: totalEncumbrance,
-        availableBudget: totalFundsAvailable,
-        actual: totalActual,
-        approvedBudget: totalBudget,
-        other_ytd: totalOther,
-        period: periodName,
-        control_budget_name: controlBudgetNames.join(", "), // Store all budget names
-        costValue: costValue, // Only from MOFA_COST_2
+        encumbrance: firstRecord.encumbrance || 0,
+        availableBudget: firstRecord.funds_available || 0,
+        actual: firstRecord.actual || 0,
+        approvedBudget: firstRecord.budget || 0,
+        other_ytd: firstRecord.other || 0,
+        period: firstRecord.period_name || "",
+        control_budget_name: controlBudgetNames.join(", "),
+        costValue: costValue, // From MOFA_COST_2 (second record)
       };
 
       console.log(
-        `Row ${rowId}: Applying aggregated financial updates:`,
+        `Row ${rowId}: Using first record (${firstRecord.control_budget_name}) for main values`
+      );
+      console.log(`Row ${rowId}: Cost value from MOFA_COST_2: ${costValue}`);
+      console.log(
+        `Row ${rowId}: Applying financial updates:`,
         financialUpdates
       );
 
