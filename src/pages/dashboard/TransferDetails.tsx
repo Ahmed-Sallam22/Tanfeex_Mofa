@@ -609,39 +609,64 @@ export default function TransferDetails() {
 
       console.log(`Row ${rowId}: Financial data fetched:`, result);
 
-      // The API returns an array directly in result.data
-      const record = result.data?.[0];
-    console.log(`Row ${rowId}: Retrieved record:`, record);
+      // The API returns an array with multiple budget records (MOFA_CASH, MOFA_COST_2, etc.)
+      const records = result.data || [];
 
-    console.log("Ayman",result);
-    
-      if (!record) {
+      if (records.length === 0) {
         console.log(`Row ${rowId}: No financial data found in API response`);
         return {};
       }
 
-      console.log(`Row ${rowId}: Using record:`, record);
+      console.log(
+        `Row ${rowId}: Processing ${records.length} budget record(s):`,
+        records
+      );
 
-      // Calculate cost value (قيمة التكاليف) - funds_available / 2 for MOFA_COST_2
-      const controlBudgetName = record.control_budget_name || "";
-      const fundsAvailable = record.funds_available || 0;
-      const costValue =
-        controlBudgetName === "MOFA_COST_2" ? fundsAvailable / 2 : 0;
+      // Sum up values from all budget records
+      let totalEncumbrance = 0;
+      let totalFundsAvailable = 0;
+      let totalActual = 0;
+      let totalBudget = 0;
+      let totalOther = 0;
+      let costValue = 0;
+      let periodName = "";
+      const controlBudgetNames: string[] = [];
 
-      // Apply financial data to the row using new response structure
+      records.forEach((record) => {
+        totalEncumbrance += record.encumbrance || 0;
+        totalFundsAvailable += record.funds_available || 0;
+        totalActual += record.actual || 0;
+        totalBudget += record.budget || 0;
+        totalOther += record.other || 0;
+
+        if (record.period_name) {
+          periodName = record.period_name;
+        }
+
+        if (record.control_budget_name) {
+          controlBudgetNames.push(record.control_budget_name);
+
+          // Calculate cost value from MOFA_COST_2 budget
+          if (record.control_budget_name === "MOFA_COST_2") {
+            costValue = (record.funds_available || 0) / 2;
+          }
+        }
+      });
+
+      // Apply financial data to the row using aggregated values
       const financialUpdates = {
-        encumbrance: record.encumbrance || 0,
-        availableBudget: fundsAvailable,
-        actual: record.actual || 0,
-        approvedBudget: record.budget || 0,
-        other_ytd: record.other || 0,
-        period: record.period_name || "",
-        control_budget_name: controlBudgetName,
-        costValue: costValue,
+        encumbrance: totalEncumbrance,
+        availableBudget: totalFundsAvailable,
+        actual: totalActual,
+        approvedBudget: totalBudget,
+        other_ytd: totalOther,
+        period: periodName,
+        control_budget_name: controlBudgetNames.join(", "), // Store all budget names
+        costValue: costValue, // Only from MOFA_COST_2
       };
 
       console.log(
-        `Row ${rowId}: Applying financial updates:`,
+        `Row ${rowId}: Applying aggregated financial updates:`,
         financialUpdates
       );
 
@@ -1174,8 +1199,11 @@ export default function TransferDetails() {
 
       render: (_, row) => {
         const transferRow = row as unknown as TransferTableRow;
-        // Only show cost value if control_budget_name is MOFA_COST_2
-        if (transferRow.control_budget_name === "MOFA_COST_2") {
+        // Show cost value if any of the budget names includes MOFA_COST_2
+        const hasMofaCost2 =
+          transferRow.control_budget_name?.includes("MOFA_COST_2");
+
+        if (hasMofaCost2 && transferRow.costValue) {
           const value = transferRow.costValue || 0;
           return (
             <span className="text-sm text-gray-900">{formatNumber(value)}</span>
