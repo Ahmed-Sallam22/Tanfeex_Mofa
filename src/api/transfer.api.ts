@@ -74,6 +74,29 @@ export interface TransferStatusResponse {
   }[];
 }
 
+export interface OracleStatusStep {
+  step_number: number;
+  step_name: string;
+  status: string;
+  message: string;
+  request_id: string | null;
+  document_id: string | null;
+  group_id: string | null;
+  created_at: string;
+  completed_at: string;
+}
+
+export interface OracleActionGroup {
+  action_type: string;
+  steps: OracleStatusStep[];
+}
+
+export interface OracleStatusResponse {
+  transaction_id: string;
+  total_records: number;
+  action_groups: OracleActionGroup[];
+}
+
 export const transferApi = createApi({
   reducerPath: 'transferApi',
   baseQuery: customBaseQuery,
@@ -121,6 +144,12 @@ export const transferApi = createApi({
       }),
       providesTags: ['Transfer'],
     }),
+    getOracleStatus: builder.query<OracleStatusResponse, number>({
+      query: (transactionId) => ({
+        url: `/budget/transfers/Oracle/Status/?transaction_id=${transactionId}`,
+        method: 'GET',
+      }),
+    }),
   }),
 });
 
@@ -130,4 +159,5 @@ export const {
   useUpdateTransferMutation,
   useDeleteTransferMutation,
   useGetTransferStatusQuery,
+  useGetOracleStatusQuery,
 } = transferApi;
