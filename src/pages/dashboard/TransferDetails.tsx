@@ -661,7 +661,7 @@ export default function TransferDetails() {
 
       // Use the FIRST record (MOFA_CASH) for main column values
       const firstRecord = records[0];
-console.log(firstRecord.encumbrance,firstRecord.funds_available);
+console.log(firstRecord);
 
       // Find MOFA_COST_2 record for cost value calculation
       const mofaCost2Record = records.find(
