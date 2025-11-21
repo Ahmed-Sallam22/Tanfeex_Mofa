@@ -999,7 +999,7 @@ export default function Transfer() {
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                Journal Steps
+                Reject & Approve Steps
               </div>
             </button>
           </div>
@@ -1039,273 +1039,283 @@ export default function Transfer() {
             ) : oracleStatusData ? (
               <div>
                 {/* Submit Steps Tab Content */}
-                {activeOracleTab === "submit" && (() => {
-                  const submitGroup = oracleStatusData.action_groups.find(
-                    (group) => group.action_type.toLowerCase() === "submit"
-                  );
-                  
-                  if (!submitGroup) {
-                    return (
-                      <div className="flex flex-col items-center justify-center py-12">
-                        <div className="text-gray-400 text-4xl mb-4">📋</div>
-                        <p className="text-sm text-gray-600">No submit steps available</p>
-                      </div>
+                {activeOracleTab === "submit" &&
+                  (() => {
+                    const submitGroup = oracleStatusData.action_groups.find(
+                      (group) => group.action_type.toLowerCase() === "submit"
                     );
-                  }
 
-                  return (
-                    <div className="relative">
-                      {/* Vertical line */}
-                      <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
-
-                      {submitGroup.steps.map((step, index) => (
-                        <div
-                          key={index}
-                          className="relative flex items-start gap-4 pb-8 last:pb-0"
-                        >
-                          {/* Timeline dot with icon */}
-                          <div
-                            className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
-                              step.status.toLowerCase() === "success"
-                                ? "bg-green-500 border-green-200"
-                                : step.status.toLowerCase() === "error"
-                                ? "bg-red-500 border-red-200"
-                                : "bg-gray-400 border-gray-200"
-                            }`}
-                          >
-                            {step.status.toLowerCase() === "success" ? (
-                              <svg
-                                className="w-6 h-6 text-white"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            ) : step.status.toLowerCase() === "error" ? (
-                              <svg
-                                className="w-6 h-6 text-white"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            ) : (
-                              <span className="text-white font-bold">
-                                {step.step_number}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Step content */}
-                          <div className="flex-1 min-w-0 pt-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <h4 className="text-sm font-semibold text-gray-900">
-                                {step.step_name}
-                              </h4>
-                              <span
-                                className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                  step.status.toLowerCase() === "success"
-                                    ? "bg-green-100 text-green-800"
-                                    : step.status.toLowerCase() === "error"
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-gray-100 text-gray-800"
-                                }`}
-                              >
-                                {step.status}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-2">
-                              {step.message}
-                            </p>
-                            {(step.request_id ||
-                              step.document_id ||
-                              step.group_id) && (
-                              <div className="flex flex-wrap gap-3 text-xs text-gray-500">
-                                {step.request_id && (
-                                  <span>
-                                    <span className="font-medium">
-                                      Request ID:
-                                    </span>{" "}
-                                    {step.request_id}
-                                  </span>
-                                )}
-                                {step.document_id && (
-                                  <span>
-                                    <span className="font-medium">
-                                      Document ID:
-                                    </span>{" "}
-                                    {step.document_id}
-                                  </span>
-                                )}
-                                {step.group_id && (
-                                  <span>
-                                    <span className="font-medium">
-                                      Group ID:
-                                    </span>{" "}
-                                    {step.group_id}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                    if (!submitGroup) {
+                      return (
+                        <div className="flex flex-col items-center justify-center py-12">
+                          <div className="text-gray-400 text-4xl mb-4">📋</div>
+                          <p className="text-sm text-gray-600">
+                            No submit steps available
+                          </p>
                         </div>
-                      ))}
-                    </div>
-                  );
-                })()}
+                      );
+                    }
 
-                {/* Journal Steps Tab Content */}
-                {activeOracleTab === "journal" && (() => {
-                  const journalGroups = oracleStatusData.action_groups.filter(
-                    (group) => group.action_type.toLowerCase() !== "submit"
-                  );
-                  
-                  if (journalGroups.length === 0) {
                     return (
-                      <div className="flex flex-col items-center justify-center py-12">
-                        <div className="text-gray-400 text-4xl mb-4">📋</div>
-                        <p className="text-sm text-gray-600">No journal steps available</p>
-                      </div>
-                    );
-                  }
+                      <div className="relative">
+                        {/* Vertical line */}
+                        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
 
-                  return (
-                    <div className="space-y-8">
-                      {journalGroups.map((group, groupIndex) => (
-                        <div key={groupIndex}>
-                          {/* Action Type Badge */}
-                          <div className="flex items-center gap-3 mb-4">
-                            <span className="text-xs font-bold text-[#4E8476] uppercase tracking-wider bg-[#4E8476]/10 px-3 py-1 rounded-full">
-                              {group.action_type}
-                            </span>
-                            <div className="flex-1 h-px bg-gray-300"></div>
-                          </div>
+                        {submitGroup.steps.map((step, index) => (
+                          <div
+                            key={index}
+                            className="relative flex items-start gap-4 pb-8 last:pb-0"
+                          >
+                            {/* Timeline dot with icon */}
+                            <div
+                              className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
+                                step.status.toLowerCase() === "success"
+                                  ? "bg-green-500 border-green-200"
+                                  : step.status.toLowerCase() === "error"
+                                  ? "bg-red-500 border-red-200"
+                                  : "bg-gray-400 border-gray-200"
+                              }`}
+                            >
+                              {step.status.toLowerCase() === "success" ? (
+                                <svg
+                                  className="w-6 h-6 text-white"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              ) : step.status.toLowerCase() === "error" ? (
+                                <svg
+                                  className="w-6 h-6 text-white"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              ) : (
+                                <span className="text-white font-bold">
+                                  {step.step_number}
+                                </span>
+                              )}
+                            </div>
 
-                          {/* Timeline for this action type */}
-                          <div className="relative">
-                            {/* Vertical line */}
-                            <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
-
-                            {group.steps.map((step, index) => (
-                              <div
-                                key={index}
-                                className="relative flex items-start gap-4 pb-8 last:pb-0"
-                              >
-                                {/* Timeline dot with icon */}
-                                <div
-                                  className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
+                            {/* Step content */}
+                            <div className="flex-1 min-w-0 pt-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <h4 className="text-sm font-semibold text-gray-900">
+                                  {step.step_name}
+                                </h4>
+                                <span
+                                  className={`text-xs font-medium px-2 py-1 rounded-full ${
                                     step.status.toLowerCase() === "success"
-                                      ? "bg-green-500 border-green-200"
+                                      ? "bg-green-100 text-green-800"
                                       : step.status.toLowerCase() === "error"
-                                      ? "bg-red-500 border-red-200"
-                                      : "bg-gray-400 border-gray-200"
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-gray-100 text-gray-800"
                                   }`}
                                 >
-                                  {step.status.toLowerCase() === "success" ? (
-                                    <svg
-                                      className="w-6 h-6 text-white"
-                                      fill="currentColor"
-                                      viewBox="0 0 20 20"
-                                    >
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
-                                  ) : step.status.toLowerCase() === "error" ? (
-                                    <svg
-                                      className="w-6 h-6 text-white"
-                                      fill="currentColor"
-                                      viewBox="0 0 20 20"
-                                    >
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
-                                  ) : (
-                                    <span className="text-white font-bold">
-                                      {step.step_number}
-                                    </span>
-                                  )}
-                                </div>
-
-                                {/* Step content */}
-                                <div className="flex-1 min-w-0 pt-1">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <h4 className="text-sm font-semibold text-gray-900">
-                                      {step.step_name}
-                                    </h4>
-                                    <span
-                                      className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                        step.status.toLowerCase() === "success"
-                                          ? "bg-green-100 text-green-800"
-                                          : step.status.toLowerCase() ===
-                                            "error"
-                                          ? "bg-red-100 text-red-800"
-                                          : "bg-gray-100 text-gray-800"
-                                      }`}
-                                    >
-                                      {step.status}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm text-gray-600 mb-2">
-                                    {step.message}
-                                  </p>
-                                  {(step.request_id ||
-                                    step.document_id ||
-                                    step.group_id) && (
-                                    <div className="flex flex-wrap gap-3 text-xs text-gray-500">
-                                      {step.request_id && (
-                                        <span>
-                                          <span className="font-medium">
-                                            Request ID:
-                                          </span>{" "}
-                                          {step.request_id}
-                                        </span>
-                                      )}
-                                      {step.document_id && (
-                                        <span>
-                                          <span className="font-medium">
-                                            Document ID:
-                                          </span>{" "}
-                                          {step.document_id}
-                                        </span>
-                                      )}
-                                      {step.group_id && (
-                                        <span>
-                                          <span className="font-medium">
-                                            Group ID:
-                                          </span>{" "}
-                                          {step.group_id}
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
+                                  {step.status}
+                                </span>
                               </div>
-                            ))}
+                              <p className="text-sm text-gray-600 mb-2">
+                                {step.message}
+                              </p>
+                              {(step.request_id ||
+                                step.document_id ||
+                                step.group_id) && (
+                                <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                                  {step.request_id && (
+                                    <span>
+                                      <span className="font-medium">
+                                        Request ID:
+                                      </span>{" "}
+                                      {step.request_id}
+                                    </span>
+                                  )}
+                                  {step.document_id && (
+                                    <span>
+                                      <span className="font-medium">
+                                        Document ID:
+                                      </span>{" "}
+                                      {step.document_id}
+                                    </span>
+                                  )}
+                                  {step.group_id && (
+                                    <span>
+                                      <span className="font-medium">
+                                        Group ID:
+                                      </span>{" "}
+                                      {step.group_id}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+
+                {/* Journal Steps Tab Content */}
+                {activeOracleTab === "journal" &&
+                  (() => {
+                    const journalGroups = oracleStatusData.action_groups.filter(
+                      (group) => group.action_type.toLowerCase() !== "submit"
+                    );
+
+                    if (journalGroups.length === 0) {
+                      return (
+                        <div className="flex flex-col items-center justify-center py-12">
+                          <div className="text-gray-400 text-4xl mb-4">📋</div>
+                          <p className="text-sm text-gray-600">
+                            No journal steps available
+                          </p>
                         </div>
-                      ))}
-                    </div>
-                  );
-                })()}
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-8">
+                        {journalGroups.map((group, groupIndex) => (
+                          <div key={groupIndex}>
+                            {/* Action Type Badge */}
+                            <div className="flex items-center gap-3 mb-4">
+                              <span className="text-xs font-bold text-[#4E8476] uppercase tracking-wider bg-[#4E8476]/10 px-3 py-1 rounded-full">
+                                {group.action_type}
+                              </span>
+                              <div className="flex-1 h-px bg-gray-300"></div>
+                            </div>
+
+                            {/* Timeline for this action type */}
+                            <div className="relative">
+                              {/* Vertical line */}
+                              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
+
+                              {group.steps.map((step, index) => (
+                                <div
+                                  key={index}
+                                  className="relative flex items-start gap-4 pb-8 last:pb-0"
+                                >
+                                  {/* Timeline dot with icon */}
+                                  <div
+                                    className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
+                                      step.status.toLowerCase() === "success"
+                                        ? "bg-green-500 border-green-200"
+                                        : step.status.toLowerCase() === "error"
+                                        ? "bg-red-500 border-red-200"
+                                        : "bg-gray-400 border-gray-200"
+                                    }`}
+                                  >
+                                    {step.status.toLowerCase() === "success" ? (
+                                      <svg
+                                        className="w-6 h-6 text-white"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                    ) : step.status.toLowerCase() ===
+                                      "error" ? (
+                                      <svg
+                                        className="w-6 h-6 text-white"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                    ) : (
+                                      <span className="text-white font-bold">
+                                        {step.step_number}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Step content */}
+                                  <div className="flex-1 min-w-0 pt-1">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <h4 className="text-sm font-semibold text-gray-900">
+                                        {step.step_name}
+                                      </h4>
+                                      <span
+                                        className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                          step.status.toLowerCase() ===
+                                          "success"
+                                            ? "bg-green-100 text-green-800"
+                                            : step.status.toLowerCase() ===
+                                              "error"
+                                            ? "bg-red-100 text-red-800"
+                                            : "bg-gray-100 text-gray-800"
+                                        }`}
+                                      >
+                                        {step.status}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-gray-600 mb-2">
+                                      {step.message}
+                                    </p>
+                                    {(step.request_id ||
+                                      step.document_id ||
+                                      step.group_id) && (
+                                      <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                                        {step.request_id && (
+                                          <span>
+                                            <span className="font-medium">
+                                              Request ID:
+                                            </span>{" "}
+                                            {step.request_id}
+                                          </span>
+                                        )}
+                                        {step.document_id && (
+                                          <span>
+                                            <span className="font-medium">
+                                              Document ID:
+                                            </span>{" "}
+                                            {step.document_id}
+                                          </span>
+                                        )}
+                                        {step.group_id && (
+                                          <span>
+                                            <span className="font-medium">
+                                              Group ID:
+                                            </span>{" "}
+                                            {step.group_id}
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="text-gray-400 text-4xl mb-4">📋</div>
-                <p className="text-sm text-gray-600">No status data available</p>
+                <p className="text-sm text-gray-600">
+                  No status data available
+                </p>
               </div>
             )}
           </div>

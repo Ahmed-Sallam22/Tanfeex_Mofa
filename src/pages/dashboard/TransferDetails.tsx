@@ -15,7 +15,11 @@ import {
   transferDetailsApi,
   type CreateTransferData,
 } from "@/api/transferDetails.api";
-import { useGetBalanceReportQuery } from "@/api/balanceReport.api";
+import { 
+  useGetSegmentTypesQuery, 
+  useGetSegmentsByTypeQuery,
+  type Segment 
+} from "@/api/segmentConfiguration.api";
 import { toast } from "react-hot-toast";
 import { store } from "@/app/store";
 import Select from "react-select";
@@ -48,6 +52,8 @@ interface TransferTableRow {
   initial_budget?: string;
   obligations?: string;
   other_consumption?: string;
+  // Dynamic segments (segment1, segment2, etc.)
+  [key: string]: string | number | string[] | undefined;
 }
 
 interface TransferDetailRow {
@@ -75,7 +81,6 @@ export default function TransferDetails() {
   const transactionId = id || "513"; // Use ID from params or default to 513
   const {
     data: apiData,
-    error,
     isLoading,
   } = useGetTransferDetailsQuery(transactionId);
 
@@ -84,16 +89,19 @@ export default function TransferDetails() {
   const [uploadExcel] = useUploadExcelMutation();
   const [reopenTransfer] = useReopenTransferMutation();
 
-  // State for balance report period
-
-  // Fetch balance report data for dropdowns
+  // Fetch segment types for dynamic columns
   const {
-    data: balanceReportData,
-    isLoading: isLoadingBalanceReport,
-    error: balanceReportError,
-  } = useGetBalanceReportQuery({
-    as_of_period: apiData?.summary?.period || "",
-  });
+    data: segmentTypesData,
+    isLoading: isLoadingSegmentTypes,
+  } = useGetSegmentTypesQuery();
+
+  // Get required segments (where segment_type_is_required is true)
+  const requiredSegments = useMemo(() => {
+    if (!segmentTypesData?.data) return [];
+    return segmentTypesData.data
+      .filter((segment) => segment.segment_type_is_required)
+      .sort((a, b) => a.segment_type_oracle_number - b.segment_type_oracle_number);
+  }, [segmentTypesData]);
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -214,93 +222,76 @@ export default function TransferDetails() {
 
   type Option = { value: string; label: string; name: string };
 
-  const toOptions = (
-    arr: Array<string | { code: string; name?: string }>
-  ): Option[] =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    arr.map((x: any) =>
-      typeof x === "string"
-        ? { value: x, label: x, name: x }
-        : {
-            value: String(x.code),
-            label: String(x.code),
-            name: x.name ?? String(x.code),
-          }
-    );
+  // Create dynamic segment options using RTK Query hooks conditionally
+  const segmentQueries = useMemo(() => {
+    if (!requiredSegments.length) return [];
+    return requiredSegments.map((segment) => ({
+      segmentId: segment.segment_id,
+      segmentName: segment.segment_name,
+      oracleNumber: segment.segment_type_oracle_number,
+    }));
+  }, [requiredSegments]);
 
-  const dedupeByValue = (opts: Option[]) =>
-    Array.from(new Map(opts.map((o) => [o.value, o])).values());
-
-  const accountOptions: Option[] = (() => {
-    if (balanceReportData?.data?.Account?.length) {
-      return toOptions(balanceReportData.data.Account);
+  // Dynamically call useGetSegmentsByTypeQuery for each required segment
+  const segmentData: Record<number, Segment[]> = {};
+  
+  // Call hooks for each required segment
+  segmentQueries.forEach(({ segmentId }) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { data } = useGetSegmentsByTypeQuery(segmentId);
+    if (data?.data) {
+      segmentData[segmentId] = data.data;
     }
-    if (apiData?.transfers?.length) {
-      const opts = apiData.transfers.map((t) => ({
-        value: String(t.account_code),
-        label: String(t.account_code), // show CODE in the Select
-        name: t.account_name?.trim() || String(t.account_code), // store friendly name
+  });
+
+  // Helper function to create options from segments
+  const createSegmentOptions = (segmentId: number): Option[] => {
+    const segments = segmentData[segmentId] || [];
+    return segments
+      .filter((seg) => seg.is_active)
+      .map((seg) => ({
+        value: seg.code,
+        label: `${seg.code} - ${seg.alias}`,
+        name: seg.alias,
       }));
-      return dedupeByValue(opts);
-    }
-    return [];
-  })();
-
-  const projectOptions: Option[] = (() => {
-    if (balanceReportData?.data?.Project?.length) {
-      return toOptions(balanceReportData.data.Project);
-    }
-    if (apiData?.transfers?.length) {
-      const opts = apiData.transfers.map((t) => ({
-        value: t.project_code,
-        label: t.project_code,
-        name: t.project_name?.trim() || t.project_code,
-      }));
-      return dedupeByValue(opts);
-    }
-    return [];
-  })();
-
-  const costCenterOptions: Option[] = (() => {
-    if (balanceReportData?.data?.Cost_Center?.length) {
-      return toOptions(balanceReportData.data.Cost_Center);
-    }
-    if (apiData?.transfers?.length) {
-      const opts = apiData.transfers.map((t) => ({
-        value: String(t.cost_center_code),
-        label: String(t.cost_center_code),
-        name: t.cost_center_name?.trim() || String(t.cost_center_code),
-      }));
-      return dedupeByValue(opts);
-    }
-    return [];
-  })();
+  };
 
   // Create a default row for when there's no data
-  const createDefaultRow = (): TransferTableRow => ({
-    id: "default-1",
-    to: 0,
-    from: 0,
-    encumbrance: 0,
-    availableBudget: 0,
-    actual: 0,
-    accountName: "",
-    projectName: "",
-    accountCode: "",
-    projectCode: "",
-    approvedBudget: 0,
-    costCenterCode: "",
-    costCenterName: "",
-    other_ytd: 0,
-    period: "",
-    validation_errors: [], // Explicitly set as empty array (no errors)
-    budget_adjustments: "0",
-    commitments: "0",
-    expenditures: "0",
-    initial_budget: "0",
-    obligations: "0",
-    other_consumption: "0",
-  });
+  const createDefaultRow = (): TransferTableRow => {
+    const defaultRow: TransferTableRow = {
+      id: "default-1",
+      to: 0,
+      from: 0,
+      encumbrance: 0,
+      availableBudget: 0,
+      actual: 0,
+      accountName: "",
+      projectName: "",
+      accountCode: "",
+      projectCode: "",
+      approvedBudget: 0,
+      costCenterCode: "",
+      costCenterName: "",
+      other_ytd: 0,
+      period: "",
+      validation_errors: [], // Explicitly set as empty array (no errors)
+      budget_adjustments: "0",
+      commitments: "0",
+      expenditures: "0",
+      initial_budget: "0",
+      obligations: "0",
+      other_consumption: "0",
+    };
+    
+    // Add dynamic segment fields
+    requiredSegments.forEach((segment) => {
+      const segmentKey = `segment${segment.segment_type_oracle_number}`;
+      defaultRow[segmentKey] = "";
+      defaultRow[`${segmentKey}_name`] = "";
+    });
+    
+    return defaultRow;
+  };
 
   // Set submission status based on API status
   useEffect(() => {
@@ -524,30 +515,45 @@ export default function TransferDetails() {
     setCurrentPage(page);
   };
 
-  // Helper function to fetch financial data when all 3 segments are selected
+  // Helper function to fetch financial data when all required segments are selected
   const fetchFinancialDataForRow = async (
     rowId: string,
-    segments: { costCenter: string; account: string; project: string }
+    segments: Record<number, string> // Changed to accept dynamic segments by oracle number
   ) => {
     try {
-      console.log(`Row ${rowId}: Calling financial data API with segments:`, {
-        segment1: parseInt(segments.costCenter),
-        segment2: parseInt(segments.account),
-        segment3: segments.project,
+      // Check if all required segments are filled
+      const allRequiredFilled = requiredSegments.every(
+        (seg) => segments[seg.segment_type_oracle_number]
+      );
+      
+      if (!allRequiredFilled) {
+        console.log(`Row ${rowId}: Not all required segments filled, skipping API call`);
+        return {};
+      }
+
+      // Build the API parameters dynamically
+      const apiParams: Record<string, string | number> = {
         as_of_period: apiData?.summary?.period || "sep-25",
         control_budget_name: "MIC_HQ_MONTHLY",
+      };
+
+      // Add each segment dynamically
+      requiredSegments.forEach((seg) => {
+        const segmentKey = `segment${seg.segment_type_oracle_number}`;
+        const segmentValue = segments[seg.segment_type_oracle_number];
+        // Parse as int if it's a number, otherwise keep as string
+        apiParams[segmentKey] = isNaN(Number(segmentValue)) 
+          ? segmentValue 
+          : parseInt(segmentValue);
       });
+
+      console.log(`Row ${rowId}: Calling financial data API with segments:`, apiParams);
 
       // Use RTK Query's initiate method to trigger the query manually
       const result = await store
         .dispatch(
-          transferDetailsApi.endpoints.getFinancialData.initiate({
-            segment1: parseInt(segments.costCenter),
-            segment2: parseInt(segments.account),
-            segment3: segments.project,
-            as_of_period: apiData?.summary?.period || "sep-25",
-            control_budget_name: "MIC_HQ_MONTHLY",
-          })
+          // @ts-expect-error - Dynamic segment params
+          transferDetailsApi.endpoints.getFinancialData.initiate(apiParams)
         )
         .unwrap();
 
@@ -722,45 +728,43 @@ export default function TransferDetails() {
     }
 
     // Now handle financial data API call if needed (after UI update)
-    if (
-      field === "costCenterCode" ||
-      field === "accountCode" ||
-      field === "projectCode"
-    ) {
+    // Check if this is a dynamic segment field
+    const isDynamicSegmentField = requiredSegments.some(
+      (seg) => field === `segment${seg.segment_type_oracle_number}`
+    );
+
+    if (isDynamicSegmentField) {
       // Determine which state array to check based on row type
       const isNewRow = rowId.startsWith("new-");
       const currentRowArray = isNewRow ? localRows : editedRows;
       const currentRow = currentRowArray.find((r) => r.id === rowId);
 
       if (currentRow) {
-        // Calculate segments after this update
-        const segments = {
-          costCenter:
-            field === "costCenterCode"
-              ? value.toString()
-              : currentRow.costCenterCode || "",
-          account:
-            field === "accountCode"
-              ? value.toString()
-              : currentRow.accountCode || "",
-          project:
-            field === "projectCode"
-              ? value.toString()
-              : currentRow.projectCode || "",
-        };
+        // Build segments object from current row values
+        const segments: Record<number, string> = {};
+        requiredSegments.forEach((seg) => {
+          const segmentKey = `segment${seg.segment_type_oracle_number}`;
+          if (field === segmentKey) {
+            segments[seg.segment_type_oracle_number] = value.toString();
+          } else {
+            segments[seg.segment_type_oracle_number] = 
+              (currentRow[segmentKey] as string) || "";
+          }
+        });
 
         console.log(`Row ${rowId}: Current segments state:`, segments);
 
-        // Only call API if ALL 3 segments are now complete
-        if (segments.costCenter && segments.account && segments.project) {
+        // Check if all required segments are filled
+        const allSegmentsFilled = requiredSegments.every(
+          (seg) => segments[seg.segment_type_oracle_number]
+        );
+
+        // Only call API if ALL required segments are now complete
+        if (allSegmentsFilled) {
           console.log(
-            `Row ${rowId}: ✅ All 3 segments complete! Calling financial data API...`
+            `Row ${rowId}: ✅ All required segments complete! Calling financial data API...`
           );
-          console.log(`Row ${rowId}: API call with segments:`, {
-            segment1: segments.costCenter,
-            segment2: segments.account,
-            segment3: segments.project,
-          });
+          console.log(`Row ${rowId}: API call with segments:`, segments);
 
           // Call API in background (don't await)
           fetchFinancialDataForRow(rowId, segments)
@@ -804,12 +808,10 @@ export default function TransferDetails() {
             });
         } else {
           console.log(
-            `Row ${rowId}: ⏳ Segments incomplete, waiting for all 3. Missing:`,
-            {
-              costCenter: !segments.costCenter,
-              account: !segments.account,
-              project: !segments.project,
-            }
+            `Row ${rowId}: ⏳ Segments incomplete, waiting for all required segments. Missing:`,
+            requiredSegments
+              .filter((seg) => !segments[seg.segment_type_oracle_number])
+              .map((seg) => seg.segment_name)
           );
         }
       }
@@ -925,6 +927,84 @@ export default function TransferDetails() {
     },
   ];
 
+  // Helper function to generate dynamic segment columns
+  const generateDynamicSegmentColumns = (): TableColumn[] => {
+    const dynamicColumns: TableColumn[] = [];
+
+    requiredSegments.forEach((segment) => {
+      const segmentKey = `segment${segment.segment_type_oracle_number}`;
+      const segmentOptions = createSegmentOptions(segment.segment_id);
+
+      // Add code column with dropdown
+      dynamicColumns.push({
+        id: segmentKey,
+        header: segment.segment_name, // Display the Arabic name
+
+        render: (_, row) => {
+          const transferRow = row as unknown as TransferTableRow;
+          return isSubmitted ? (
+            <span className="text-sm text-gray-900">
+              {transferRow[segmentKey] as string}
+            </span>
+          ) : (
+            <Select
+              value={
+                segmentOptions.find(
+                  (o) => o.value === transferRow[segmentKey]
+                ) ?? null
+              }
+              onChange={(opt) => {
+                updateRow(transferRow.id, segmentKey, opt?.value || "");
+                if (opt) updateRow(transferRow.id, `${segmentKey}_name`, opt.name);
+              }}
+              options={segmentOptions}
+              placeholder={`Select ${segment.segment_name}`}
+              isSearchable
+              isClearable
+              className="w-full"
+              classNamePrefix="react-select"
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  border: "1px solid #E2E2E2",
+                  borderRadius: "6px",
+                  minHeight: "38px",
+                  fontSize: "12px",
+                }),
+                menu: (base) => ({
+                  ...base,
+                  zIndex: 9999,
+                }),
+                menuPortal: (base) => ({
+                  ...base,
+                  zIndex: 9999,
+                }),
+              }}
+              menuPortalTarget={document.body}
+            />
+          );
+        },
+      });
+
+      // Add name column (read-only display)
+      dynamicColumns.push({
+        id: `${segmentKey}_name`,
+        header: `${segment.segment_name} Name`, // With "Name" to differentiate
+
+        render: (_, row) => {
+          const transferRow = row as unknown as TransferTableRow;
+          return (
+            <span className="text-sm text-gray-900">
+              {transferRow[`${segmentKey}_name`] as string}
+            </span>
+          );
+        },
+      });
+    });
+
+    return dynamicColumns;
+  };
+
   // Keep the old columns for the main transfer table
   const columnsDetails: TableColumn[] = [
     {
@@ -1019,191 +1099,8 @@ export default function TransferDetails() {
       },
     },
 
-    {
-      id: "costCenterCode",
-      header: "Legal Entity",
-
-      render: (_, row) => {
-        const transferRow = row as unknown as TransferTableRow;
-        return isSubmitted ? (
-          <span className="text-sm text-gray-900">
-            {transferRow.costCenterCode}
-          </span>
-        ) : (
-          <Select
-            value={
-              costCenterOptions.find(
-                (o) => o.value === transferRow.costCenterCode
-              ) ?? null
-            }
-            onChange={(opt) => {
-              updateRow(transferRow.id, "costCenterCode", opt?.value || "");
-              if (opt) updateRow(transferRow.id, "costCenterName", opt.name);
-            }}
-            options={costCenterOptions}
-            placeholder="Select Legal"
-            isSearchable
-            isClearable
-            className="w-full"
-            classNamePrefix="react-select"
-            styles={{
-              control: (base) => ({
-                ...base,
-                border: "1px solid #E2E2E2",
-                borderRadius: "6px",
-                minHeight: "38px",
-                fontSize: "12px",
-              }),
-              menu: (base) => ({
-                ...base,
-                zIndex: 9999,
-              }),
-              menuPortal: (base) => ({
-                ...base,
-                zIndex: 9999,
-              }),
-            }}
-            menuPortalTarget={document.body}
-          />
-        );
-      },
-    },
-    {
-      id: "accountCode",
-      header: "Account",
-
-      render: (_, row) => {
-        const transferRow = row as unknown as TransferTableRow;
-        return isSubmitted ? (
-          <span className="text-sm text-gray-900">
-            {transferRow.accountCode}
-          </span>
-        ) : (
-          <Select
-            value={
-              accountOptions.find((o) => o.value === transferRow.accountCode) ??
-              null
-            }
-            onChange={(opt) => {
-              updateRow(transferRow.id, "accountCode", opt?.value || "");
-              if (opt) updateRow(transferRow.id, "accountName", opt.name);
-            }}
-            options={accountOptions}
-            placeholder="Select account"
-            isSearchable
-            isClearable
-            className="w-full"
-            classNamePrefix="react-select"
-            styles={{
-              control: (base) => ({
-                ...base,
-                border: "1px solid #E2E2E2",
-                borderRadius: "6px",
-                minHeight: "38px",
-                fontSize: "12px",
-              }),
-              menu: (base) => ({
-                ...base,
-                zIndex: 9999,
-              }),
-              menuPortal: (base) => ({
-                ...base,
-                zIndex: 9999,
-              }),
-            }}
-            menuPortalTarget={document.body}
-          />
-        );
-      },
-    },
-
-    {
-      id: "projectCode",
-      header: "Project",
-
-      render: (_, row) => {
-        const transferRow = row as unknown as TransferTableRow;
-        return isSubmitted ? (
-          <span className="text-sm text-gray-900">
-            {transferRow.projectCode}
-          </span>
-        ) : (
-          <Select
-            value={
-              projectOptions.find((o) => o.value === transferRow.projectCode) ??
-              null
-            }
-            onChange={(opt) => {
-              updateRow(transferRow.id, "projectCode", opt?.value || "");
-              if (opt) updateRow(transferRow.id, "projectName", opt.name);
-            }}
-            options={projectOptions}
-            placeholder="Select project"
-            isSearchable
-            isClearable
-            className="w-full"
-            classNamePrefix="react-select"
-            styles={{
-              control: (base) => ({
-                ...base,
-                border: "1px solid #E2E2E2",
-                borderRadius: "6px",
-                minHeight: "38px",
-                fontSize: "12px",
-              }),
-              menu: (base) => ({
-                ...base,
-                zIndex: 9999,
-              }),
-              menuPortal: (base) => ({
-                ...base,
-                zIndex: 9999,
-              }),
-            }}
-            menuPortalTarget={document.body}
-          />
-        );
-      },
-    },
-    {
-      id: "costCenterName",
-      header: "Legal Entity",
-
-      render: (_, row) => {
-        const transferRow = row as unknown as TransferTableRow;
-        return (
-          <span className="text-sm text-gray-900">
-            {transferRow.costCenterName}
-          </span>
-        );
-      },
-    },
-    {
-      id: "accountName",
-      header: "Account ",
-
-      render: (_, row) => {
-        const transferRow = row as unknown as TransferTableRow;
-        return (
-          <span className="text-sm text-gray-900">
-            {transferRow.accountName}
-          </span>
-        );
-      },
-    },
-    {
-      id: "projectName",
-      header: "Project ",
-
-      render: (_, row) => {
-        const transferRow = row as unknown as TransferTableRow;
-        return (
-          <span className="text-sm text-gray-900">
-            {transferRow.projectName}
-          </span>
-        );
-      },
-    },
+    // Dynamic segment columns will be inserted here
+    ...generateDynamicSegmentColumns(),
 
     {
       id: "encumbrance",
@@ -1538,20 +1435,20 @@ export default function TransferDetails() {
   }
 
   // Show error state
-  if (error) {
-    const errorMessage =
-      "data" in error
-        ? JSON.stringify(error.data)
-        : "message" in error
-        ? error.message
-        : "Failed to load transfer details";
+  // if (error) {
+  //   const errorMessage =
+  //     "data" in error
+  //       ? JSON.stringify(error.data)
+  //       : "message" in error
+  //       ? error.message
+  //       : "Failed to load transfer details";
 
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg text-red-600">Error: {errorMessage}</div>
-      </div>
-    );
-  }
+  //   return (
+  //     <div className="flex items-center justify-center min-h-[400px]">
+  //       <div className="text-lg text-red-600">Error: {errorMessage}</div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div>
@@ -1570,16 +1467,13 @@ export default function TransferDetails() {
           </h1>
         </div>
 
-        {/* Period Selector for Balance Report */}
+        {/* Segment Types Loader */}
         <div className="flex items-center gap-2">
-          {isLoadingBalanceReport && (
+          {isLoadingSegmentTypes && (
             <div className="flex items-center text-sm text-gray-500">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-              Loading options...
+              Loading segment types...
             </div>
-          )}
-          {balanceReportError && (
-            <div className="text-sm text-red-500">Error loading options</div>
           )}
         </div>
       </div>

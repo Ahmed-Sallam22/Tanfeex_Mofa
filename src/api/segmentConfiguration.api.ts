@@ -36,10 +36,32 @@ export interface LoadSegmentsResponse {
   total_records: number;
 }
 
+export interface Segment {
+  id: number;
+  segment_type: number;
+  segment_type_name: string;
+  code: string;
+  alias: string;
+  parent_code: string | null;
+  level: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SegmentsResponse {
+  message: string;
+  data: Segment[];
+  segment_type: string;
+  segment_type_id: number;
+  filter_applied: string;
+  total_count: number;
+}
+
 export const segmentConfigurationApi = createApi({
   reducerPath: 'segmentConfigurationApi',
   baseQuery: customBaseQuery,
-  tagTypes: ['SegmentTypes'],
+  tagTypes: ['SegmentTypes', 'Segments'],
   endpoints: (builder) => ({
     // Get all segment types
     getSegmentTypes: builder.query<SegmentTypesResponse, void>({
@@ -116,6 +138,15 @@ export const segmentConfigurationApi = createApi({
       }),
       invalidatesTags: ['SegmentTypes'],
     }),
+
+    // Get segments by segment type
+    getSegmentsByType: builder.query<SegmentsResponse, number>({
+      query: (segmentType) => ({
+        url: `/accounts-entities/segments/?segment_type=${segmentType}`,
+        method: 'GET',
+      }),
+      providesTags: ['Segments'],
+    }),
   }),
 });
 
@@ -127,4 +158,5 @@ export const {
   useToggleSegmentRequiredMutation,
   useToggleSegmentHierarchyMutation,
   useLoadSegmentsValuesMutation,
+  useGetSegmentsByTypeQuery,
 } = segmentConfigurationApi;
