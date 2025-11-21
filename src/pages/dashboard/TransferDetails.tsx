@@ -121,28 +121,28 @@ export default function TransferDetails() {
   useEffect(() => {
     if (apiData?.transfers && apiData.transfers.length > 0) {
       const initialRows = apiData.transfers.map((transfer) => ({
-        id: transfer.transfer_id.toString(),
-        to: parseFloat(transfer.to_center),
-        from: parseFloat(transfer.from_center),
-        encumbrance: parseFloat(transfer.encumbrance),
-        availableBudget: parseFloat(transfer.available_budget),
-        actual: parseFloat(transfer.actual),
+        id: transfer.transfer_id?.toString() || "0",
+        to: parseFloat(transfer.to_center) || 0,
+        from: parseFloat(transfer.from_center) || 0,
+        encumbrance: parseFloat(transfer.encumbrance) || 0,
+        availableBudget: parseFloat(transfer.available_budget) || 0,
+        actual: parseFloat(transfer.actual) || 0,
         accountName:
           transfer.account_name && transfer.account_name.trim() !== ""
             ? transfer.account_name
-            : transfer.account_name.toString(),
+            : transfer.account_code?.toString() || "",
         projectName:
           transfer.project_name && transfer.project_name.trim() !== ""
             ? transfer.project_name
-            : transfer.project_name,
-        accountCode: transfer.account_code.toString(),
-        projectCode: transfer.project_code,
-        approvedBudget: parseFloat(transfer.approved_budget),
-        costCenterCode: transfer.cost_center_code.toString(),
+            : transfer.project_code || "",
+        accountCode: transfer.account_code?.toString() || "",
+        projectCode: transfer.project_code || "",
+        approvedBudget: parseFloat(transfer.approved_budget) || 0,
+        costCenterCode: transfer.cost_center_code?.toString() || "",
         costCenterName:
           transfer.cost_center_name && transfer.cost_center_name.trim() !== ""
             ? transfer.cost_center_name
-            : transfer.cost_center_name.toString(),
+            : transfer.cost_center_code?.toString() || "",
         other_ytd: 0,
         period: apiData?.summary.period || "",
         validation_errors: transfer.validation_errors,
