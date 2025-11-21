@@ -222,31 +222,45 @@ export default function TransferDetails() {
 
   type Option = { value: string; label: string; name: string };
 
-  // Create dynamic segment options using RTK Query hooks conditionally
-  const segmentQueries = useMemo(() => {
-    if (!requiredSegments.length) return [];
-    return requiredSegments.map((segment) => ({
-      segmentId: segment.segment_id,
-      segmentName: segment.segment_name,
-      oracleNumber: segment.segment_type_oracle_number,
-    }));
-  }, [requiredSegments]);
+  // Pre-call hooks for all required segments (must be called unconditionally)
+  // We'll use the segment IDs to call the hooks - supporting up to 5 required segments
+  const segment1 = requiredSegments[0];
+  const segment2 = requiredSegments[1];
+  const segment3 = requiredSegments[2];
+  const segment4 = requiredSegments[3];
+  const segment5 = requiredSegments[4];
 
-  // Dynamically call useGetSegmentsByTypeQuery for each required segment
-  const segmentData: Record<number, Segment[]> = {};
-  
-  // Call hooks for each required segment
-  segmentQueries.forEach(({ segmentId }) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { data } = useGetSegmentsByTypeQuery(segmentId);
-    if (data?.data) {
-      segmentData[segmentId] = data.data;
-    }
+  // Call hooks unconditionally (they will skip if segment is undefined)
+  const { data: segmentData1 } = useGetSegmentsByTypeQuery(segment1?.segment_id || 0, {
+    skip: !segment1,
   });
+  const { data: segmentData2 } = useGetSegmentsByTypeQuery(segment2?.segment_id || 0, {
+    skip: !segment2,
+  });
+  const { data: segmentData3 } = useGetSegmentsByTypeQuery(segment3?.segment_id || 0, {
+    skip: !segment3,
+  });
+  const { data: segmentData4 } = useGetSegmentsByTypeQuery(segment4?.segment_id || 0, {
+    skip: !segment4,
+  });
+  const { data: segmentData5 } = useGetSegmentsByTypeQuery(segment5?.segment_id || 0, {
+    skip: !segment5,
+  });
+
+  // Build segment data map
+  const segmentDataMap = useMemo(() => {
+    const map: Record<number, Segment[]> = {};
+    if (segment1 && segmentData1?.data) map[segment1.segment_id] = segmentData1.data;
+    if (segment2 && segmentData2?.data) map[segment2.segment_id] = segmentData2.data;
+    if (segment3 && segmentData3?.data) map[segment3.segment_id] = segmentData3.data;
+    if (segment4 && segmentData4?.data) map[segment4.segment_id] = segmentData4.data;
+    if (segment5 && segmentData5?.data) map[segment5.segment_id] = segmentData5.data;
+    return map;
+  }, [segment1, segment2, segment3, segment4, segment5, segmentData1, segmentData2, segmentData3, segmentData4, segmentData5]);
 
   // Helper function to create options from segments
   const createSegmentOptions = (segmentId: number): Option[] => {
-    const segments = segmentData[segmentId] || [];
+    const segments = segmentDataMap[segmentId] || [];
     return segments
       .filter((seg) => seg.is_active)
       .map((seg) => ({
