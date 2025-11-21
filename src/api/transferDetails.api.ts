@@ -1,6 +1,15 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { customBaseQuery } from './baseQuery';
 
+export interface SegmentData {
+  segment_name: string;
+  segment_type: string;
+  from_code: string | null;
+  from_alias: string | null;
+  to_code: string | null;
+  to_alias: string | null;
+}
+
 export interface TransferDetail {
   transfer_id: number;
   approved_budget: string;
@@ -8,18 +17,20 @@ export interface TransferDetail {
   from_center: string;
   to_center: string;
   reason: string | null;
-  account_code: number;
-  account_name: string;
-  project_code: string;
-  project_name: string;
-  cost_center_code: number;
-  cost_center_name: string;
+  account_code: number | null;
+  account_name: string | null;
+  project_code: string | null;
+  project_name: string | null;
+  cost_center_code: number | null;
+  cost_center_name: string | null;
   done: number;
   encumbrance: string;
   actual: string;
   file: string | null;
   transaction: number;
   validation_errors?: string[];
+  segment_summary?: string;
+  is_valid?: boolean;
   // New financial fields
   budget_adjustments?: string;
   commitments?: string;
@@ -27,6 +38,8 @@ export interface TransferDetail {
   initial_budget?: string;
   obligations?: string;
   other_consumption?: string;
+  // New segments structure
+  segments?: Record<string, SegmentData>; // e.g., { "5": { segment_name: "...", from_code: "...", ... } }
 }
 
 export interface TransferDetailsSummary {
@@ -74,9 +87,9 @@ export interface CreateTransferRequest {
 }
 
 export interface CreateTransferResponse {
-  success: boolean;
-  message?: string;
-  created_transfers?: number[];
+  summary: TransferDetailsSummary;
+  transfers: TransferDetail[];
+  status: TransferDetailsStatus;
 }
 
 export interface SubmitTransferRequest {

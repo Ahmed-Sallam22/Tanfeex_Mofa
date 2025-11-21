@@ -130,9 +130,23 @@ export default function TransferDetails() {
         // Add dynamic segment fields from the transfer data
         requiredSegments.forEach((segment) => {
           const segmentKey = `segment${segment.segment_type_oracle_number}`;
-          // TODO: Map transfer data to segment fields once backend provides segment data
-          row[segmentKey] = "";
-          row[`${segmentKey}_name`] = "";
+          const oracleNumber = segment.segment_type_oracle_number.toString();
+
+          // Map segment data from the API response
+          if (transfer.segments && transfer.segments[oracleNumber]) {
+            const segmentData = transfer.segments[oracleNumber];
+            // Use from_code if available, otherwise use to_code (one of them should have a value)
+            const segmentCode =
+              segmentData.from_code || segmentData.to_code || "";
+            const segmentAlias =
+              segmentData.from_alias || segmentData.to_alias || "";
+
+            row[segmentKey] = segmentCode;
+            row[`${segmentKey}_name`] = segmentAlias;
+          } else {
+            row[segmentKey] = "";
+            row[`${segmentKey}_name`] = "";
+          }
         });
 
         return row;
@@ -142,7 +156,7 @@ export default function TransferDetails() {
       // If no API data, set a default row
       setEditedRows([createDefaultRow()]);
     }
-  }, [apiData]);
+  }, [apiData, requiredSegments]);
 
   const sameLine = (a: TransferTableRow, b: TransferTableRow) => {
     // Check if all dynamic segment values match
@@ -435,7 +449,27 @@ export default function TransferDetails() {
       });
 
       // Save
-      await createTransfer(transfersToSave).unwrap();
+      const response = await createTransfer(transfersToSave).unwrap();
+
+      // Check if there are validation errors in the response
+      if (response?.transfers) {
+        const hasErrors = response.transfers.some(
+          (t) => t.validation_errors && t.validation_errors.length > 0
+        );
+
+        if (hasErrors) {
+          // Show warning toast about validation errors
+          toast.error(
+            "Some transfers have validation errors. Please check the error messages."
+          );
+        } else if (response.summary?.balanced) {
+          toast.success("Transfers saved successfully and balanced!");
+        } else {
+          toast.success("Transfers saved successfully!");
+        }
+      } else {
+        toast.success("Transfers saved successfully!");
+      }
 
       // ✅ Immediately remove only the local rows that were saved
       // const savedLocalIds = nonEmptyLocalRows.map((r) => r.id);
@@ -453,8 +487,6 @@ export default function TransferDetails() {
       store.dispatch(
         transferDetailsApi.util.invalidateTags(["TransferDetails"])
       );
-
-      toast.success("Transfers saved successfully!");
     } catch (err) {
       console.error("Error saving transfers:", err);
       toast.error("Error saving transfers. Please try again.");

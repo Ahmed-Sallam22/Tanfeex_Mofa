@@ -368,6 +368,7 @@ export default function Transfer() {
     data: oracleStatusData,
     isLoading: isLoadingOracleStatus,
     error: oracleStatusError,
+    refetch: refetchOracleStatus,
   } = useGetOracleStatusQuery(trackTransactionId!, {
     skip: !trackTransactionId || !isTrackModalOpen,
   });
@@ -1321,7 +1322,41 @@ export default function Transfer() {
           </div>
 
           {/* Close Button */}
-          <div className="flex justify-end px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-between px-6 py-4 border-t border-gray-200">
+            <button
+              onClick={() => {
+                if (refetchOracleStatus) {
+                  refetchOracleStatus();
+                  toast.success("Refreshing Oracle status...");
+                }
+              }}
+              disabled={isLoadingOracleStatus}
+              className="px-4 py-2 text-sm font-medium text-[#4E8476] bg-[#4E8476]/10 border border-[#4E8476] rounded-md hover:bg-[#4E8476]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isLoadingOracleStatus ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#4E8476]"></div>
+                  <span>Refreshing...</span>
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  <span>Refresh</span>
+                </>
+              )}
+            </button>
             <button
               onClick={() => {
                 setIsTrackModalOpen(false);
