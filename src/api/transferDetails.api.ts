@@ -63,12 +63,6 @@ export interface UpdateTransferDetailResponse {
 
 export interface CreateTransferData {
   transaction: number;
-  cost_center_code: string;
-  cost_center_name: string;
-  account_code: string;
-  account_name: string;
-  project_code: string;
-  project_name: string;
   approved_budget: number;
   available_budget: number;
   to_center: number;
@@ -76,6 +70,7 @@ export interface CreateTransferData {
   actual: number;
   done: number;
   from_center: number;
+  [key: string]: string | number; // Support dynamic segment fields (e.g., segment5, segment9, etc.)
 }
 
 export interface CreateTransferRequest {
@@ -119,33 +114,18 @@ export interface ReopenTransferResponse {
 }
 
 export interface FinancialDataParams {
-  segment1: number; // cost center code
-  segment2: number; // account code
-  segment3: string; // project code
-  as_of_period: string; // period parameter
-  control_budget_name: string; // budget name parameter
+  segments: Record<string, string | number>; // Dynamic segments (e.g., { Segment5: "100", Segment9: "200" })
 }
 
 export interface FinancialDataRecord {
-  control_budget_name: string;
-  ledger_name: string;
-  as_of_period: string | null;
-  segment1: string;
-  segment2: string;
-  segment3: string;
-  encumbrance_ytd: number;
-  other_ytd: number;
-  actual_ytd: number;
-  funds_available_asof: number;
-  budget_ytd: number;
-  budget_adjustments: number;
-  commitments: number;
-  expenditures: number;
-  initial_budget: number;
-  obligations: number;
-  other_consumption: number;
-  total_budget: number;
-  total_consumption: number;
+  budget: number;
+  encumbrance: number;
+  funds_available: number;
+  commitment: number;
+  obligation: number;
+  actual: number;
+  other: number;
+  period_name: string;
 }
 
 export interface FinancialDataResponse {
@@ -203,10 +183,18 @@ export const transferDetailsApi = createApi({
       invalidatesTags: ['TransferDetails'],
     }),
     getFinancialData: builder.query<FinancialDataResponse, FinancialDataParams>({
-      query: ({ segment1, segment2, segment3, as_of_period, control_budget_name }) => ({
-        url: `/accounts-entities/balance-report/single_balance/?as_of_period=${as_of_period}&control_budget_name=${control_budget_name}&segment1=${segment1}&segment2=${segment2}&segment3=${segment3}`,
-        method: 'GET',
-      }),
+      query: ({ segments }) => {
+        // Build query params from dynamic segments
+        const params = new URLSearchParams();
+        Object.entries(segments).forEach(([key, value]) => {
+          params.append(key, value.toString());
+        });
+        
+        return {
+          url: `/accounts-entities/segments/get_segment_fund/?${params.toString()}`,
+          method: 'GET',
+        };
+      },
       providesTags: ['TransferDetails'],
     }),
     uploadExcel: builder.mutation<ExcelUploadResponse, ExcelUploadRequest>({

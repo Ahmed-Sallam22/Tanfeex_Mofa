@@ -15,10 +15,10 @@ import {
   transferDetailsApi,
   type CreateTransferData,
 } from "@/api/transferDetails.api";
-import { 
-  useGetSegmentTypesQuery, 
+import {
+  useGetSegmentTypesQuery,
   useGetSegmentsByTypeQuery,
-  type Segment 
+  type Segment,
 } from "@/api/segmentConfiguration.api";
 import { toast } from "react-hot-toast";
 import { store } from "@/app/store";
@@ -32,14 +32,8 @@ interface TransferTableRow {
   encumbrance: number;
   availableBudget: number;
   actual: number;
-  accountName: string;
-  projectName: string;
-  accountCode: string;
-  projectCode: string;
   // Additional fields from API
   approvedBudget?: number;
-  costCenterCode?: string;
-  costCenterName?: string;
   // New fields for financial data
   other_ytd?: number;
   period?: string;
@@ -79,10 +73,8 @@ export default function TransferDetails() {
 
   // Use RTK Query to fetch transfer details
   const transactionId = id || "513"; // Use ID from params or default to 513
-  const {
-    data: apiData,
-    isLoading,
-  } = useGetTransferDetailsQuery(transactionId);
+  const { data: apiData, isLoading } =
+    useGetTransferDetailsQuery(transactionId);
 
   const [createTransfer] = useCreateTransferMutation();
   const [submitTransfer] = useSubmitTransferMutation();
@@ -90,17 +82,17 @@ export default function TransferDetails() {
   const [reopenTransfer] = useReopenTransferMutation();
 
   // Fetch segment types for dynamic columns
-  const {
-    data: segmentTypesData,
-    isLoading: isLoadingSegmentTypes,
-  } = useGetSegmentTypesQuery();
+  const { data: segmentTypesData, isLoading: isLoadingSegmentTypes } =
+    useGetSegmentTypesQuery();
 
   // Get required segments (where segment_type_is_required is true)
   const requiredSegments = useMemo(() => {
     if (!segmentTypesData?.data) return [];
     return segmentTypesData.data
       .filter((segment) => segment.segment_type_is_required)
-      .sort((a, b) => a.segment_type_oracle_number - b.segment_type_oracle_number);
+      .sort(
+        (a, b) => a.segment_type_oracle_number - b.segment_type_oracle_number
+      );
   }, [segmentTypesData]);
 
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -120,51 +112,56 @@ export default function TransferDetails() {
   // Initialize editedRows when API data loads
   useEffect(() => {
     if (apiData?.transfers && apiData.transfers.length > 0) {
-      const initialRows = apiData.transfers.map((transfer) => ({
-        id: transfer.transfer_id?.toString() || "0",
-        to: parseFloat(transfer.to_center) || 0,
-        from: parseFloat(transfer.from_center) || 0,
-        encumbrance: parseFloat(transfer.encumbrance) || 0,
-        availableBudget: parseFloat(transfer.available_budget) || 0,
-        actual: parseFloat(transfer.actual) || 0,
-        accountName:
-          transfer.account_name && transfer.account_name.trim() !== ""
-            ? transfer.account_name
-            : transfer.account_code?.toString() || "",
-        projectName:
-          transfer.project_name && transfer.project_name.trim() !== ""
-            ? transfer.project_name
-            : transfer.project_code || "",
-        accountCode: transfer.account_code?.toString() || "",
-        projectCode: transfer.project_code || "",
-        approvedBudget: parseFloat(transfer.approved_budget) || 0,
-        costCenterCode: transfer.cost_center_code?.toString() || "",
-        costCenterName:
-          transfer.cost_center_name && transfer.cost_center_name.trim() !== ""
-            ? transfer.cost_center_name
-            : transfer.cost_center_code?.toString() || "",
-        other_ytd: 0,
-        period: apiData?.summary.period || "",
-        validation_errors: transfer.validation_errors,
-        budget_adjustments: transfer.budget_adjustments || "0",
-        commitments: transfer.commitments || "0",
-        expenditures: transfer.expenditures || "0",
-        initial_budget: transfer.initial_budget || "0",
-        obligations: transfer.obligations || "0",
-        other_consumption: transfer.other_consumption || "0",
-      }));
+      const initialRows = apiData.transfers.map((transfer) => {
+        const row: TransferTableRow = {
+          id: transfer.transfer_id?.toString() || "0",
+          to: parseFloat(transfer.to_center) || 0,
+          from: parseFloat(transfer.from_center) || 0,
+          encumbrance: parseFloat(transfer.encumbrance) || 0,
+          availableBudget: parseFloat(transfer.available_budget) || 0,
+          actual: parseFloat(transfer.actual) || 0,
+          approvedBudget: parseFloat(transfer.approved_budget) || 0,
+          other_ytd: 0,
+          period: apiData?.summary.period || "",
+          validation_errors: transfer.validation_errors,
+          budget_adjustments: transfer.budget_adjustments || "0",
+          commitments: transfer.commitments || "0",
+          expenditures: transfer.expenditures || "0",
+          initial_budget: transfer.initial_budget || "0",
+          obligations: transfer.obligations || "0",
+          other_consumption: transfer.other_consumption || "0",
+        };
+
+        // Add dynamic segment fields from the transfer data
+        requiredSegments.forEach((segment) => {
+          const segmentKey = `segment${segment.segment_type_oracle_number}`;
+          // TODO: Map transfer data to segment fields once backend provides segment data
+          row[segmentKey] = "";
+          row[`${segmentKey}_name`] = "";
+        });
+
+        return row;
+      });
       setEditedRows(initialRows);
     } else {
       // If no API data, set a default row
       setEditedRows([createDefaultRow()]);
     }
   }, [apiData]);
-  const sameLine = (a: TransferTableRow, b: TransferTableRow) =>
-    (a.costCenterCode || "") === (b.costCenterCode || "") &&
-    (a.accountCode || "") === (b.accountCode || "") &&
-    (a.projectCode || "") === (b.projectCode || "") &&
-    Number(a.to || 0) === Number(b.to || 0) &&
-    Number(a.from || 0) === Number(b.from || 0);
+
+  const sameLine = (a: TransferTableRow, b: TransferTableRow) => {
+    // Check if all dynamic segment values match
+    const segmentsMatch = requiredSegments.every((seg) => {
+      const segmentKey = `segment${seg.segment_type_oracle_number}`;
+      return (a[segmentKey] || "") === (b[segmentKey] || "");
+    });
+
+    return (
+      segmentsMatch &&
+      Number(a.to || 0) === Number(b.to || 0) &&
+      Number(a.from || 0) === Number(b.from || 0)
+    );
+  };
 
   // Combine edited API rows with local rows for display
   const rows = useMemo(() => {
@@ -231,32 +228,63 @@ export default function TransferDetails() {
   const segment5 = requiredSegments[4];
 
   // Call hooks unconditionally (they will skip if segment is undefined)
-  const { data: segmentData1 } = useGetSegmentsByTypeQuery(segment1?.segment_id || 0, {
-    skip: !segment1,
-  });
-  const { data: segmentData2 } = useGetSegmentsByTypeQuery(segment2?.segment_id || 0, {
-    skip: !segment2,
-  });
-  const { data: segmentData3 } = useGetSegmentsByTypeQuery(segment3?.segment_id || 0, {
-    skip: !segment3,
-  });
-  const { data: segmentData4 } = useGetSegmentsByTypeQuery(segment4?.segment_id || 0, {
-    skip: !segment4,
-  });
-  const { data: segmentData5 } = useGetSegmentsByTypeQuery(segment5?.segment_id || 0, {
-    skip: !segment5,
-  });
+  const { data: segmentData1 } = useGetSegmentsByTypeQuery(
+    segment1?.segment_id || 0,
+    {
+      skip: !segment1,
+    }
+  );
+  const { data: segmentData2 } = useGetSegmentsByTypeQuery(
+    segment2?.segment_id || 0,
+    {
+      skip: !segment2,
+    }
+  );
+  const { data: segmentData3 } = useGetSegmentsByTypeQuery(
+    segment3?.segment_id || 0,
+    {
+      skip: !segment3,
+    }
+  );
+  const { data: segmentData4 } = useGetSegmentsByTypeQuery(
+    segment4?.segment_id || 0,
+    {
+      skip: !segment4,
+    }
+  );
+  const { data: segmentData5 } = useGetSegmentsByTypeQuery(
+    segment5?.segment_id || 0,
+    {
+      skip: !segment5,
+    }
+  );
 
   // Build segment data map
   const segmentDataMap = useMemo(() => {
     const map: Record<number, Segment[]> = {};
-    if (segment1 && segmentData1?.data) map[segment1.segment_id] = segmentData1.data;
-    if (segment2 && segmentData2?.data) map[segment2.segment_id] = segmentData2.data;
-    if (segment3 && segmentData3?.data) map[segment3.segment_id] = segmentData3.data;
-    if (segment4 && segmentData4?.data) map[segment4.segment_id] = segmentData4.data;
-    if (segment5 && segmentData5?.data) map[segment5.segment_id] = segmentData5.data;
+    if (segment1 && segmentData1?.data)
+      map[segment1.segment_id] = segmentData1.data;
+    if (segment2 && segmentData2?.data)
+      map[segment2.segment_id] = segmentData2.data;
+    if (segment3 && segmentData3?.data)
+      map[segment3.segment_id] = segmentData3.data;
+    if (segment4 && segmentData4?.data)
+      map[segment4.segment_id] = segmentData4.data;
+    if (segment5 && segmentData5?.data)
+      map[segment5.segment_id] = segmentData5.data;
     return map;
-  }, [segment1, segment2, segment3, segment4, segment5, segmentData1, segmentData2, segmentData3, segmentData4, segmentData5]);
+  }, [
+    segment1,
+    segment2,
+    segment3,
+    segment4,
+    segment5,
+    segmentData1,
+    segmentData2,
+    segmentData3,
+    segmentData4,
+    segmentData5,
+  ]);
 
   // Helper function to create options from segments
   const createSegmentOptions = (segmentId: number): Option[] => {
@@ -279,13 +307,7 @@ export default function TransferDetails() {
       encumbrance: 0,
       availableBudget: 0,
       actual: 0,
-      accountName: "",
-      projectName: "",
-      accountCode: "",
-      projectCode: "",
       approvedBudget: 0,
-      costCenterCode: "",
-      costCenterName: "",
       other_ytd: 0,
       period: "",
       validation_errors: [], // Explicitly set as empty array (no errors)
@@ -296,14 +318,14 @@ export default function TransferDetails() {
       obligations: "0",
       other_consumption: "0",
     };
-    
+
     // Add dynamic segment fields
     requiredSegments.forEach((segment) => {
       const segmentKey = `segment${segment.segment_type_oracle_number}`;
       defaultRow[segmentKey] = "";
       defaultRow[`${segmentKey}_name`] = "";
     });
-    
+
     return defaultRow;
   };
 
@@ -373,12 +395,16 @@ export default function TransferDetails() {
     []
   );
   const [awaitingSync, setAwaitingSync] = useState(false);
-  const isNonEmpty = (row: TransferTableRow) =>
-    row.costCenterCode !== "" ||
-    row.accountCode !== "" ||
-    row.projectCode !== "" ||
-    row.to > 0 ||
-    row.from > 0;
+
+  const isNonEmpty = (row: TransferTableRow) => {
+    // Check if any required segment has a value
+    const hasSegmentValue = requiredSegments.some((seg) => {
+      const segmentKey = `segment${seg.segment_type_oracle_number}`;
+      return row[segmentKey] !== "" && row[segmentKey] !== undefined;
+    });
+
+    return hasSegmentValue || row.to > 0 || row.from > 0;
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -394,14 +420,19 @@ export default function TransferDetails() {
         if (fromCenter > 0) toCenter = 0;
         else if (toCenter > 0) fromCenter = 0;
 
+        // Build dynamic segment data
+        const segmentData: Record<string, string> = {};
+        requiredSegments.forEach((segment) => {
+          const segmentKey = `segment${segment.segment_type_oracle_number}`;
+          const segmentValue = row[segmentKey];
+          if (segmentValue && typeof segmentValue === "string") {
+            segmentData[segmentKey] = segmentValue;
+          }
+        });
+
         return {
           transaction: parseInt(transactionId),
-          cost_center_code: row.costCenterCode || "",
-          cost_center_name: row.costCenterName || "",
-          account_code: row.accountCode || "",
-          account_name: row.accountName || "",
-          project_code: row.projectCode || "-",
-          project_name: row.projectName || "-",
+          ...segmentData, // Spread dynamic segment fields
           approved_budget: row.approvedBudget || 0,
           available_budget: row.availableBudget || 0,
           to_center: toCenter,
@@ -470,15 +501,17 @@ export default function TransferDetails() {
   // Check if submit should be disabled
   const isSubmitDisabled = () => {
     // Filter out default rows (empty rows with no data)
-    const nonDefaultEditedRows = editedRows.filter(
-      (row) =>
-        !(
-          row.id.startsWith("default-") &&
-          row.costCenterCode === "" &&
-          row.accountCode === "" &&
-          row.projectCode === ""
-        )
-    );
+    const nonDefaultEditedRows = editedRows.filter((row) => {
+      if (!row.id.startsWith("default-")) return true;
+
+      // Check if any dynamic segment has a value
+      const hasSegmentValue = requiredSegments.some((seg) => {
+        const segmentKey = `segment${seg.segment_type_oracle_number}`;
+        return row[segmentKey] !== "" && row[segmentKey] !== undefined;
+      });
+
+      return hasSegmentValue;
+    });
 
     // Count total valid rows (API rows + local rows)
     const totalValidRows =
@@ -539,35 +572,36 @@ export default function TransferDetails() {
       const allRequiredFilled = requiredSegments.every(
         (seg) => segments[seg.segment_type_oracle_number]
       );
-      
+
       if (!allRequiredFilled) {
-        console.log(`Row ${rowId}: Not all required segments filled, skipping API call`);
+        console.log(
+          `Row ${rowId}: Not all required segments filled, skipping API call`
+        );
         return {};
       }
 
-      // Build the API parameters dynamically
-      const apiParams: Record<string, string | number> = {
-        as_of_period: apiData?.summary?.period || "sep-25",
-        control_budget_name: "MIC_HQ_MONTHLY",
-      };
+      // Build the API parameters dynamically with Segment format (e.g., Segment5, Segment9)
+      const apiSegments: Record<string, string | number> = {};
 
-      // Add each segment dynamically
+      // Add each segment with capitalized Segment prefix
       requiredSegments.forEach((seg) => {
-        const segmentKey = `segment${seg.segment_type_oracle_number}`;
+        const segmentKey = `Segment${seg.segment_type_oracle_number}`;
         const segmentValue = segments[seg.segment_type_oracle_number];
-        // Parse as int if it's a number, otherwise keep as string
-        apiParams[segmentKey] = isNaN(Number(segmentValue)) 
-          ? segmentValue 
-          : parseInt(segmentValue);
+        // Use the value as-is (string or number)
+        apiSegments[segmentKey] = segmentValue;
       });
 
-      console.log(`Row ${rowId}: Calling financial data API with segments:`, apiParams);
+      console.log(
+        `Row ${rowId}: Calling financial data API with segments:`,
+        apiSegments
+      );
 
       // Use RTK Query's initiate method to trigger the query manually
       const result = await store
         .dispatch(
-          // @ts-expect-error - Dynamic segment params
-          transferDetailsApi.endpoints.getFinancialData.initiate(apiParams)
+          transferDetailsApi.endpoints.getFinancialData.initiate({
+            segments: apiSegments,
+          })
         )
         .unwrap();
 
@@ -579,24 +613,14 @@ export default function TransferDetails() {
       // Get the first record from the response data array
       const record = result.data?.data?.[0];
 
-      // Apply financial data to the row
+      // Apply financial data to the row using new response structure
       const financialUpdates = {
-        encumbrance: record?.encumbrance_ytd || 0,
-        availableBudget: record?.funds_available_asof || 0,
-        actual: record?.actual_ytd || 0,
-        approvedBudget: record?.budget_ytd || 0,
-        other_ytd: record?.other_ytd || 0,
-        period: record?.as_of_period || "",
-        budget_adjustments: record?.budget_adjustments || "0",
-        other_consumption: record?.other_consumption || "0",
-        commitments: record?.commitments || "0",
-        expenditures: record?.expenditures || "0",
-        initial_budget: record?.initial_budget || "0",
-        obligations: record?.obligations || "0",
-        funds_available_asof: record?.funds_available_asof || "0",
-        budget_ytd: record?.budget_ytd || "0",
-        total_budget: record?.total_budget || "0",
-        total_consumption: record?.total_consumption || "0",
+        encumbrance: record?.encumbrance || 0,
+        availableBudget: record?.funds_available || 0,
+        actual: record?.actual || 0,
+        approvedBudget: record?.budget || 0,
+        other_ytd: record?.other || 0,
+        period: record?.period_name || "",
       };
 
       return financialUpdates;
@@ -614,13 +638,7 @@ export default function TransferDetails() {
       encumbrance: 0,
       availableBudget: 0,
       actual: 0,
-      accountName: "",
-      projectName: "",
-      accountCode: "",
-      projectCode: "",
       approvedBudget: 0,
-      costCenterCode: "",
-      costCenterName: "",
       other_ytd: 0,
       period: "",
       validation_errors: [], // Explicitly set as empty array (no errors)
@@ -631,6 +649,13 @@ export default function TransferDetails() {
       obligations: "0",
       other_consumption: "0",
     };
+
+    // Add dynamic segment fields
+    requiredSegments.forEach((segment) => {
+      const segmentKey = `segment${segment.segment_type_oracle_number}`;
+      newRow[segmentKey] = "";
+      newRow[`${segmentKey}_name`] = "";
+    });
 
     setLocalRows((prevRows) => {
       const updatedRows = [...prevRows, newRow];
@@ -688,29 +713,6 @@ export default function TransferDetails() {
       additionalUpdates.from = 0;
     }
 
-    // Check if this is a segment field update
-    if (
-      field === "costCenterCode" ||
-      field === "accountCode" ||
-      field === "projectCode"
-    ) {
-      console.log(`Row ${rowId}: ${field} changed to ${value}`);
-
-      // Handle name updates for dropdown changes (immediate update)
-      if (field === "accountCode") {
-        additionalUpdates.accountName = updatedValue.toString();
-        console.log(`Row ${rowId}: Account name updated to ${updatedValue}`);
-      } else if (field === "projectCode") {
-        additionalUpdates.projectName = updatedValue.toString();
-        console.log(`Row ${rowId}: Project name updated to ${updatedValue}`);
-      } else if (field === "costCenterCode") {
-        additionalUpdates.costCenterName = updatedValue.toString();
-        console.log(
-          `Row ${rowId}: Cost center name updated to ${updatedValue}`
-        );
-      }
-    }
-
     // Update the row state immediately first (don't wait for API)
     // Check if this is a local row (new row)
     if (rowId.startsWith("new-")) {
@@ -761,7 +763,7 @@ export default function TransferDetails() {
           if (field === segmentKey) {
             segments[seg.segment_type_oracle_number] = value.toString();
           } else {
-            segments[seg.segment_type_oracle_number] = 
+            segments[seg.segment_type_oracle_number] =
               (currentRow[segmentKey] as string) || "";
           }
         });
@@ -969,7 +971,8 @@ export default function TransferDetails() {
               }
               onChange={(opt) => {
                 updateRow(transferRow.id, segmentKey, opt?.value || "");
-                if (opt) updateRow(transferRow.id, `${segmentKey}_name`, opt.name);
+                if (opt)
+                  updateRow(transferRow.id, `${segmentKey}_name`, opt.name);
               }}
               options={segmentOptions}
               placeholder={`Select ${segment.segment_name}`}
@@ -1003,7 +1006,7 @@ export default function TransferDetails() {
       // Add name column (read-only display)
       dynamicColumns.push({
         id: `${segmentKey}_name`,
-        header: `${segment.segment_name} Name`, // With "Name" to differentiate
+        header: `${segment.segment_name}`, // With "Name" to differentiate
 
         render: (_, row) => {
           const transferRow = row as unknown as TransferTableRow;
@@ -1270,7 +1273,7 @@ export default function TransferDetails() {
         );
       },
     },
-     {
+    {
       id: "from",
       header: "From",
       showSum: true,
@@ -1320,7 +1323,6 @@ export default function TransferDetails() {
         );
       },
     },
-   
   ];
 
   // Handler for validation error click
@@ -1599,15 +1601,22 @@ export default function TransferDetails() {
                       const totalValidRows =
                         (apiData?.transfers?.length || 0) +
                         localRows.length +
-                        editedRows.filter(
-                          (row) =>
-                            !(
-                              row.id.startsWith("default-") &&
-                              row.costCenterCode === "" &&
-                              row.accountCode === "" &&
-                              row.projectCode === ""
-                            )
-                        ).length;
+                        editedRows.filter((row) => {
+                          if (!row.id.startsWith("default-")) return true;
+
+                          // Check if any dynamic segment has a value
+                          const hasSegmentValue = requiredSegments.some(
+                            (seg) => {
+                              const segmentKey = `segment${seg.segment_type_oracle_number}`;
+                              return (
+                                row[segmentKey] !== "" &&
+                                row[segmentKey] !== undefined
+                              );
+                            }
+                          );
+
+                          return hasSegmentValue;
+                        }).length;
 
                       if (totalValidRows < 2) {
                         return "Cannot submit: At least 2 rows are required";
@@ -1658,15 +1667,20 @@ export default function TransferDetails() {
                   const totalValidRows =
                     (apiData?.transfers?.length || 0) +
                     localRows.length +
-                    editedRows.filter(
-                      (row) =>
-                        !(
-                          row.id.startsWith("default-") &&
-                          row.costCenterCode === "" &&
-                          row.accountCode === "" &&
-                          row.projectCode === ""
-                        )
-                    ).length;
+                    editedRows.filter((row) => {
+                      if (!row.id.startsWith("default-")) return true;
+
+                      // Check if any dynamic segment has a value
+                      const hasSegmentValue = requiredSegments.some((seg) => {
+                        const segmentKey = `segment${seg.segment_type_oracle_number}`;
+                        return (
+                          row[segmentKey] !== "" &&
+                          row[segmentKey] !== undefined
+                        );
+                      });
+
+                      return hasSegmentValue;
+                    }).length;
 
                   if (totalValidRows < 2) {
                     return "Cannot submit: At least 2 rows are required for transfer.";
