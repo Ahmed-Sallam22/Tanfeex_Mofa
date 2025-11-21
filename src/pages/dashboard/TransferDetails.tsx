@@ -661,6 +661,7 @@ export default function TransferDetails() {
 
       // Use the FIRST record (MOFA_CASH) for main column values
       const firstRecord = records[0];
+console.log(firstRecord.encumbrance,firstRecord.funds_available);
 
       // Find MOFA_COST_2 record for cost value calculation
       const mofaCost2Record = records.find(
@@ -679,7 +680,7 @@ export default function TransferDetails() {
 
       // Apply financial data using FIRST record values
       const financialUpdates = {
-        encumbrance: firstRecord.encumbrance || 50000,
+        encumbrance: firstRecord.encumbrance || 0,
         availableBudget: firstRecord.funds_available || 0,
         actual: firstRecord.actual || 0,
         approvedBudget: firstRecord.budget || 0,
