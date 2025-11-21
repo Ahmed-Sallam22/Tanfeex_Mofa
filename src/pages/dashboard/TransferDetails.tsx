@@ -618,27 +618,27 @@ export default function TransferDetails() {
         data: [
           {
             id: 1099,
-            control_budget_name: "MOFA_CASH",
-            period_name: "1-25",
-            budget: 12500688.82,
-            encumbrance: 500688.82,
-            funds_available: 11247398.93,
-            commitment: 0,
-            obligation: 0,
-            actual: 251912.25,
-            other: 0,
+            Control_budget_name: "MOFA_CASH",
+            Period_name: "1-25",
+            Budget: 12500688.82,
+            Encumbrance: 500688.82,
+            Funds_available: 11247398.93,
+            Commitment: 0,
+            Obligation: 0,
+            Actual: 251912.25,
+            Other: 0,
           },
           {
             id: 1221,
-            control_budget_name: "MOFA_COST_2",
-            period_name: "1-25",
-            budget: 12539796.42,
-            encumbrance: 539796.42,
-            funds_available: 10928291.33,
-            commitment: 0,
-            obligation: 0,
-            actual: 531912.25,
-            other: -300.0,
+            Control_budget_name: "MOFA_COST_2",
+            Period_name: "1-25",
+            Budget: 12539796.42,
+            Encumbrance: 539796.42,
+            Funds_available: 10928291.33,
+            Commitment: 0,
+            Obligation: 0,
+            Actual: 531912.25,
+            Other: -300.0,
           }
         ]
       };
@@ -661,37 +661,37 @@ export default function TransferDetails() {
 
       // Use the FIRST record (MOFA_CASH) for main column values
       const firstRecord = records[0];
-console.log(firstRecord);
+      console.log(firstRecord);
 
       // Find MOFA_COST_2 record for cost value calculation
       const mofaCost2Record = records.find(
-        (r) => r.control_budget_name === "MOFA_COST_2"
+        (r) => r.Control_budget_name === "MOFA_COST_2"
       );
 
-      // Calculate cost value from MOFA_COST_2 (funds_available / 2)
+      // Calculate cost value from MOFA_COST_2 (Funds_available / 2)
       const costValue = mofaCost2Record
-        ? (mofaCost2Record.funds_available || 0) / 2
+        ? (mofaCost2Record.Funds_available || 0) / 2
         : 0;
 
       // Collect all budget names
       const controlBudgetNames = records
-        .map((r) => r.control_budget_name)
+        .map((r) => r.Control_budget_name)
         .filter(Boolean);
 
       // Apply financial data using FIRST record values
       const financialUpdates = {
-        encumbrance: firstRecord.encumbrance || 0,
-        availableBudget: firstRecord.funds_available || 0,
-        actual: firstRecord.actual || 0,
-        approvedBudget: firstRecord.budget || 0,
-        other_ytd: firstRecord.other || 0,
-        period: firstRecord.period_name || "",
+        encumbrance: firstRecord.Encumbrance || 0,
+        availableBudget: firstRecord.Funds_available || 0,
+        actual: firstRecord.Actual || 0,
+        approvedBudget: firstRecord.Budget || 0,
+        other_ytd: firstRecord.Other || 0,
+        period: firstRecord.Period_name || "",
         control_budget_name: controlBudgetNames.join(", "),
         costValue: costValue, // From MOFA_COST_2 (second record)
       };
 
       console.log(
-        `Row ${rowId}: Using first record (${firstRecord.control_budget_name}) for main values`
+        `Row ${rowId}: Using first record (${firstRecord.Control_budget_name}) for main values`
       );
       console.log(`Row ${rowId}: Cost value from MOFA_COST_2: ${costValue}`);
       console.log(

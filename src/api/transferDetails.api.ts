@@ -122,16 +122,16 @@ export interface FinancialDataRecord {
   segment5?: string;
   segment9?: string;
   segment11?: string;
-  budget: number;
-  encumbrance: number;
-  funds_available: number;
-  commitment: number;
-  obligation: number;
-  actual: number;
-  other: number;
-  period_name: string;
-  control_budget_name: string;
-  created_at?: string;
+  Budget: number; // Capitalized in API response
+  Encumbrance: number; // Capitalized in API response
+  Funds_available: number; // Capitalized in API response
+  Commitment: number; // Capitalized in API response
+  Obligation: number; // Capitalized in API response
+  Actual: number; // Capitalized in API response
+  Other: number; // Capitalized in API response
+  Period_name: string; // Capitalized in API response
+  Control_budget_name: string; // Capitalized in API response
+  Created_at?: string; // Capitalized in API response
 }
 
 export interface FinancialDataResponse {
