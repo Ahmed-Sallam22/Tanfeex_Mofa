@@ -63,14 +63,10 @@ export interface UpdateTransferDetailResponse {
 
 export interface CreateTransferData {
   transaction: number;
-  approved_budget: number;
-  available_budget: number;
-  to_center: number;
-  encumbrance: number;
-  actual: number;
-  done: number;
-  from_center: number;
-  [key: string]: string | number; // Support dynamic segment fields (e.g., segment5, segment9, etc.)
+  from_center: string;
+  to_center: string;
+  reason?: string;
+  segments: Record<string, { code: string }>; // e.g., { "5": { "code": "2760000" }, "9": { "code": "013800000000" } }
 }
 
 export interface CreateTransferRequest {

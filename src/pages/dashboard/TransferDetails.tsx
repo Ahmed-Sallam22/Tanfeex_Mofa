@@ -13,7 +13,6 @@ import {
   useUploadExcelMutation,
   useReopenTransferMutation,
   transferDetailsApi,
-  type CreateTransferData,
 } from "@/api/transferDetails.api";
 import {
   useGetSegmentTypesQuery,
@@ -42,10 +41,7 @@ interface TransferTableRow {
   // Validation errors
   validation_errors?: string[];
   // New budget fields
-  budget_adjustments?: string;
   commitments?: string;
-  expenditures?: string;
-  initial_budget?: string;
   obligations?: string;
   other_consumption?: string;
   // Dynamic segments (segment1, segment2, etc.)
@@ -126,10 +122,7 @@ export default function TransferDetails() {
           other_ytd: 0,
           period: apiData?.summary.period || "",
           validation_errors: transfer.validation_errors,
-          budget_adjustments: transfer.budget_adjustments || "0",
           commitments: transfer.commitments || "0",
-          expenditures: transfer.expenditures || "0",
-          initial_budget: transfer.initial_budget || "0",
           obligations: transfer.obligations || "0",
           other_consumption: transfer.other_consumption || "0",
         };
@@ -313,10 +306,7 @@ export default function TransferDetails() {
       other_ytd: 0,
       period: "",
       validation_errors: [], // Explicitly set as empty array (no errors)
-      budget_adjustments: "0",
       commitments: "0",
-      expenditures: "0",
-      initial_budget: "0",
       obligations: "0",
       other_consumption: "0",
     };
@@ -416,32 +406,31 @@ export default function TransferDetails() {
 
       const allRows = [...nonEmptyEditedRows, ...nonEmptyLocalRows];
 
-      const transfersToSave: CreateTransferData[] = allRows.map((row) => {
+      const transfersToSave = allRows.map((row) => {
         let fromCenter = row.from || 0;
         let toCenter = row.to || 0;
         if (fromCenter > 0) toCenter = 0;
         else if (toCenter > 0) fromCenter = 0;
 
-        // Build dynamic segment data
-        const segmentData: Record<string, string> = {};
+        // Build dynamic segments object with the new structure
+        const segments: Record<string, { code: string }> = {};
         requiredSegments.forEach((segment) => {
           const segmentKey = `segment${segment.segment_type_oracle_number}`;
           const segmentValue = row[segmentKey];
           if (segmentValue && typeof segmentValue === "string") {
-            segmentData[segmentKey] = segmentValue;
+            // Use the oracle number as the key (e.g., "5", "9", "11")
+            segments[segment.segment_type_oracle_number.toString()] = {
+              code: segmentValue,
+            };
           }
         });
 
         return {
           transaction: parseInt(transactionId),
-          ...segmentData, // Spread dynamic segment fields
-          approved_budget: row.approvedBudget || 0,
-          available_budget: row.availableBudget || 0,
-          to_center: toCenter,
-          encumbrance: row.encumbrance || 0,
-          actual: row.actual || 0,
-          done: 1,
-          from_center: fromCenter,
+          from_center: fromCenter.toString(),
+          to_center: toCenter.toString(),
+          reason: "", // You can add a reason field to the row if needed
+          segments: segments,
         };
       });
 
@@ -718,10 +707,7 @@ export default function TransferDetails() {
       other_ytd: 0,
       period: "",
       validation_errors: [], // Explicitly set as empty array (no errors)
-      budget_adjustments: "0",
       commitments: "0",
-      expenditures: "0",
-      initial_budget: "0",
       obligations: "0",
       other_consumption: "0",
     };
@@ -1221,26 +1207,7 @@ export default function TransferDetails() {
         );
       },
     },
-    {
-      id: "costValue",
-      header: "قيمة التكاليف",
-      showSum: true,
 
-      render: (_, row) => {
-        const transferRow = row as unknown as TransferTableRow;
-        // Show cost value if any of the budget names includes MOFA_COST_2
-        const hasMofaCost2 =
-          transferRow.control_budget_name?.includes("MOFA_COST_2");
-
-        if (hasMofaCost2 && transferRow.costValue) {
-          const value = transferRow.costValue || 0;
-          return (
-            <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-          );
-        }
-        return <span className="text-sm text-gray-400">-</span>;
-      },
-    },
     {
       id: "actual",
       header: "Actual",
@@ -1255,19 +1222,6 @@ export default function TransferDetails() {
       },
     },
     {
-      id: "budget_adjustments",
-      header: "Budget Adjustments",
-      showSum: true,
-
-      render: (_, row) => {
-        const transferRow = row as unknown as TransferTableRow;
-        const value = Number(transferRow.budget_adjustments) || 0;
-        return (
-          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-        );
-      },
-    },
-    {
       id: "commitments",
       header: "Commitments",
       showSum: true,
@@ -1275,32 +1229,6 @@ export default function TransferDetails() {
       render: (_, row) => {
         const transferRow = row as unknown as TransferTableRow;
         const value = Number(transferRow.commitments) || 0;
-        return (
-          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-        );
-      },
-    },
-    {
-      id: "expenditures",
-      header: "Expenditures",
-      showSum: true,
-
-      render: (_, row) => {
-        const transferRow = row as unknown as TransferTableRow;
-        const value = Number(transferRow.expenditures) || 0;
-        return (
-          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-        );
-      },
-    },
-    {
-      id: "initial_budget",
-      header: "Initial Budget",
-      showSum: true,
-
-      render: (_, row) => {
-        const transferRow = row as unknown as TransferTableRow;
-        const value = Number(transferRow.initial_budget) || 0;
         return (
           <span className="text-sm text-gray-900">{formatNumber(value)}</span>
         );
@@ -1367,6 +1295,26 @@ export default function TransferDetails() {
         return (
           <span className="text-sm text-gray-900">{transferRow.period}</span>
         );
+      },
+    },
+    {
+      id: "costValue",
+      header: "قيمة التكاليف",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        // Show cost value if any of the budget names includes MOFA_COST_2
+        const hasMofaCost2 =
+          transferRow.control_budget_name?.includes("MOFA_COST_2");
+
+        if (hasMofaCost2 && transferRow.costValue) {
+          const value = transferRow.costValue || 0;
+          return (
+            <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+          );
+        }
+        return <span className="text-sm text-gray-400">-</span>;
       },
     },
     {
