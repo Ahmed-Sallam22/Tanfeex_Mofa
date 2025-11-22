@@ -60,6 +60,9 @@ export interface SegmentFundItem {
   Created_at: string;
   control_budget_name: string;
   period_name: string;
+  segment5?: string;
+  segment9?: string;
+  segment11?: string;
 }
 
 // New segment fund response structure

@@ -8,6 +8,7 @@ import {
   useGetSegmentsFundQuery,
   type SegmentFundItem,
 } from "@/api/reports.api";
+import { useGetSegmentTypesQuery } from "@/api/segmentConfiguration.api";
 
 export default function Reports() {
   // State management
@@ -18,6 +19,9 @@ export default function Reports() {
     useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 10;
+
+  // Fetch segment types for dynamic column names
+  const { data: segmentTypesData } = useGetSegmentTypesQuery();
 
   // Only make API call when period is selected (budget has default)
   const {
@@ -60,6 +64,9 @@ export default function Reports() {
       id: item.id || index + 1,
       control_budget_name: safeValue(item.Control_budget_name),
       period_name: safeValue(item.Period_name),
+      segment5: safeValue(item.segment5),
+      segment9: safeValue(item.segment9),
+      segment11: safeValue(item.segment11),
       budget: item.Budget || 0,
       encumbrance: item.Encumbrance || 0,
       funds_available: item.Funds_available || 0,
@@ -71,6 +78,14 @@ export default function Reports() {
       // Include original item for detail view
       original: item,
     })) || [];
+
+  // Get segment names from segment types data
+  const getSegmentName = (oracleNumber: number): string => {
+    const segment = segmentTypesData?.data?.find(
+      (s) => s.segment_type_oracle_number === oracleNumber
+    );
+    return segment?.segment_name || `Segment ${oracleNumber}`;
+  };
 
   // Table columns configuration
   const reportColumns: TableColumn[] = [
@@ -88,6 +103,33 @@ export default function Reports() {
       header: "Period Name",
       accessor: "period_name",
       minWidth: 120,
+      render: (value) => (
+        <span className="text-[#282828]">{safeValue(value)}</span>
+      ),
+    },
+    {
+      id: "segment5",
+      header: getSegmentName(5),
+      accessor: "segment5",
+      minWidth: 150,
+      render: (value) => (
+        <span className="text-[#282828]">{safeValue(value)}</span>
+      ),
+    },
+    {
+      id: "segment9",
+      header: getSegmentName(9),
+      accessor: "segment9",
+      minWidth: 150,
+      render: (value) => (
+        <span className="text-[#282828]">{safeValue(value)}</span>
+      ),
+    },
+    {
+      id: "segment11",
+      header: getSegmentName(11),
+      accessor: "segment11",
+      minWidth: 150,
       render: (value) => (
         <span className="text-[#282828]">{safeValue(value)}</span>
       ),
@@ -230,7 +272,11 @@ export default function Reports() {
     return transformedData.filter((r) => {
       // text fields
       const textHit =
-        includesI(r.control_budget_name, q) || includesI(r.period_name, q);
+        includesI(r.control_budget_name, q) ||
+        includesI(r.period_name, q) ||
+        includesI(r.segment5, q) ||
+        includesI(r.segment9, q) ||
+        includesI(r.segment11, q);
 
       // numeric fields
       const numHit =
