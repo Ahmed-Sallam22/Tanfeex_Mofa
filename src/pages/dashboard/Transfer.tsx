@@ -1211,7 +1211,7 @@ export default function Transfer() {
                                     className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
                                       step.status.toLowerCase() === "success"
                                         ? "bg-green-500 border-green-200"
-                                        : step.status.toLowerCase() === "error"
+                                        : step.status.toLowerCase() === "error" || step.status.toLowerCase() === "failed" || step.status.toLowerCase() === "warning"
                                         ? "bg-red-500 border-red-200"
                                         : "bg-gray-400 border-gray-200"
                                     }`}
@@ -1229,7 +1229,7 @@ export default function Transfer() {
                                         />
                                       </svg>
                                     ) : step.status.toLowerCase() ===
-                                      "error" ? (
+                                      "error" || step.status.toLowerCase() === "failed" || step.status.toLowerCase() === "warning" ? (
                                       <svg
                                         className="w-6 h-6 text-white"
                                         fill="currentColor"
