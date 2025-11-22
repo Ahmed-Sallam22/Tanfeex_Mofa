@@ -16,6 +16,7 @@ import {
 } from "../../components/ui";
 // import Animation from "../../assets/Animation.png";
 import bgDesigne from "../../assets/bgDesigne.jpg";
+import Logo from "../../assets/Tanfeezletter.png";
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
@@ -73,17 +74,19 @@ export default function SignIn() {
     <div className="relative flex min-h-screen items-center justify-center px-4">
       {/* Background Design Layer */}
       <div className="absolute inset-0 z-0">
-        <img 
-          src={bgDesigne} 
-          alt="Background Design" 
+        <img
+          src={bgDesigne}
+          alt="Background Design"
           className="w-full h-full object-cover "
         />
       </div>
-     
-      <div className="relative z-10 flex h-[80vh] w-full max-w-xl items-center justify-center rounded-3xl bg-white px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
+
+      <div className="relative z-10 flex flex-col h-[80vh] w-full max-w-2xl items-center justify-center rounded-3xl bg-white px-4 sm:px-6 lg:px-8">
+        <img src={Logo} alt="" className="h-30" />
+
+        <div className=" w-[85%] mx-auto">
           <div className="text-center lg:text-start">
-            <h2 className="mt-6  text-2xl lg:text-3xl font-extrabold text-[gray-900]">
+            <h2 className="text-2xl lg:text-3xl font-extrabold text-[gray-900]">
               {t("signIn")}
             </h2>
             <p className="mt-2  text-sm text-[#757575]">
@@ -161,7 +164,6 @@ export default function SignIn() {
           </form>
         </div>
       </div>
-
     </div>
   );
 }
