@@ -81,8 +81,8 @@ export default function SignIn() {
         />
       </div>
 
-      <div className="relative z-10 flex flex-col h-[80vh] w-full max-w-2xl items-center justify-center rounded-3xl bg-white px-4 sm:px-6 lg:px-8">
-        <img src={Logo} alt="" className="h-30" />
+      <div className="relative z-10 flex flex-col 2xl:h-auto h-[80vh]  w-full max-w-2xl items-center gap-8 py-20 justify-center rounded-3xl bg-white px-4 sm:px-6 lg:px-8">
+        <img src={Logo} alt="" className="2xl:h-40 h-25" />
 
         <div className=" w-[85%] mx-auto">
           <div className="text-center lg:text-start">
