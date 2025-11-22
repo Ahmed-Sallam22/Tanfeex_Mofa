@@ -10,6 +10,23 @@ export interface SegmentData {
   to_alias: string | null;
 }
 
+export interface ControlBudget {
+  id: number;
+  Control_budget_name: string;
+  Period_name: string;
+  Budget: number;
+  Encumbrance: number;
+  Funds_available: number;
+  Commitments: number;
+  Obligation: number;
+  Actual: number;
+  Other: number;
+  Created_at: string;
+  segment5: string;
+  segment9: string;
+  segment11: string;
+}
+
 export interface TransferDetail {
   transfer_id: number;
   approved_budget: string;
@@ -40,6 +57,9 @@ export interface TransferDetail {
   other_consumption?: string;
   // New segments structure
   segments?: Record<string, SegmentData>; // e.g., { "5": { segment_name: "...", from_code: "...", ... } }
+  // Control budgets array
+  control_budgets?: ControlBudget[];
+  control_budgets_count?: number;
 }
 
 export interface TransferDetailsSummary {

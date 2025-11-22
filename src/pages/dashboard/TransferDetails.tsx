@@ -111,20 +111,48 @@ export default function TransferDetails() {
   useEffect(() => {
     if (apiData?.transfers && apiData.transfers.length > 0) {
       const initialRows = apiData.transfers.map((transfer) => {
+        // Get MOFA_CASH budget data (first control budget)
+        const mofaCash = transfer.control_budgets?.find(
+          (cb) => cb.Control_budget_name === "MOFA_CASH"
+        );
+
+        // Get MOFA_COST_2 budget data (second control budget)
+        const mofaCost2 = transfer.control_budgets?.find(
+          (cb) => cb.Control_budget_name === "MOFA_COST_2"
+        );
+
         const row: TransferTableRow = {
           id: transfer.transfer_id?.toString() || "0",
           to: parseFloat(transfer.to_center) || 0,
           from: parseFloat(transfer.from_center) || 0,
-          encumbrance: parseFloat(transfer.encumbrance) || 0,
-          availableBudget: parseFloat(transfer.available_budget) || 0,
-          actual: parseFloat(transfer.actual) || 0,
-          approvedBudget: parseFloat(transfer.approved_budget) || 0,
-          other_ytd: 0,
-          period: apiData?.summary.period || "",
+          // Use control_budgets data if available, otherwise fall back to transfer data
+          encumbrance: mofaCash
+            ? mofaCash.Encumbrance
+            : parseFloat(transfer.encumbrance) || 0,
+          availableBudget: mofaCash
+            ? mofaCash.Funds_available
+            : parseFloat(transfer.available_budget) || 0,
+          actual: mofaCash ? mofaCash.Actual : parseFloat(transfer.actual) || 0,
+          approvedBudget: mofaCash
+            ? mofaCash.Budget
+            : parseFloat(transfer.approved_budget) || 0,
+          other_ytd: mofaCash ? mofaCash.Other : 0,
+          period: mofaCash
+            ? mofaCash.Period_name
+            : apiData?.summary.period || "",
+          control_budget_name: mofaCash ? mofaCash.Control_budget_name : "",
           validation_errors: transfer.validation_errors,
-          commitments: transfer.commitments || "0",
-          obligations: transfer.obligations || "0",
-          other_consumption: transfer.other_consumption || "0",
+          commitments: mofaCash
+            ? mofaCash.Commitments.toString()
+            : transfer.commitments || "0",
+          obligations: mofaCash
+            ? mofaCash.Obligation.toString()
+            : transfer.obligations || "0",
+          other_consumption: mofaCash
+            ? mofaCash.Other.toString()
+            : transfer.other_consumption || "0",
+          // Calculate cost value from MOFA_COST_2
+          costValue: mofaCost2 ? mofaCost2.Funds_available / 2 : undefined,
         };
 
         // Add dynamic segment fields from the transfer data
