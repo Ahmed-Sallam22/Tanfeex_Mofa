@@ -277,6 +277,9 @@ export function SharedTable({
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
     () => new Set(columns.map((col) => col.id))
   );
+  const previousColumnsRef = useRef<Set<string>>(
+    new Set(columns.map((col) => col.id))
+  );
 
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{
@@ -448,9 +451,29 @@ export function SharedTable({
   );
 
   // Update visible columns when columns change
-  // useEffect(() => {
-  //   setVisibleColumns(new Set(columns.map((col) => col.id)));
-  // }, [columns]);
+  useEffect(() => {
+    setVisibleColumns((prev) => {
+      const next = new Set(prev);
+      const currentIds = columns.map((col) => col.id);
+
+      // Remove columns that no longer exist
+      Array.from(next).forEach((id) => {
+        if (!currentIds.includes(id)) {
+          next.delete(id);
+        }
+      });
+
+      // Add any brand-new columns so they are visible by default
+      currentIds.forEach((id) => {
+        if (!previousColumnsRef.current.has(id)) {
+          next.add(id);
+        }
+      });
+
+      previousColumnsRef.current = new Set(currentIds);
+      return next;
+    });
+  }, [columns]);
 
   // Click outside handler for column dropdown
   useEffect(() => {

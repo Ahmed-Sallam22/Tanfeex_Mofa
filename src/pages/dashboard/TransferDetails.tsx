@@ -180,34 +180,17 @@ export default function TransferDetails() {
         return row;
       });
       setEditedRows(initialRows);
-    } else {
-      // If no API data, set a default row
+    } else if (!isLoading && !isLoadingSegmentTypes) {
+      // Only set default row if we're not loading and there's truly no data
       setEditedRows([createDefaultRow()]);
     }
-  }, [apiData, requiredSegments]);
-
-  const sameLine = (a: TransferTableRow, b: TransferTableRow) => {
-    // Check if all dynamic segment values match
-    const segmentsMatch = requiredSegments.every((seg) => {
-      const segmentKey = `segment${seg.segment_type_oracle_number}`;
-      return (a[segmentKey] || "") === (b[segmentKey] || "");
-    });
-
-    return (
-      segmentsMatch &&
-      Number(a.to || 0) === Number(b.to || 0) &&
-      Number(a.from || 0) === Number(b.from || 0)
-    );
-  };
+  }, [apiData, requiredSegments, isLoading, isLoadingSegmentTypes]);
 
   // Combine edited API rows with local rows for display
-  const rows = useMemo(() => {
-    // Show API rows, plus only the local rows that don’t match any API row
-    const prunedLocal = localRows.filter(
-      (lr) => !editedRows.some((er) => sameLine(er, lr))
-    );
-    return [...editedRows, ...prunedLocal];
-  }, [editedRows, localRows]);
+  const rows = useMemo(
+    () => [...editedRows, ...localRows],
+    [editedRows, localRows]
+  );
   useEffect(() => {
     const savedLocalRows = localStorage.getItem(`localRows_${transactionId}`);
     if (savedLocalRows) {
@@ -365,20 +348,17 @@ export default function TransferDetails() {
 
   // Set submission status based on API status
   useEffect(() => {
-    if (
-      apiData?.status.status !== "not yet sent for approval" ||
-      apiData?.summary?.status !== "not yet sent for approval"
-    ) {
-      setIsSubmitted(true);
-    } else {
+    const statusFromSummary = apiData?.summary?.status;
+    const statusFromDetails = apiData?.status?.status;
+    const effectiveStatus = statusFromSummary ?? statusFromDetails;
+
+    if (!effectiveStatus) {
       setIsSubmitted(false);
+      return;
     }
-    if (apiData?.summary?.status !== "not yet sent for approval") {
-      setIsSubmitted(true);
-    } else {
-      setIsSubmitted(false);
-    }
-  }, [apiData?.status.status, apiData?.summary.status]);
+
+    setIsSubmitted(effectiveStatus !== "not yet sent for approval");
+  }, [apiData?.status?.status, apiData?.summary?.status]);
 
   // Sample data for fund requests details
   const [rowsDetails] = useState<TransferDetailRow[]>([
@@ -479,12 +459,14 @@ export default function TransferDetails() {
       // Save
       const response = await createTransfer(transfersToSave).unwrap();
 
+      const hasErrors = response?.transfers
+        ? response.transfers.some(
+            (t) => t.validation_errors && t.validation_errors.length > 0
+          )
+        : false;
+
       // Check if there are validation errors in the response
       if (response?.transfers) {
-        const hasErrors = response.transfers.some(
-          (t) => t.validation_errors && t.validation_errors.length > 0
-        );
-
         if (hasErrors) {
           // Show warning toast about validation errors
           toast.error(
@@ -497,6 +479,11 @@ export default function TransferDetails() {
         }
       } else {
         toast.success("Transfers saved successfully!");
+      }
+
+      if (!hasErrors && nonEmptyLocalRows.length > 0) {
+        setPendingSavedLocalIds(nonEmptyLocalRows.map((r) => r.id));
+        setAwaitingSync(true);
       }
 
       // ✅ Immediately remove only the local rows that were saved
@@ -1544,16 +1531,6 @@ export default function TransferDetails() {
     }
   };
 
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64 bg-white rounded-lg">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Loading transfers...</span>
-      </div>
-    );
-  }
-
   // Show error state
   // if (error) {
   //   const errorMessage =
@@ -1569,6 +1546,18 @@ export default function TransferDetails() {
   //     </div>
   //   );
   // }
+
+  // Show loading state while data is being fetched
+  if (isLoading || isLoadingSegmentTypes) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#4E8476]"></div>
+          <p className="text-gray-600 text-lg">Loading transfer details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
