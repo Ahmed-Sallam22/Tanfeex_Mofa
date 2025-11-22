@@ -151,7 +151,7 @@ export default function TransferDetails() {
            ? mofaCash.Other.toString()
            : transfer.other_consumption || "0",
          // Calculate cost value from MOFA_COST_2
-         costValue: mofaCost2 ? mofaCost2.Funds_available / 2 : undefined,
+         costValue: mofaCost2 ? mofaCost2.Funds_available / 2 : 0,
        };
 
        // Add dynamic segment fields from the transfer data
