@@ -351,7 +351,9 @@ export default function PendingTransferDetails() {
          // Show cost value if any of the budget names includes MOFA_COST_2
          const hasMofaCost2 =
            transferRow.control_budget_name?.includes("MOFA_COST_2");
- 
+ console.log("afa", transferRow.control_budget_name, hasMofaCost2);
+ console.log("Af", transferRow.costValue, "all", transferRow);
+
          if (hasMofaCost2 && transferRow.costValue) {
            const value = transferRow.costValue || 0;
            return (
