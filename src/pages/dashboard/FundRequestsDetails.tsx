@@ -1338,12 +1338,9 @@ export default function TransferDetails() {
 
      render: (_, row) => {
        const transferRow = row as unknown as TransferTableRow;
-       // Show cost value if any of the budget names includes MOFA_COST_2
-       const hasMofaCost2 =
-         transferRow.control_budget_name?.includes("MOFA_COST_2");
-
-       if (hasMofaCost2 && transferRow.costValue) {
-         const value = transferRow.costValue || 0;
+       // Show cost value only if it's greater than 0
+       const value = transferRow.costValue || 0;
+       if (value > 0) {
          return (
            <span className="text-sm text-gray-900">{formatNumber(value)}</span>
          );

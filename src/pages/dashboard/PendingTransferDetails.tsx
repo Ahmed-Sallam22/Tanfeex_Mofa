@@ -170,7 +170,8 @@ export default function PendingTransferDetails() {
       // Only set default row if we're not loading and there's truly no data
       setRows([createDefaultRow()]);
     }
-  }, [apiData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiData, requiredSegments, isLoading, isLoadingSegmentTypes]);
 
   // Check if pagination should be shown
   const shouldShowPagination = rows.length > 10;
