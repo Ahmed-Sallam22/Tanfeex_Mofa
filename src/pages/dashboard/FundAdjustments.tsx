@@ -89,6 +89,7 @@ export default function FundAdjustments() {
     data: oracleStatusData,
     isLoading: isLoadingOracleStatus,
     error: oracleStatusError,
+    refetch: refetchOracleStatus,
   } = useGetOracleStatusQuery(trackTransactionId!, {
     skip: !trackTransactionId || !isTrackModalOpen,
   });
@@ -1074,106 +1075,117 @@ export default function FundAdjustments() {
                         {/* Vertical line */}
                         <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
 
-                        {submitGroup.steps.map((step, index) => (
-                          <div
-                            key={index}
-                            className="relative flex items-start gap-4 pb-8 last:pb-0"
-                          >
-                            {/* Timeline dot with icon */}
-                            <div
-                              className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
-                                step.status.toLowerCase() === "success"
-                                  ? "bg-green-500 border-green-200"
-                                  : step.status.toLowerCase() === "error"
-                                  ? "bg-red-500 border-red-200"
-                                  : "bg-gray-400 border-gray-200"
-                              }`}
-                            >
-                              {step.status.toLowerCase() === "success" ? (
-                                <svg
-                                  className="w-6 h-6 text-white"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                              ) : step.status.toLowerCase() === "error" ? (
-                                <svg
-                                  className="w-6 h-6 text-white"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                              ) : (
-                                <span className="text-white font-bold">
-                                  {step.step_number}
-                                </span>
-                              )}
-                            </div>
+                        {submitGroup.steps.map((step, index) => {
+                          // Check if this is an error/failed/warning status
+                          const isErrorStatus = [
+                            "error",
+                            "failed",
+                            "warning",
+                          ].includes(step.status.toLowerCase());
+                          const isSuccessStatus =
+                            step.status.toLowerCase() === "success";
 
-                            {/* Step content */}
-                            <div className="flex-1 min-w-0 pt-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <h4 className="text-sm font-semibold text-gray-900">
-                                  {step.step_name}
-                                </h4>
-                                <span
-                                  className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                    step.status.toLowerCase() === "success"
-                                      ? "bg-green-100 text-green-800"
-                                      : step.status.toLowerCase() === "error"
-                                      ? "bg-red-100 text-red-800"
-                                      : "bg-gray-100 text-gray-800"
-                                  }`}
-                                >
-                                  {step.status}
-                                </span>
+                          return (
+                            <div
+                              key={index}
+                              className="relative flex items-start gap-4 pb-8 last:pb-0"
+                            >
+                              {/* Timeline dot with icon */}
+                              <div
+                                className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
+                                  isSuccessStatus
+                                    ? "bg-green-500 border-green-200"
+                                    : isErrorStatus
+                                    ? "bg-red-500 border-red-200"
+                                    : "bg-gray-400 border-gray-200"
+                                }`}
+                              >
+                                {isSuccessStatus ? (
+                                  <svg
+                                    className="w-6 h-6 text-white"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                ) : isErrorStatus ? (
+                                  <svg
+                                    className="w-6 h-6 text-white"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                ) : (
+                                  <span className="text-white font-bold">
+                                    {step.step_number}
+                                  </span>
+                                )}
                               </div>
-                              <p className="text-sm text-gray-600 mb-2">
-                                {step.message}
-                              </p>
-                              {(step.request_id ||
-                                step.document_id ||
-                                step.group_id) && (
-                                <div className="flex flex-wrap gap-3 text-xs text-gray-500">
-                                  {step.request_id && (
-                                    <span>
-                                      <span className="font-medium">
-                                        Request ID:
-                                      </span>{" "}
-                                      {step.request_id}
-                                    </span>
-                                  )}
-                                  {step.document_id && (
-                                    <span>
-                                      <span className="font-medium">
-                                        Document ID:
-                                      </span>{" "}
-                                      {step.document_id}
-                                    </span>
-                                  )}
-                                  {step.group_id && (
-                                    <span>
-                                      <span className="font-medium">
-                                        Group ID:
-                                      </span>{" "}
-                                      {step.group_id}
-                                    </span>
-                                  )}
+
+                              {/* Step content */}
+                              <div className="flex-1 min-w-0 pt-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <h4 className="text-sm font-semibold text-gray-900">
+                                    {step.step_name}
+                                  </h4>
+                                  <span
+                                    className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                      isSuccessStatus
+                                        ? "bg-green-100 text-green-800"
+                                        : isErrorStatus
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-gray-100 text-gray-800"
+                                    }`}
+                                  >
+                                    {step.status}
+                                  </span>
                                 </div>
-                              )}
+                                <p className="text-sm text-gray-600 mb-2">
+                                  {step.message}
+                                </p>
+                                {(step.request_id ||
+                                  step.document_id ||
+                                  step.group_id) && (
+                                  <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                                    {step.request_id && (
+                                      <span>
+                                        <span className="font-medium">
+                                          Request ID:
+                                        </span>{" "}
+                                        {step.request_id}
+                                      </span>
+                                    )}
+                                    {step.document_id && (
+                                      <span>
+                                        <span className="font-medium">
+                                          Document ID:
+                                        </span>{" "}
+                                        {step.document_id}
+                                      </span>
+                                    )}
+                                    {step.group_id && (
+                                      <span>
+                                        <span className="font-medium">
+                                          Group ID:
+                                        </span>{" "}
+                                        {step.group_id}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     );
                   })()}
@@ -1213,109 +1225,117 @@ export default function FundAdjustments() {
                               {/* Vertical line */}
                               <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
 
-                              {group.steps.map((step, index) => (
-                                <div
-                                  key={index}
-                                  className="relative flex items-start gap-4 pb-8 last:pb-0"
-                                >
-                                  {/* Timeline dot with icon */}
-                                  <div
-                                    className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
-                                      step.status.toLowerCase() === "success"
-                                        ? "bg-green-500 border-green-200"
-                                        : step.status.toLowerCase() === "error"
-                                        ? "bg-red-500 border-red-200"
-                                        : "bg-gray-400 border-gray-200"
-                                    }`}
-                                  >
-                                    {step.status.toLowerCase() === "success" ? (
-                                      <svg
-                                        className="w-6 h-6 text-white"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                    ) : step.status.toLowerCase() ===
-                                      "error" ? (
-                                      <svg
-                                        className="w-6 h-6 text-white"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                    ) : (
-                                      <span className="text-white font-bold">
-                                        {step.step_number}
-                                      </span>
-                                    )}
-                                  </div>
+                              {group.steps.map((step, index) => {
+                                // Check if this is an error/failed/warning status
+                                const isErrorStatus = [
+                                  "error",
+                                  "failed",
+                                  "warning",
+                                ].includes(step.status.toLowerCase());
+                                const isSuccessStatus =
+                                  step.status.toLowerCase() === "success";
 
-                                  {/* Step content */}
-                                  <div className="flex-1 min-w-0 pt-1">
-                                    <div className="flex items-center justify-between mb-1">
-                                      <h4 className="text-sm font-semibold text-gray-900">
-                                        {step.step_name}
-                                      </h4>
-                                      <span
-                                        className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                          step.status.toLowerCase() ===
-                                          "success"
-                                            ? "bg-green-100 text-green-800"
-                                            : step.status.toLowerCase() ===
-                                              "error"
-                                            ? "bg-red-100 text-red-800"
-                                            : "bg-gray-100 text-gray-800"
-                                        }`}
-                                      >
-                                        {step.status}
-                                      </span>
+                                return (
+                                  <div
+                                    key={index}
+                                    className="relative flex items-start gap-4 pb-8 last:pb-0"
+                                  >
+                                    {/* Timeline dot with icon */}
+                                    <div
+                                      className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
+                                        isSuccessStatus
+                                          ? "bg-green-500 border-green-200"
+                                          : isErrorStatus
+                                          ? "bg-red-500 border-red-200"
+                                          : "bg-gray-400 border-gray-200"
+                                      }`}
+                                    >
+                                      {isSuccessStatus ? (
+                                        <svg
+                                          className="w-6 h-6 text-white"
+                                          fill="currentColor"
+                                          viewBox="0 0 20 20"
+                                        >
+                                          <path
+                                            fillRule="evenodd"
+                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                            clipRule="evenodd"
+                                          />
+                                        </svg>
+                                      ) : isErrorStatus ? (
+                                        <svg
+                                          className="w-6 h-6 text-white"
+                                          fill="currentColor"
+                                          viewBox="0 0 20 20"
+                                        >
+                                          <path
+                                            fillRule="evenodd"
+                                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                            clipRule="evenodd"
+                                          />
+                                        </svg>
+                                      ) : (
+                                        <span className="text-white font-bold">
+                                          {step.step_number}
+                                        </span>
+                                      )}
                                     </div>
-                                    <p className="text-sm text-gray-600 mb-2">
-                                      {step.message}
-                                    </p>
-                                    {(step.request_id ||
-                                      step.document_id ||
-                                      step.group_id) && (
-                                      <div className="flex flex-wrap gap-3 text-xs text-gray-500">
-                                        {step.request_id && (
-                                          <span>
-                                            <span className="font-medium">
-                                              Request ID:
-                                            </span>{" "}
-                                            {step.request_id}
-                                          </span>
-                                        )}
-                                        {step.document_id && (
-                                          <span>
-                                            <span className="font-medium">
-                                              Document ID:
-                                            </span>{" "}
-                                            {step.document_id}
-                                          </span>
-                                        )}
-                                        {step.group_id && (
-                                          <span>
-                                            <span className="font-medium">
-                                              Group ID:
-                                            </span>{" "}
-                                            {step.group_id}
-                                          </span>
-                                        )}
+
+                                    {/* Step content */}
+                                    <div className="flex-1 min-w-0 pt-1">
+                                      <div className="flex items-center justify-between mb-1">
+                                        <h4 className="text-sm font-semibold text-gray-900">
+                                          {step.step_name}
+                                        </h4>
+                                        <span
+                                          className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                            isSuccessStatus
+                                              ? "bg-green-100 text-green-800"
+                                              : isErrorStatus
+                                              ? "bg-red-100 text-red-800"
+                                              : "bg-gray-100 text-gray-800"
+                                          }`}
+                                        >
+                                          {step.status}
+                                        </span>
                                       </div>
-                                    )}
+                                      <p className="text-sm text-gray-600 mb-2">
+                                        {step.message}
+                                      </p>
+                                      {(step.request_id ||
+                                        step.document_id ||
+                                        step.group_id) && (
+                                        <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                                          {step.request_id && (
+                                            <span>
+                                              <span className="font-medium">
+                                                Request ID:
+                                              </span>{" "}
+                                              {step.request_id}
+                                            </span>
+                                          )}
+                                          {step.document_id && (
+                                            <span>
+                                              <span className="font-medium">
+                                                Document ID:
+                                              </span>{" "}
+                                              {step.document_id}
+                                            </span>
+                                          )}
+                                          {step.group_id && (
+                                            <span>
+                                              <span className="font-medium">
+                                                Group ID:
+                                              </span>{" "}
+                                              {step.group_id}
+                                            </span>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </div>
                         ))}
@@ -1334,7 +1354,41 @@ export default function FundAdjustments() {
           </div>
 
           {/* Close Button */}
-          <div className="flex justify-end px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-between px-6 py-4 border-t border-gray-200">
+            <button
+              onClick={() => {
+                if (refetchOracleStatus) {
+                  refetchOracleStatus();
+                  toast.success("Refreshing Oracle status...");
+                }
+              }}
+              disabled={isLoadingOracleStatus}
+              className="px-4 py-2 text-sm font-medium text-[#4E8476] bg-[#4E8476]/10 border border-[#4E8476] rounded-md hover:bg-[#4E8476]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isLoadingOracleStatus ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#4E8476]"></div>
+                  <span>Refreshing...</span>
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  <span>Refresh</span>
+                </>
+              )}
+            </button>
             <button
               onClick={() => {
                 setIsTrackModalOpen(false);
