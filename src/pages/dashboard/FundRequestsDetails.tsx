@@ -62,586 +62,592 @@ interface TransferDetailRow {
 }
 
 export default function TransferDetails() {
- const { id } = useParams<{ id: string }>();
- const navigate = useNavigate();
- const location = useLocation();
-
- // Get status from navigation state (passed from Transfer page)
- const transferStatus = location.state?.status || null;
-
- // Use RTK Query to fetch transfer details
- const transactionId = id || "513"; // Use ID from params or default to 513
- const { data: apiData, isLoading } = useGetTransferDetailsQuery(transactionId);
-
- const [createTransfer] = useCreateTransferMutation();
- const [submitTransfer] = useSubmitTransferMutation();
- const [uploadExcel] = useUploadExcelMutation();
- const [reopenTransfer] = useReopenTransferMutation();
-
- // Fetch segment types for dynamic columns
- const { data: segmentTypesData, isLoading: isLoadingSegmentTypes } =
-   useGetSegmentTypesQuery();
-
- // Get required segments (where segment_type_is_required is true)
- const requiredSegments = useMemo(() => {
-   if (!segmentTypesData?.data) return [];
-   return segmentTypesData.data
-     .filter((segment) => segment.segment_type_is_required)
-     .sort(
-       (a, b) => a.segment_type_oracle_number - b.segment_type_oracle_number
-     );
- }, [segmentTypesData]);
-
- const [isSubmitted, setIsSubmitted] = useState(false);
- const [currentPage, setCurrentPage] = useState(1);
- const itemsPerPage = 10;
-
- // Loading states
- const [isSaving, setIsSaving] = useState(false);
- const [isSubmitting, setIsSubmitting] = useState(false);
-
- // Local state for additional rows (new rows added by user)
- const [localRows, setLocalRows] = useState<TransferTableRow[]>([]);
-
- // State to track all edits locally (both existing and new rows)
- const [editedRows, setEditedRows] = useState<TransferTableRow[]>([]);
-
- // Initialize editedRows when API data loads
- useEffect(() => {
-   if (apiData?.transfers && apiData.transfers.length > 0) {
-     const initialRows = apiData.transfers.map((transfer) => {
-       // Get MOFA_CASH budget data (first control budget)
-       const mofaCash = transfer.control_budgets?.find(
-         (cb) => cb.Control_budget_name === "MOFA_CASH"
-       );
-
-       // Get MOFA_COST_2 budget data (second control budget)
-       const mofaCost2 = transfer.control_budgets?.find(
-         (cb) => cb.Control_budget_name === "MOFA_COST_2"
-       );
-
-       const row: TransferTableRow = {
-         id: transfer.transfer_id?.toString() || "0",
-         to: parseFloat(transfer.to_center) || 0,
-         from: parseFloat(transfer.from_center) || 0,
-         // Use control_budgets data if available, otherwise fall back to transfer data
-         encumbrance: mofaCash
-           ? mofaCash.Encumbrance
-           : parseFloat(transfer.encumbrance) || 0,
-         availableBudget: mofaCash
-           ? mofaCash.Funds_available
-           : parseFloat(transfer.available_budget) || 0,
-         actual: mofaCash ? mofaCash.Actual : parseFloat(transfer.actual) || 0,
-         approvedBudget: mofaCash
-           ? mofaCash.Budget
-           : parseFloat(transfer.approved_budget) || 0,
-         other_ytd: mofaCash ? mofaCash.Other : 0,
-         period: mofaCash
-           ? mofaCash.Period_name
-           : apiData?.summary.period || "",
-         control_budget_name: mofaCash ? mofaCash.Control_budget_name : "",
-         validation_errors: transfer.validation_errors,
-         commitments: mofaCash
-           ? mofaCash.Commitments.toString()
-           : transfer.commitments || "0",
-         obligations: mofaCash
-           ? mofaCash.Obligation.toString()
-           : transfer.obligations || "0",
-         other_consumption: mofaCash
-           ? mofaCash.Other.toString()
-           : transfer.other_consumption || "0",
-         // Calculate cost value from MOFA_COST_2
-         costValue: mofaCost2 ? mofaCost2.Funds_available / 2 : 0,
-       };
-
-       // Add dynamic segment fields from the transfer data
-       requiredSegments.forEach((segment) => {
-         const segmentKey = `segment${segment.segment_type_oracle_number}`;
-         const oracleNumber = segment.segment_type_oracle_number.toString();
-
-         // Map segment data from the API response
-         if (transfer.segments && transfer.segments[oracleNumber]) {
-           const segmentData = transfer.segments[oracleNumber];
-           // Use from_code if available, otherwise use to_code (one of them should have a value)
-           const segmentCode =
-             segmentData.from_code || segmentData.to_code || "";
-           const segmentAlias =
-             segmentData.from_alias || segmentData.to_alias || "";
-
-           row[segmentKey] = segmentCode;
-           row[`${segmentKey}_name`] = segmentAlias;
-         } else {
-           row[segmentKey] = "";
-           row[`${segmentKey}_name`] = "";
-         }
-       });
-
-       return row;
-     });
-     setEditedRows(initialRows);
-   } else if (!isLoading && !isLoadingSegmentTypes) {
-     // Only set default row if we're not loading and there's truly no data
-     setEditedRows([createDefaultRow()]);
-   }
- }, [apiData, requiredSegments, isLoading, isLoadingSegmentTypes]);
-
- // Combine edited API rows with local rows for display
- const rows = useMemo(
-   () => [...editedRows, ...localRows],
-   [editedRows, localRows]
- );
- useEffect(() => {
-   const savedLocalRows = localStorage.getItem(`localRows_${transactionId}`);
-   if (savedLocalRows) {
-     try {
-       const parsedRows = JSON.parse(savedLocalRows);
-       setLocalRows(parsedRows);
-       console.log("Loaded local rows from localStorage:", parsedRows);
-     } catch (error) {
-       console.error("Error parsing localStorage data:", error);
-     }
-   }
- }, [transactionId]);
-
- // Save local rows to localStorage whenever they change
- useEffect(() => {
-   if (localRows.length > 0) {
-     localStorage.setItem(
-       `localRows_${transactionId}`,
-       JSON.stringify(localRows)
-     );
-     console.log("Saved local rows to localStorage:", localRows);
-   } else {
-     localStorage.removeItem(`localRows_${transactionId}`);
-   }
- }, [localRows, transactionId]);
-
- useEffect(() => {
-   const cleanupEmptyRows = () => {
-     const nonEmptyRows = localRows.filter(isNonEmpty);
-     if (nonEmptyRows.length > 0) {
-       localStorage.setItem(
-         `localRows_${transactionId}`,
-         JSON.stringify(nonEmptyRows)
-       );
-     } else {
-       localStorage.removeItem(`localRows_${transactionId}`);
-     }
-   };
-   const handleBeforeUnload = () => cleanupEmptyRows();
-   window.addEventListener("beforeunload", handleBeforeUnload);
-   return () => {
-     cleanupEmptyRows();
-     window.removeEventListener("beforeunload", handleBeforeUnload);
-   };
- }, [localRows, transactionId]);
-
- type Option = { value: string; label: string; name: string };
-
- // Pre-call hooks for all required segments (must be called unconditionally)
- // We'll use the segment IDs to call the hooks - supporting up to 5 required segments
- const segment1 = requiredSegments[0];
- const segment2 = requiredSegments[1];
- const segment3 = requiredSegments[2];
- const segment4 = requiredSegments[3];
- const segment5 = requiredSegments[4];
-
- // Call hooks unconditionally (they will skip if segment is undefined)
- const { data: segmentData1 } = useGetSegmentsByTypeQuery(
-   segment1?.segment_id || 0,
-   {
-     skip: !segment1,
-   }
- );
- const { data: segmentData2 } = useGetSegmentsByTypeQuery(
-   segment2?.segment_id || 0,
-   {
-     skip: !segment2,
-   }
- );
- const { data: segmentData3 } = useGetSegmentsByTypeQuery(
-   segment3?.segment_id || 0,
-   {
-     skip: !segment3,
-   }
- );
- const { data: segmentData4 } = useGetSegmentsByTypeQuery(
-   segment4?.segment_id || 0,
-   {
-     skip: !segment4,
-   }
- );
- const { data: segmentData5 } = useGetSegmentsByTypeQuery(
-   segment5?.segment_id || 0,
-   {
-     skip: !segment5,
-   }
- );
-
- // Build segment data map
- const segmentDataMap = useMemo(() => {
-   const map: Record<number, Segment[]> = {};
-   if (segment1 && segmentData1?.data)
-     map[segment1.segment_id] = segmentData1.data;
-   if (segment2 && segmentData2?.data)
-     map[segment2.segment_id] = segmentData2.data;
-   if (segment3 && segmentData3?.data)
-     map[segment3.segment_id] = segmentData3.data;
-   if (segment4 && segmentData4?.data)
-     map[segment4.segment_id] = segmentData4.data;
-   if (segment5 && segmentData5?.data)
-     map[segment5.segment_id] = segmentData5.data;
-   return map;
- }, [
-   segment1,
-   segment2,
-   segment3,
-   segment4,
-   segment5,
-   segmentData1,
-   segmentData2,
-   segmentData3,
-   segmentData4,
-   segmentData5,
- ]);
-
- // Helper function to create options from segments
- const createSegmentOptions = (segmentId: number): Option[] => {
-   const segments = segmentDataMap[segmentId] || [];
-   return segments
-     .filter((seg) => seg.is_active)
-     .map((seg) => ({
-       value: seg.code,
-       label: `${seg.code} - ${seg.alias}`,
-       name: seg.alias,
-     }));
- };
-
- // Create a default row for when there's no data
- const createDefaultRow = (): TransferTableRow => {
-   const defaultRow: TransferTableRow = {
-     id: "default-1",
-     to: 0,
-     from: 0,
-     encumbrance: 0,
-     availableBudget: 0,
-     actual: 0,
-     approvedBudget: 0,
-     other_ytd: 0,
-     period: "",
-     validation_errors: [], // Explicitly set as empty array (no errors)
-     commitments: "0",
-     obligations: "0",
-     other_consumption: "0",
-   };
-
-   // Add dynamic segment fields
-   requiredSegments.forEach((segment) => {
-     const segmentKey = `segment${segment.segment_type_oracle_number}`;
-     defaultRow[segmentKey] = "";
-     defaultRow[`${segmentKey}_name`] = "";
-   });
-
-   return defaultRow;
- };
-
- // Set submission status based on API status
- useEffect(() => {
-   const statusFromSummary = apiData?.summary?.status;
-   const statusFromDetails = apiData?.status?.status;
-   const effectiveStatus = statusFromSummary ?? statusFromDetails;
-
-   if (!effectiveStatus) {
-     setIsSubmitted(false);
-     return;
-   }
-
-   setIsSubmitted(effectiveStatus !== "not yet sent for approval");
- }, [apiData?.status?.status, apiData?.summary?.status]);
-
- // Sample data for fund requests details
- const [rowsDetails] = useState<TransferDetailRow[]>([
-   {
-     id: "1",
-     itemId: "1213322",
-     itemName: "11 - Project 1",
-     accountId: "3121",
-     accountName: "Audit fees",
-     from: 1000,
-     to: 20000,
-     approvedBudget: 1283914.64,
-     current: 346062.59,
-     availableBudget: 22430677.39,
-   },
-   {
-     id: "2",
-     itemId: "1213323",
-     itemName: "12 - Project 2",
-     accountId: "3122",
-     accountName: "Consulting fees",
-     from: 5000,
-     to: 15000,
-     approvedBudget: 800000.0,
-     current: 250000.0,
-     availableBudget: 15000000.0,
-   },
-   {
-     id: "3",
-     itemId: "1213324",
-     itemName: "13 - Project 3",
-     accountId: "3123",
-     accountName: "Training costs",
-     from: 2000,
-     to: 8000,
-     approvedBudget: 500000.0,
-     current: 150000.0,
-     availableBudget: 8500000.0,
-   },
- ]); // Check if pagination should be shown
- const shouldShowPagination = rows.length > 10;
-
- const handleBack = () => {
-   navigate("/app/transfer");
- };
-
- const [pendingSavedLocalIds, setPendingSavedLocalIds] = useState<string[]>([]);
- const [awaitingSync, setAwaitingSync] = useState(false);
-
- const isNonEmpty = (row: TransferTableRow) => {
-   // Check if any required segment has a value
-   const hasSegmentValue = requiredSegments.some((seg) => {
-     const segmentKey = `segment${seg.segment_type_oracle_number}`;
-     return row[segmentKey] !== "" && row[segmentKey] !== undefined;
-   });
-
-   return hasSegmentValue || row.to > 0 || row.from > 0;
- };
-
- const handleSave = async () => {
-   setIsSaving(true);
-   try {
-     const nonEmptyEditedRows = editedRows.filter(isNonEmpty);
-     const nonEmptyLocalRows = localRows.filter(isNonEmpty);
-
-     const allRows = [...nonEmptyEditedRows, ...nonEmptyLocalRows];
-
-     const transfersToSave = allRows.map((row) => {
-       let fromCenter = row.from || 0;
-       let toCenter = row.to || 0;
-       if (fromCenter > 0) toCenter = 0;
-       else if (toCenter > 0) fromCenter = 0;
-
-       // Build dynamic segments object with the new structure
-       const segments: Record<string, { code: string }> = {};
-       requiredSegments.forEach((segment) => {
-         const segmentKey = `segment${segment.segment_type_oracle_number}`;
-         const segmentValue = row[segmentKey];
-         if (segmentValue && typeof segmentValue === "string") {
-           // Use the oracle number as the key (e.g., "5", "9", "11")
-           segments[segment.segment_type_oracle_number.toString()] = {
-             code: segmentValue,
-           };
-         }
-       });
-
-       return {
-         transaction: parseInt(transactionId),
-         from_center: fromCenter.toString(),
-         to_center: toCenter.toString(),
-         reason: "", // You can add a reason field to the row if needed
-         segments: segments,
-       };
-     });
-
-     // Save
-     const response = await createTransfer(transfersToSave).unwrap();
-
-     const hasErrors = response?.transfers
-       ? response.transfers.some(
-           (t) => t.validation_errors && t.validation_errors.length > 0
-         )
-       : false;
-
-     // Check if there are validation errors in the response
-     if (response?.transfers) {
-       if (hasErrors) {
-         // Show warning toast about validation errors
-         toast.error(
-           "Some transfers have validation errors. Please check the error messages."
-         );
-       } else if (response.summary?.balanced) {
-         toast.success("Transfers saved successfully and balanced!");
-       } else {
-         toast.success("Transfers saved successfully!");
-       }
-     } else {
-       toast.success("Transfers saved successfully!");
-     }
-
-     if (!hasErrors && nonEmptyLocalRows.length > 0) {
-       setPendingSavedLocalIds(nonEmptyLocalRows.map((r) => r.id));
-       setAwaitingSync(true);
-     }
-
-     // ✅ Immediately remove only the local rows that were saved
-     // const savedLocalIds = nonEmptyLocalRows.map((r) => r.id);
-     // setLocalRows((prev) => {
-     //   const next = prev.filter((r) => !savedLocalIds.includes(r.id));
-     //   if (next.length > 0) {
-     //     localStorage.setItem(`localRows_${transactionId}`, JSON.stringify(next));
-     //   } else {
-     //     localStorage.removeItem(`localRows_${transactionId}`);
-     //   }
-     //   return next;
-     // });
-
-     // Ask RTK to refetch API rows
-     store.dispatch(
-       transferDetailsApi.util.invalidateTags(["TransferDetails"])
-     );
-   } catch (err) {
-     console.error("Error saving transfers:", err);
-     toast.error("Error saving transfers. Please try again.");
-     // (no local deletion on error)
-   } finally {
-     setIsSaving(false);
-   }
- };
-
- useEffect(() => {
-   if (!awaitingSync) return;
-   if (!apiData?.transfers) return;
-
-   // We assume the refetch has brought back the rows we just created.
-   // Remove only the local rows that were part of this save.
-   setLocalRows((prev) => {
-     const next = prev.filter((r) => !pendingSavedLocalIds.includes(r.id));
-     // Update localStorage accordingly
-     if (next.length > 0) {
-       localStorage.setItem(`localRows_${transactionId}`, JSON.stringify(next));
-     } else {
-       localStorage.removeItem(`localRows_${transactionId}`);
-     }
-     return next;
-   });
-
-   // done syncing
-   setPendingSavedLocalIds([]);
-   setAwaitingSync(false);
- }, [apiData, awaitingSync, pendingSavedLocalIds, transactionId]);
-
- // Check if submit should be disabled
- const isSubmitDisabled = () => {
-   // Filter out default rows (empty rows with no data)
-   const nonDefaultEditedRows = editedRows.filter((row) => {
-     if (!row.id.startsWith("default-")) return true;
-
-     // Check if any dynamic segment has a value
-     const hasSegmentValue = requiredSegments.some((seg) => {
-       const segmentKey = `segment${seg.segment_type_oracle_number}`;
-       return row[segmentKey] !== "" && row[segmentKey] !== undefined;
-     });
-
-     return hasSegmentValue;
-   });
-
-   // Count total valid rows (API rows + local rows)
-   const totalValidRows =
-     (apiData?.transfers?.length || 0) +
-     localRows.length +
-     nonDefaultEditedRows.length;
-
-   // Check if there are fewer than 2 rows
-   const hasInsufficientRows = totalValidRows < 2;
-
-   // Check if there are validation errors in any row
-   const hasValidationErrors = [...editedRows, ...localRows].some(
-     (row) => row.validation_errors && row.validation_errors.length > 0
-   );
-
-   return hasInsufficientRows || hasValidationErrors;
- };
-
- const handleSubmit = async () => {
-   if (!isSubmitDisabled()) {
-     setIsSubmitting(true);
-     try {
-       // Call the submit API
-       await submitTransfer({
-         transaction: parseInt(transactionId),
-       }).unwrap();
-
-       // Show success toast
-       toast.success("Transfer submitted successfully!");
-
-       // Set submitted state
-       setIsSubmitted(true);
-
-       console.log(
-         "Transfer submitted successfully for transaction:",
-         transactionId
-       );
-     } catch (error) {
-       console.error("Error submitting transfer:", error);
-       toast.error("Error submitting transfer. Please try again.");
-     } finally {
-       setIsSubmitting(false);
-     }
-   }
- };
-
- const handlePageChange = (page: number) => {
-   setCurrentPage(page);
- };
-
- // Helper function to fetch financial data when all required segments are selected
- const fetchFinancialDataForRow = async (
-   rowId: string,
-   segments: Record<number, string> // Changed to accept dynamic segments by oracle number
- ) => {
-   try {
-     // Check if all required segments are filled
-     const allRequiredFilled = requiredSegments.every(
-       (seg) => segments[seg.segment_type_oracle_number]
-     );
-
-     if (!allRequiredFilled) {
-       console.log(
-         `Row ${rowId}: Not all required segments filled, skipping API call`
-       );
-       return {};
-     }
-
-     // Build the API parameters dynamically with Segment format (e.g., Segment5, Segment9)
-     const apiSegments: Record<string, string | number> = {};
-
-     // Add each segment with capitalized Segment prefix
-     requiredSegments.forEach((seg) => {
-       const segmentKey = `Segment${seg.segment_type_oracle_number}`;
-       const segmentValue = segments[seg.segment_type_oracle_number];
-       // Use the value as-is (string or number)
-       apiSegments[segmentKey] = segmentValue;
-     });
-
-     console.log(
-       `Row ${rowId}: Calling financial data API with segments:`,
-       apiSegments
-     );
-
-     // Use RTK Query's initiate method to trigger the query manually
-     const result = await store
-       .dispatch(
-         transferDetailsApi.endpoints.getFinancialData.initiate({
-           segments: apiSegments,
-         })
-       )
-       .unwrap();
-
-     console.log(`Row ${rowId}: Financial data fetched:`, result);
-
-     // 🧪 MOCK DATA FOR TESTING - TODO: Remove after testing
-     // Uncomment the lines below to test with mock data
-     /*
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get status from navigation state (passed from Transfer page)
+  const transferStatus = location.state?.status || null;
+
+  // Use RTK Query to fetch transfer details
+  const transactionId = id || "513"; // Use ID from params or default to 513
+  const { data: apiData, isLoading } =
+    useGetTransferDetailsQuery(transactionId);
+
+  const [createTransfer] = useCreateTransferMutation();
+  const [submitTransfer] = useSubmitTransferMutation();
+  const [uploadExcel] = useUploadExcelMutation();
+  const [reopenTransfer] = useReopenTransferMutation();
+
+  // Fetch segment types for dynamic columns
+  const { data: segmentTypesData, isLoading: isLoadingSegmentTypes } =
+    useGetSegmentTypesQuery();
+
+  // Get required segments (where segment_type_is_required is true)
+  const requiredSegments = useMemo(() => {
+    if (!segmentTypesData?.data) return [];
+    return segmentTypesData.data
+      .filter((segment) => segment.segment_type_is_required)
+      .sort(
+        (a, b) => a.segment_type_oracle_number - b.segment_type_oracle_number
+      );
+  }, [segmentTypesData]);
+
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Loading states
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Local state for additional rows (new rows added by user)
+  const [localRows, setLocalRows] = useState<TransferTableRow[]>([]);
+
+  // State to track all edits locally (both existing and new rows)
+  const [editedRows, setEditedRows] = useState<TransferTableRow[]>([]);
+
+  // Initialize editedRows when API data loads
+  useEffect(() => {
+    if (apiData?.transfers && apiData.transfers.length > 0) {
+      const initialRows = apiData.transfers.map((transfer) => {
+        // Get MOFA_CASH budget data (first control budget)
+        const mofaCash = transfer.control_budgets?.find(
+          (cb) => cb.Control_budget_name === "MOFA_CASH"
+        );
+
+        // Get MOFA_COST_2 budget data (second control budget)
+        const mofaCost2 = transfer.control_budgets?.find(
+          (cb) => cb.Control_budget_name === "MOFA_COST_2"
+        );
+
+        const row: TransferTableRow = {
+          id: transfer.transfer_id?.toString() || "0",
+          to: parseFloat(transfer.to_center) || 0,
+          from: parseFloat(transfer.from_center) || 0,
+          // Use control_budgets data if available, otherwise fall back to transfer data
+          encumbrance: mofaCash
+            ? mofaCash.Encumbrance
+            : parseFloat(transfer.encumbrance) || 0,
+          availableBudget: mofaCash
+            ? mofaCash.Funds_available
+            : parseFloat(transfer.available_budget) || 0,
+          actual: mofaCash ? mofaCash.Actual : parseFloat(transfer.actual) || 0,
+          approvedBudget: mofaCash
+            ? mofaCash.Budget
+            : parseFloat(transfer.approved_budget) || 0,
+          other_ytd: mofaCash ? mofaCash.Other : 0,
+          period: mofaCash
+            ? mofaCash.Period_name
+            : apiData?.summary.period || "",
+          control_budget_name: mofaCash ? mofaCash.Control_budget_name : "",
+          validation_errors: transfer.validation_errors,
+          commitments: mofaCash
+            ? mofaCash.Commitments.toString()
+            : transfer.commitments || "0",
+          obligations: mofaCash
+            ? mofaCash.Obligation.toString()
+            : transfer.obligations || "0",
+          other_consumption: mofaCash
+            ? mofaCash.Other.toString()
+            : transfer.other_consumption || "0",
+          // Calculate cost value from MOFA_COST_2
+          costValue: mofaCost2 ? mofaCost2.Funds_available / 2 : 0,
+        };
+
+        // Add dynamic segment fields from the transfer data
+        requiredSegments.forEach((segment) => {
+          const segmentKey = `segment${segment.segment_type_oracle_number}`;
+          const oracleNumber = segment.segment_type_oracle_number.toString();
+
+          // Map segment data from the API response
+          if (transfer.segments && transfer.segments[oracleNumber]) {
+            const segmentData = transfer.segments[oracleNumber];
+            // Use from_code if available, otherwise use to_code (one of them should have a value)
+            const segmentCode =
+              segmentData.from_code || segmentData.to_code || "";
+            const segmentAlias =
+              segmentData.from_alias || segmentData.to_alias || "";
+
+            row[segmentKey] = segmentCode;
+            row[`${segmentKey}_name`] = segmentAlias;
+          } else {
+            row[segmentKey] = "";
+            row[`${segmentKey}_name`] = "";
+          }
+        });
+
+        return row;
+      });
+      setEditedRows(initialRows);
+    } else if (!isLoading && !isLoadingSegmentTypes) {
+      // Only set default row if we're not loading and there's truly no data
+      setEditedRows([createDefaultRow()]);
+    }
+  }, [apiData, requiredSegments, isLoading, isLoadingSegmentTypes]);
+
+  // Combine edited API rows with local rows for display
+  const rows = useMemo(
+    () => [...editedRows, ...localRows],
+    [editedRows, localRows]
+  );
+  useEffect(() => {
+    const savedLocalRows = localStorage.getItem(`localRows_${transactionId}`);
+    if (savedLocalRows) {
+      try {
+        const parsedRows = JSON.parse(savedLocalRows);
+        setLocalRows(parsedRows);
+        console.log("Loaded local rows from localStorage:", parsedRows);
+      } catch (error) {
+        console.error("Error parsing localStorage data:", error);
+      }
+    }
+  }, [transactionId]);
+
+  // Save local rows to localStorage whenever they change
+  useEffect(() => {
+    if (localRows.length > 0) {
+      localStorage.setItem(
+        `localRows_${transactionId}`,
+        JSON.stringify(localRows)
+      );
+      console.log("Saved local rows to localStorage:", localRows);
+    } else {
+      localStorage.removeItem(`localRows_${transactionId}`);
+    }
+  }, [localRows, transactionId]);
+
+  useEffect(() => {
+    const cleanupEmptyRows = () => {
+      const nonEmptyRows = localRows.filter(isNonEmpty);
+      if (nonEmptyRows.length > 0) {
+        localStorage.setItem(
+          `localRows_${transactionId}`,
+          JSON.stringify(nonEmptyRows)
+        );
+      } else {
+        localStorage.removeItem(`localRows_${transactionId}`);
+      }
+    };
+    const handleBeforeUnload = () => cleanupEmptyRows();
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      cleanupEmptyRows();
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [localRows, transactionId]);
+
+  type Option = { value: string; label: string; name: string };
+
+  // Pre-call hooks for all required segments (must be called unconditionally)
+  // We'll use the segment IDs to call the hooks - supporting up to 5 required segments
+  const segment1 = requiredSegments[0];
+  const segment2 = requiredSegments[1];
+  const segment3 = requiredSegments[2];
+  const segment4 = requiredSegments[3];
+  const segment5 = requiredSegments[4];
+
+  // Call hooks unconditionally (they will skip if segment is undefined)
+  const { data: segmentData1 } = useGetSegmentsByTypeQuery(
+    segment1?.segment_id || 0,
+    {
+      skip: !segment1,
+    }
+  );
+  const { data: segmentData2 } = useGetSegmentsByTypeQuery(
+    segment2?.segment_id || 0,
+    {
+      skip: !segment2,
+    }
+  );
+  const { data: segmentData3 } = useGetSegmentsByTypeQuery(
+    segment3?.segment_id || 0,
+    {
+      skip: !segment3,
+    }
+  );
+  const { data: segmentData4 } = useGetSegmentsByTypeQuery(
+    segment4?.segment_id || 0,
+    {
+      skip: !segment4,
+    }
+  );
+  const { data: segmentData5 } = useGetSegmentsByTypeQuery(
+    segment5?.segment_id || 0,
+    {
+      skip: !segment5,
+    }
+  );
+
+  // Build segment data map
+  const segmentDataMap = useMemo(() => {
+    const map: Record<number, Segment[]> = {};
+    if (segment1 && segmentData1?.data)
+      map[segment1.segment_id] = segmentData1.data;
+    if (segment2 && segmentData2?.data)
+      map[segment2.segment_id] = segmentData2.data;
+    if (segment3 && segmentData3?.data)
+      map[segment3.segment_id] = segmentData3.data;
+    if (segment4 && segmentData4?.data)
+      map[segment4.segment_id] = segmentData4.data;
+    if (segment5 && segmentData5?.data)
+      map[segment5.segment_id] = segmentData5.data;
+    return map;
+  }, [
+    segment1,
+    segment2,
+    segment3,
+    segment4,
+    segment5,
+    segmentData1,
+    segmentData2,
+    segmentData3,
+    segmentData4,
+    segmentData5,
+  ]);
+
+  // Helper function to create options from segments
+  const createSegmentOptions = (segmentId: number): Option[] => {
+    const segments = segmentDataMap[segmentId] || [];
+    return segments
+      .filter((seg) => seg.is_active)
+      .map((seg) => ({
+        value: seg.code,
+        label: `${seg.code} - ${seg.alias}`,
+        name: seg.alias,
+      }));
+  };
+
+  // Create a default row for when there's no data
+  const createDefaultRow = (): TransferTableRow => {
+    const defaultRow: TransferTableRow = {
+      id: "default-1",
+      to: 0,
+      from: 0,
+      encumbrance: 0,
+      availableBudget: 0,
+      actual: 0,
+      approvedBudget: 0,
+      other_ytd: 0,
+      period: "",
+      validation_errors: [], // Explicitly set as empty array (no errors)
+      commitments: "0",
+      obligations: "0",
+      other_consumption: "0",
+    };
+
+    // Add dynamic segment fields
+    requiredSegments.forEach((segment) => {
+      const segmentKey = `segment${segment.segment_type_oracle_number}`;
+      defaultRow[segmentKey] = "";
+      defaultRow[`${segmentKey}_name`] = "";
+    });
+
+    return defaultRow;
+  };
+
+  // Set submission status based on API status
+  useEffect(() => {
+    const statusFromSummary = apiData?.summary?.status;
+    const statusFromDetails = apiData?.status?.status;
+    const effectiveStatus = statusFromSummary ?? statusFromDetails;
+
+    if (!effectiveStatus) {
+      setIsSubmitted(false);
+      return;
+    }
+
+    setIsSubmitted(effectiveStatus !== "not yet sent for approval");
+  }, [apiData?.status?.status, apiData?.summary?.status]);
+
+  // Sample data for fund requests details
+  const [rowsDetails] = useState<TransferDetailRow[]>([
+    {
+      id: "1",
+      itemId: "1213322",
+      itemName: "11 - Project 1",
+      accountId: "3121",
+      accountName: "Audit fees",
+      from: 1000,
+      to: 20000,
+      approvedBudget: 1283914.64,
+      current: 346062.59,
+      availableBudget: 22430677.39,
+    },
+    {
+      id: "2",
+      itemId: "1213323",
+      itemName: "12 - Project 2",
+      accountId: "3122",
+      accountName: "Consulting fees",
+      from: 5000,
+      to: 15000,
+      approvedBudget: 800000.0,
+      current: 250000.0,
+      availableBudget: 15000000.0,
+    },
+    {
+      id: "3",
+      itemId: "1213324",
+      itemName: "13 - Project 3",
+      accountId: "3123",
+      accountName: "Training costs",
+      from: 2000,
+      to: 8000,
+      approvedBudget: 500000.0,
+      current: 150000.0,
+      availableBudget: 8500000.0,
+    },
+  ]); // Check if pagination should be shown
+  const shouldShowPagination = rows.length > 10;
+
+  const handleBack = () => {
+    navigate("/app/transfer");
+  };
+
+  const [pendingSavedLocalIds, setPendingSavedLocalIds] = useState<string[]>(
+    []
+  );
+  const [awaitingSync, setAwaitingSync] = useState(false);
+
+  const isNonEmpty = (row: TransferTableRow) => {
+    // Check if any required segment has a value
+    const hasSegmentValue = requiredSegments.some((seg) => {
+      const segmentKey = `segment${seg.segment_type_oracle_number}`;
+      return row[segmentKey] !== "" && row[segmentKey] !== undefined;
+    });
+
+    return hasSegmentValue || row.to > 0 || row.from > 0;
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const nonEmptyEditedRows = editedRows.filter(isNonEmpty);
+      const nonEmptyLocalRows = localRows.filter(isNonEmpty);
+
+      const allRows = [...nonEmptyEditedRows, ...nonEmptyLocalRows];
+
+      const transfersToSave = allRows.map((row) => {
+        let fromCenter = row.from || 0;
+        let toCenter = row.to || 0;
+        if (fromCenter > 0) toCenter = 0;
+        else if (toCenter > 0) fromCenter = 0;
+
+        // Build dynamic segments object with the new structure
+        const segments: Record<string, { code: string }> = {};
+        requiredSegments.forEach((segment) => {
+          const segmentKey = `segment${segment.segment_type_oracle_number}`;
+          const segmentValue = row[segmentKey];
+          if (segmentValue && typeof segmentValue === "string") {
+            // Use the oracle number as the key (e.g., "5", "9", "11")
+            segments[segment.segment_type_oracle_number.toString()] = {
+              code: segmentValue,
+            };
+          }
+        });
+
+        return {
+          transaction: parseInt(transactionId),
+          from_center: fromCenter.toString(),
+          to_center: toCenter.toString(),
+          reason: "", // You can add a reason field to the row if needed
+          segments: segments,
+        };
+      });
+
+      // Save
+      const response = await createTransfer(transfersToSave).unwrap();
+
+      const hasErrors = response?.transfers
+        ? response.transfers.some(
+            (t) => t.validation_errors && t.validation_errors.length > 0
+          )
+        : false;
+
+      // Check if there are validation errors in the response
+      if (response?.transfers) {
+        if (hasErrors) {
+          // Show warning toast about validation errors
+          toast.error(
+            "Some transfers have validation errors. Please check the error messages."
+          );
+        } else if (response.summary?.balanced) {
+          toast.success("Transfers saved successfully and balanced!");
+        } else {
+          toast.success("Transfers saved successfully!");
+        }
+      } else {
+        toast.success("Transfers saved successfully!");
+      }
+
+      if (!hasErrors && nonEmptyLocalRows.length > 0) {
+        setPendingSavedLocalIds(nonEmptyLocalRows.map((r) => r.id));
+        setAwaitingSync(true);
+      }
+
+      // ✅ Immediately remove only the local rows that were saved
+      // const savedLocalIds = nonEmptyLocalRows.map((r) => r.id);
+      // setLocalRows((prev) => {
+      //   const next = prev.filter((r) => !savedLocalIds.includes(r.id));
+      //   if (next.length > 0) {
+      //     localStorage.setItem(`localRows_${transactionId}`, JSON.stringify(next));
+      //   } else {
+      //     localStorage.removeItem(`localRows_${transactionId}`);
+      //   }
+      //   return next;
+      // });
+
+      // Ask RTK to refetch API rows
+      store.dispatch(
+        transferDetailsApi.util.invalidateTags(["TransferDetails"])
+      );
+    } catch (err) {
+      console.error("Error saving transfers:", err);
+      toast.error("Error saving transfers. Please try again.");
+      // (no local deletion on error)
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!awaitingSync) return;
+    if (!apiData?.transfers) return;
+
+    // We assume the refetch has brought back the rows we just created.
+    // Remove only the local rows that were part of this save.
+    setLocalRows((prev) => {
+      const next = prev.filter((r) => !pendingSavedLocalIds.includes(r.id));
+      // Update localStorage accordingly
+      if (next.length > 0) {
+        localStorage.setItem(
+          `localRows_${transactionId}`,
+          JSON.stringify(next)
+        );
+      } else {
+        localStorage.removeItem(`localRows_${transactionId}`);
+      }
+      return next;
+    });
+
+    // done syncing
+    setPendingSavedLocalIds([]);
+    setAwaitingSync(false);
+  }, [apiData, awaitingSync, pendingSavedLocalIds, transactionId]);
+
+  // Check if submit should be disabled
+  const isSubmitDisabled = () => {
+    // Filter out default rows (empty rows with no data)
+    const nonDefaultEditedRows = editedRows.filter((row) => {
+      if (!row.id.startsWith("default-")) return true;
+
+      // Check if any dynamic segment has a value
+      const hasSegmentValue = requiredSegments.some((seg) => {
+        const segmentKey = `segment${seg.segment_type_oracle_number}`;
+        return row[segmentKey] !== "" && row[segmentKey] !== undefined;
+      });
+
+      return hasSegmentValue;
+    });
+
+    // Count total valid rows (API rows + local rows)
+    const totalValidRows =
+      (apiData?.transfers?.length || 0) +
+      localRows.length +
+      nonDefaultEditedRows.length;
+
+    // Check if there are fewer than 2 rows
+    const hasInsufficientRows = totalValidRows < 2;
+
+    // Check if there are validation errors in any row
+    const hasValidationErrors = [...editedRows, ...localRows].some(
+      (row) => row.validation_errors && row.validation_errors.length > 0
+    );
+
+    return hasInsufficientRows || hasValidationErrors;
+  };
+
+  const handleSubmit = async () => {
+    if (!isSubmitDisabled()) {
+      setIsSubmitting(true);
+      try {
+        // Call the submit API
+        await submitTransfer({
+          transaction: parseInt(transactionId),
+        }).unwrap();
+
+        // Show success toast
+        toast.success("Transfer submitted successfully!");
+
+        // Set submitted state
+        setIsSubmitted(true);
+
+        console.log(
+          "Transfer submitted successfully for transaction:",
+          transactionId
+        );
+      } catch (error) {
+        console.error("Error submitting transfer:", error);
+        toast.error("Error submitting transfer. Please try again.");
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Helper function to fetch financial data when all required segments are selected
+  const fetchFinancialDataForRow = async (
+    rowId: string,
+    segments: Record<number, string> // Changed to accept dynamic segments by oracle number
+  ) => {
+    try {
+      // Check if all required segments are filled
+      const allRequiredFilled = requiredSegments.every(
+        (seg) => segments[seg.segment_type_oracle_number]
+      );
+
+      if (!allRequiredFilled) {
+        console.log(
+          `Row ${rowId}: Not all required segments filled, skipping API call`
+        );
+        return {};
+      }
+
+      // Build the API parameters dynamically with Segment format (e.g., Segment5, Segment9)
+      const apiSegments: Record<string, string | number> = {};
+
+      // Add each segment with capitalized Segment prefix
+      requiredSegments.forEach((seg) => {
+        const segmentKey = `Segment${seg.segment_type_oracle_number}`;
+        const segmentValue = segments[seg.segment_type_oracle_number];
+        // Use the value as-is (string or number)
+        apiSegments[segmentKey] = segmentValue;
+      });
+
+      console.log(
+        `Row ${rowId}: Calling financial data API with segments:`,
+        apiSegments
+      );
+
+      // Use RTK Query's initiate method to trigger the query manually
+      const result = await store
+        .dispatch(
+          transferDetailsApi.endpoints.getFinancialData.initiate({
+            segments: apiSegments,
+          })
+        )
+        .unwrap();
+
+      console.log(`Row ${rowId}: Financial data fetched:`, result);
+
+      // 🧪 MOCK DATA FOR TESTING - TODO: Remove after testing
+      // Uncomment the lines below to test with mock data
+      /*
       const mockResult = {
         message: "Retrieved 2 segment funds",
         count: 2,
@@ -676,872 +682,879 @@ export default function TransferDetails() {
       const records = mockResult.data || [];
       */
 
-     // The API returns an array with multiple budget records
-     const records = result.data || [];
-
-     if (records.length === 0) {
-       console.log(`Row ${rowId}: No financial data found in API response`);
-       return {};
-     }
-
-     console.log(
-       `Row ${rowId}: Processing ${records.length} budget record(s):`,
-       records
-     );
-
-     // Use the FIRST record (MOFA_CASH) for main column values
-     const firstRecord = records[0];
-     console.log(firstRecord);
-
-     // Find MOFA_COST_2 record for cost value calculation
-     const mofaCost2Record = records.find(
-       (r) => r.Control_budget_name === "MOFA_COST_2"
-     );
-
-     // Calculate cost value from MOFA_COST_2 (Funds_available / 2)
-     const costValue = mofaCost2Record
-       ? (mofaCost2Record.Funds_available || 0) / 2
-       : 0;
-
-     // Collect all budget names
-     const controlBudgetNames = records
-       .map((r) => r.Control_budget_name)
-       .filter(Boolean);
-
-     // Apply financial data using FIRST record values
-     const financialUpdates = {
-       encumbrance: firstRecord.Encumbrance || 0,
-       availableBudget: firstRecord.Funds_available || 0,
-       actual: firstRecord.Actual || 0,
-       approvedBudget: firstRecord.Budget || 0,
-       other_ytd: firstRecord.Other || 0,
-       period: firstRecord.Period_name || "",
-       control_budget_name: controlBudgetNames.join(", "),
-       costValue: costValue, // From MOFA_COST_2 (second record)
-     };
-
-     console.log(
-       `Row ${rowId}: Using first record (${firstRecord.Control_budget_name}) for main values`
-     );
-     console.log(`Row ${rowId}: Cost value from MOFA_COST_2: ${costValue}`);
-     console.log(`Row ${rowId}: Applying financial updates:`, financialUpdates);
-
-     return financialUpdates;
-   } catch (error) {
-     console.error(`Error fetching financial data for row ${rowId}:`, error);
-     return {};
-   }
- };
-
- const addNewRow = () => {
-   const newRow: TransferTableRow = {
-     id: `new-${Date.now()}`,
-     to: 0,
-     from: 0,
-     encumbrance: 0,
-     availableBudget: 0,
-     actual: 0,
-     approvedBudget: 0,
-     other_ytd: 0,
-     period: "",
-     validation_errors: [], // Explicitly set as empty array (no errors)
-     commitments: "0",
-     obligations: "0",
-     other_consumption: "0",
-   };
-
-   // Add dynamic segment fields
-   requiredSegments.forEach((segment) => {
-     const segmentKey = `segment${segment.segment_type_oracle_number}`;
-     newRow[segmentKey] = "";
-     newRow[`${segmentKey}_name`] = "";
-   });
-
-   setLocalRows((prevRows) => {
-     const updatedRows = [...prevRows, newRow];
-     // Save to localStorage when adding new rows
-     localStorage.setItem(
-       `localRows_${transactionId}`,
-       JSON.stringify(updatedRows)
-     );
-     return updatedRows;
-   });
- };
-
- // Function to delete a row
- const deleteRow = (rowId: string) => {
-   // Check if this is a local row (new row)
-   if (rowId.startsWith("new-")) {
-     setLocalRows((prevRows) => {
-       const updatedRows = prevRows.filter((row) => row.id !== rowId);
-
-       // Update localStorage when deleting local rows
-       if (updatedRows.length > 0) {
-         localStorage.setItem(
-           `localRows_${transactionId}`,
-           JSON.stringify(updatedRows)
-         );
-       } else {
-         localStorage.removeItem(`localRows_${transactionId}`);
-       }
-
-       console.log(`Deleted local row ${rowId}`);
-       return updatedRows;
-     });
-   } else {
-     // For existing API rows, remove from editedRows
-     setEditedRows((prevRows) => {
-       const updatedRows = prevRows.filter((row) => row.id !== rowId);
-       console.log(`Deleted API row ${rowId}`);
-       return updatedRows;
-     });
-   }
- };
-
- const updateRow = async (
-   rowId: string,
-   field: keyof TransferTableRow,
-   value: string | number
- ) => {
-   // Handle business logic for from/to mutual exclusivity
-   const updatedValue = value;
-   const additionalUpdates: Partial<TransferTableRow> = {};
-
-   if (field === "from" && Number(value) > 0) {
-     additionalUpdates.to = 0;
-   } else if (field === "to" && Number(value) > 0) {
-     additionalUpdates.from = 0;
-   }
-
-   // Update the row state immediately first (don't wait for API)
-   // Check if this is a local row (new row)
-   if (rowId.startsWith("new-")) {
-     setLocalRows((prevRows) => {
-       const updatedRows = prevRows.map((row) => {
-         if (row.id === rowId) {
-           return { ...row, [field]: updatedValue, ...additionalUpdates };
-         }
-         return row;
-       });
-
-       // Save to localStorage when updating local rows
-       localStorage.setItem(
-         `localRows_${transactionId}`,
-         JSON.stringify(updatedRows)
-       );
-       return updatedRows;
-     });
-   } else {
-     // For existing API rows (including default rows), update editedRows
-     setEditedRows((prevRows) =>
-       prevRows.map((row) => {
-         if (row.id === rowId) {
-           return { ...row, [field]: updatedValue, ...additionalUpdates };
-         }
-         return row;
-       })
-     );
-   }
-
-   // Now handle financial data API call if needed (after UI update)
-   // Check if this is a dynamic segment field
-   const isDynamicSegmentField = requiredSegments.some(
-     (seg) => field === `segment${seg.segment_type_oracle_number}`
-   );
-
-   if (isDynamicSegmentField) {
-     // Determine which state array to check based on row type
-     const isNewRow = rowId.startsWith("new-");
-     const currentRowArray = isNewRow ? localRows : editedRows;
-     const currentRow = currentRowArray.find((r) => r.id === rowId);
-
-     if (currentRow) {
-       // Build segments object from current row values
-       const segments: Record<number, string> = {};
-       requiredSegments.forEach((seg) => {
-         const segmentKey = `segment${seg.segment_type_oracle_number}`;
-         if (field === segmentKey) {
-           segments[seg.segment_type_oracle_number] = value.toString();
-         } else {
-           segments[seg.segment_type_oracle_number] =
-             (currentRow[segmentKey] as string) || "";
-         }
-       });
-
-       console.log(`Row ${rowId}: Current segments state:`, segments);
-
-       // Check if all required segments are filled
-       const allSegmentsFilled = requiredSegments.every(
-         (seg) => segments[seg.segment_type_oracle_number]
-       );
-
-       // Only call API if ALL required segments are now complete
-       if (allSegmentsFilled) {
-         console.log(
-           `Row ${rowId}: ✅ All required segments complete! Calling financial data API...`
-         );
-         console.log(`Row ${rowId}: API call with segments:`, segments);
-
-         // Call API in background (don't await)
-         fetchFinancialDataForRow(rowId, segments)
-           .then((financialUpdates) => {
-             console.log(
-               `Row ${rowId}: Financial data received:`,
-               financialUpdates
-             );
-
-             // Apply financial data to the row after API response
-             if (isNewRow) {
-               setLocalRows((prevRows) => {
-                 const updatedRows = prevRows.map((row) => {
-                   if (row.id === rowId) {
-                     return { ...row, ...financialUpdates };
-                   }
-                   return row;
-                 });
-                 localStorage.setItem(
-                   `localRows_${transactionId}`,
-                   JSON.stringify(updatedRows)
-                 );
-                 return updatedRows;
-               });
-             } else {
-               setEditedRows((prevRows) =>
-                 prevRows.map((row) => {
-                   if (row.id === rowId) {
-                     return { ...row, ...financialUpdates };
-                   }
-                   return row;
-                 })
-               );
-             }
-           })
-           .catch((error) => {
-             console.error(
-               `Error fetching financial data for row ${rowId}:`,
-               error
-             );
-           });
-       } else {
-         console.log(
-           `Row ${rowId}: ⏳ Segments incomplete, waiting for all required segments. Missing:`,
-           requiredSegments
-             .filter((seg) => !segments[seg.segment_type_oracle_number])
-             .map((seg) => seg.segment_name)
-         );
-       }
-     }
-   }
- };
-
- // Define columns for SharedTable
- const columns: TableColumn[] = [
-   {
-     id: "itemId",
-     header: "Item ID",
-     render: (_, row) => {
-       const detailRow = row as unknown as TransferDetailRow;
-       return <span className="text-sm text-gray-900">{detailRow.itemId}</span>;
-     },
-   },
-   {
-     id: "itemName",
-     header: "Item Name",
-     render: (_, row) => {
-       const detailRow = row as unknown as TransferDetailRow;
-       return (
-         <span className="text-sm text-gray-900">{detailRow.itemName}</span>
-       );
-     },
-   },
-   {
-     id: "accountId",
-     header: "Account ID",
-     render: (_, row) => {
-       const detailRow = row as unknown as TransferDetailRow;
-       return (
-         <span className="text-sm text-gray-900">{detailRow.accountId}</span>
-       );
-     },
-   },
-   {
-     id: "accountName",
-     header: "Account Name",
-     render: (_, row) => {
-       const detailRow = row as unknown as TransferDetailRow;
-       return (
-         <span className="text-sm text-gray-900">{detailRow.accountName}</span>
-       );
-     },
-   },
-   {
-     id: "from",
-     header: "From",
-     showSum: true,
-     render: (_, row) => {
-       const detailRow = row as unknown as TransferDetailRow;
-       return (
-         <span className="text-sm text-gray-900">
-           {detailRow.from.toLocaleString()}
-         </span>
-       );
-     },
-   },
-   {
-     id: "to",
-     header: "To",
-     showSum: true,
-     render: (_, row) => {
-       const detailRow = row as unknown as TransferDetailRow;
-       return (
-         <span className="text-sm text-gray-900">
-           {detailRow.to.toLocaleString()}
-         </span>
-       );
-     },
-   },
-   {
-     id: "approvedBudget",
-     header: "Approved Budget",
-     showSum: true,
-     render: (_, row) => {
-       const detailRow = row as unknown as TransferDetailRow;
-       return (
-         <span className="text-sm text-gray-900">
-           {detailRow.approvedBudget.toLocaleString()}
-         </span>
-       );
-     },
-   },
-   {
-     id: "current",
-     header: "Current",
-     showSum: true,
-     render: (_, row) => {
-       const detailRow = row as unknown as TransferDetailRow;
-       return (
-         <span className="text-sm text-gray-900">
-           {detailRow.current.toLocaleString()}
-         </span>
-       );
-     },
-   },
-   {
-     id: "availableBudget",
-     header: "Available Budget",
-     showSum: true,
-     render: (_, row) => {
-       const detailRow = row as unknown as TransferDetailRow;
-       return (
-         <span className="text-sm text-gray-900">
-           {detailRow.availableBudget.toLocaleString()}
-         </span>
-       );
-     },
-   },
- ];
-
- // Helper function to generate dynamic segment columns
- const generateDynamicSegmentColumns = (): TableColumn[] => {
-   const dynamicColumns: TableColumn[] = [];
-
-   requiredSegments.forEach((segment) => {
-     const segmentKey = `segment${segment.segment_type_oracle_number}`;
-     const segmentOptions = createSegmentOptions(segment.segment_id);
-
-     // Add code column with dropdown
-     dynamicColumns.push({
-       id: segmentKey,
-       header: segment.segment_name, // Display the Arabic name
-
-       render: (_, row) => {
-         const transferRow = row as unknown as TransferTableRow;
-         return isSubmitted ? (
-           <span className="text-sm text-gray-900">
-             {transferRow[segmentKey] as string}
-           </span>
-         ) : (
-           <Select
-             value={
-               segmentOptions.find(
-                 (o) => o.value === transferRow[segmentKey]
-               ) ?? null
-             }
-             onChange={(opt) => {
-               updateRow(transferRow.id, segmentKey, opt?.value || "");
-               if (opt)
-                 updateRow(transferRow.id, `${segmentKey}_name`, opt.name);
-             }}
-             options={segmentOptions}
-             placeholder={`Select ${segment.segment_name}`}
-             isSearchable
-             isClearable
-             className="w-full"
-             classNamePrefix="react-select"
-             styles={{
-               control: (base) => ({
-                 ...base,
-                 border: "1px solid #E2E2E2",
-                 borderRadius: "6px",
-                 minHeight: "38px",
-                 fontSize: "12px",
-               }),
-               menu: (base) => ({
-                 ...base,
-                 zIndex: 9999,
-               }),
-               menuPortal: (base) => ({
-                 ...base,
-                 zIndex: 9999,
-               }),
-             }}
-             menuPortalTarget={document.body}
-           />
-         );
-       },
-     });
-
-     // Add name column (read-only display)
-     dynamicColumns.push({
-       id: `${segmentKey}_name`,
-       header: `${segment.segment_name}`, // With "Name" to differentiate
-
-       render: (_, row) => {
-         const transferRow = row as unknown as TransferTableRow;
-         return (
-           <span className="text-sm text-gray-900">
-             {transferRow[`${segmentKey}_name`] as string}
-           </span>
-         );
-       },
-     });
-   });
-
-   return dynamicColumns;
- };
-
- // Keep the old columns for the main transfer table
- const columnsDetails: TableColumn[] = [
-   {
-     id: "validation",
-     header: "Status",
-     render: (_, row) => {
-       const transferRow = row as unknown as TransferTableRow;
-       const hasErrors =
-         transferRow.validation_errors &&
-         transferRow.validation_errors.length > 0;
-
-       return (
-         <div className="flex items-center  gap-3 justify-center">
-           {apiData?.status.status === "not yet sent for approval" ||
-           apiData?.summary?.status === "not yet sent for approval" ? (
-             <button
-               onClick={() => deleteRow(transferRow.id)}
-               className="flex items-center justify-center w-6 h-6 bg-red-100 border border-red-300 rounded-full text-red-600 hover:bg-red-200 transition-colors"
-               title="Delete row"
-             >
-               <svg
-                 width="12"
-                 height="12"
-                 viewBox="0 0 12 12"
-                 fill="none"
-                 xmlns="http://www.w3.org/2000/svg"
-               >
-                 <path
-                   d="M9 3L3 9M3 3L9 9"
-                   stroke="currentColor"
-                   strokeWidth="1.5"
-                   strokeLinecap="round"
-                   strokeLinejoin="round"
-                 />
-               </svg>
-             </button>
-           ) : null}
-
-           {hasErrors ? (
-             <button
-               onClick={() =>
-                 handleValidationErrorClick(transferRow.validation_errors || [])
-               }
-               className="flex items-center justify-center w-6 h-6 bg-yellow-100 border border-yellow-300 rounded-full text-yellow-600 hover:bg-yellow-200 transition-colors"
-               title="Click to view validation errors"
-             >
-               <svg
-                 width="12"
-                 height="12"
-                 viewBox="0 0 12 12"
-                 fill="none"
-                 xmlns="http://www.w3.org/2000/svg"
-               >
-                 <path
-                   d="M6 1L11 10H1L6 1Z"
-                   stroke="currentColor"
-                   strokeWidth="1.5"
-                   strokeLinejoin="round"
-                 />
-                 <path
-                   d="M6 4V6.5"
-                   stroke="currentColor"
-                   strokeWidth="1.5"
-                   strokeLinecap="round"
-                 />
-                 <circle cx="6" cy="8.5" r="0.5" fill="currentColor" />
-               </svg>
-             </button>
-           ) : (
-             <div className="w-6 h-6 bg-green-100 border border-green-300 rounded-full flex items-center justify-center">
-               <svg
-                 width="12"
-                 height="12"
-                 viewBox="0 0 12 12"
-                 fill="none"
-                 xmlns="http://www.w3.org/2000/svg"
-               >
-                 <path
-                   d="M2.5 6L4.5 8L9.5 3"
-                   stroke="#16a34a"
-                   strokeWidth="1.5"
-                   strokeLinecap="round"
-                   strokeLinejoin="round"
-                 />
-               </svg>
-             </div>
-           )}
-         </div>
-       );
-     },
-   },
-
-   // Dynamic segment columns will be inserted here
-   ...generateDynamicSegmentColumns(),
-
-   {
-     id: "encumbrance",
-     header: "Encumbrance",
-     showSum: true,
-
-     render: (_, row) => {
-       const transferRow = row as unknown as TransferTableRow;
-       const value = transferRow.encumbrance || 0;
-       return (
-         <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-       );
-     },
-   },
-   {
-     id: "availableBudget",
-     header: "Available Budget",
-     showSum: true,
-
-     render: (_, row) => {
-       const transferRow = row as unknown as TransferTableRow;
-       const value = transferRow.availableBudget || 0;
-       return (
-         <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-       );
-     },
-   },
-
-   {
-     id: "actual",
-     header: "Actual",
-     showSum: true,
-
-     render: (_, row) => {
-       const transferRow = row as unknown as TransferTableRow;
-       const value = transferRow.actual || 0;
-       return (
-         <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-       );
-     },
-   },
-   {
-     id: "commitments",
-     header: "Commitments",
-     showSum: true,
-
-     render: (_, row) => {
-       const transferRow = row as unknown as TransferTableRow;
-       const value = Number(transferRow.commitments) || 0;
-       return (
-         <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-       );
-     },
-   },
-   {
-     id: "obligations",
-     header: "Obligations",
-     showSum: true,
-
-     render: (_, row) => {
-       const transferRow = row as unknown as TransferTableRow;
-       const value = Number(transferRow.obligations) || 0;
-       return (
-         <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-       );
-     },
-   },
-   {
-     id: "other_consumption",
-     header: "Other Consumption",
-     showSum: true,
-
-     render: (_, row) => {
-       const transferRow = row as unknown as TransferTableRow;
-       const value = Number(transferRow.other_consumption) || 0;
-       return (
-         <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-       );
-     },
-   },
-   {
-     id: "approvedBudget",
-     header: "Approved Budget",
-     showSum: true,
-
-     render: (_, row) => {
-       const transferRow = row as unknown as TransferTableRow;
-       const value = transferRow.approvedBudget || 0;
-       return (
-         <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-       );
-     },
-   },
-   {
-     id: "other_ytd",
-     header: "Other YTD",
-     showSum: true,
-
-     render: (_, row) => {
-       const transferRow = row as unknown as TransferTableRow;
-       const value = transferRow.other_ytd || 0;
-       return (
-         <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-       );
-     },
-   },
-   {
-     id: "period",
-     header: "Period",
-
-     render: (_, row) => {
-       const transferRow = row as unknown as TransferTableRow;
-       return (
-         <span className="text-sm text-gray-900">{transferRow.period}</span>
-       );
-     },
-   },
-   {
-     id: "costValue",
-     header: "قيمة التكاليف",
-     showSum: true,
-
-     render: (_, row) => {
-       const transferRow = row as unknown as TransferTableRow;
-       // Show cost value only if it's greater than 0
-       const value = transferRow.costValue || 0;
-       if (value > 0) {
-         return (
-           <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-         );
-       }
-       return <span className="text-sm text-gray-400">-</span>;
-     },
-   },
-   {
-     id: "from",
-     header: "From",
-     showSum: true,
-
-     render: (_, row) => {
-       const transferRow = row as unknown as TransferTableRow;
-
-       return isSubmitted ? (
-         <span className={`text-sm text-gray-900 `}>
-           {formatNumber(transferRow.from)}
-         </span>
-       ) : (
-         <input
-           type="number"
-           value={transferRow.from || ""}
-           onChange={(e) =>
-             updateRow(transferRow.id, "from", Number(e.target.value) || 0)
-           }
-           className={`w-full px-3 py-2 border rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-[#AFAFAF] `}
-           placeholder="From"
-         />
-       );
-     },
-   },
-   {
-     id: "to",
-     header: "To",
-     showSum: true,
-
-     render: (_, row) => {
-       const transferRow = row as unknown as TransferTableRow;
-
-       return isSubmitted ? (
-         <span className={`text-sm text-gray-900 `}>
-           {formatNumber(transferRow.to)}
-         </span>
-       ) : (
-         <input
-           type="number"
-           value={transferRow.to || ""}
-           onChange={(e) =>
-             updateRow(transferRow.id, "to", Number(e.target.value) || 0)
-           }
-           className={`w-full px-3 py-2 border rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-[#AFAFAF] `}
-           placeholder="To"
-         />
-       );
-     },
-   },
- ];
-
- // Handler for validation error click
- const handleValidationErrorClick = (errors: string[]) => {
-   setSelectedValidationErrors(errors);
-   setIsValidationErrorModalOpen(true);
- };
-
- const [isAttachmentsModalOpen, setIsAttachmentsModalOpen] = useState(false);
- const [isReportModalOpen, setIsReportModalOpen] = useState(false);
- const [isValidationErrorModalOpen, setIsValidationErrorModalOpen] =
-   useState(false);
- const [selectedValidationErrors, setSelectedValidationErrors] = useState<
-   string[]
- >([]);
-
- const [isDragOver, setIsDragOver] = useState(false);
- const [selectedFile, setSelectedFile] = useState<File | null>(null);
- const [isUploading, setIsUploading] = useState(false);
- const [isReopenClicked, setIsReopenClicked] = useState(false);
-
- // Handler for attachments click
- const handleAttachmentsClick = () => {
-   setIsAttachmentsModalOpen(true);
- };
-
- const handleDragOver = (e: React.DragEvent) => {
-   e.preventDefault();
-   setIsDragOver(true);
- };
-
- const handleDragLeave = (e: React.DragEvent) => {
-   e.preventDefault();
-   setIsDragOver(false);
- };
-
- const handleDrop = (e: React.DragEvent) => {
-   e.preventDefault();
-   setIsDragOver(false);
-
-   const files = Array.from(e.dataTransfer.files);
-   const validFile = files.find(
-     (file) =>
-       file.type ===
-         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-       file.type === "application/pdf" ||
-       file.type === "application/msword" ||
-       file.type ===
-         "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-       file.name.endsWith(".xlsx") ||
-       file.name.endsWith(".pdf") ||
-       file.name.endsWith(".doc") ||
-       file.name.endsWith(".docx")
-   );
-
-   if (validFile) {
-     handleFileSelect(validFile);
-   } else {
-     alert("Please upload a valid file (.xlsx, .pdf, .doc, .docx)");
-   }
- };
-
- const handleFileSelect = (file: File) => {
-   console.log("File selected:", file.name, file.size, file.type);
-   setSelectedFile(file);
- };
-
- const handleUploadFile = async () => {
-   if (!selectedFile) {
-     toast.error("Please select a file to upload");
-     return;
-   }
-
-   setIsUploading(true);
-   try {
-     await uploadExcel({
-       file: selectedFile,
-       transaction: parseInt(transactionId),
-     }).unwrap();
-
-     toast.success("Excel file uploaded successfully!");
-     setIsAttachmentsModalOpen(false);
-     setSelectedFile(null);
-
-     console.log("Excel file uploaded successfully");
-   } catch (error) {
-     console.error("Error uploading Excel file:", error);
-     toast.error("Failed to upload Excel file. Please try again.");
-   } finally {
-     setIsUploading(false);
-   }
- };
-
- const handleReopenRequest = async () => {
-   try {
-     // Set the state immediately to hide the button
-     setIsReopenClicked(true);
-
-     await reopenTransfer({
-       transaction: parseInt(transactionId),
-       action: "reopen",
-     }).unwrap();
-
-     toast.success("Transfer request reopened successfully!");
-     console.log("Transfer request reopened successfully");
-
-     // Optionally navigate back to transfer list or refresh the page
-     // navigate('/app/transfer');
-   } catch (error) {
-     console.error("Error reopening transfer request:", error);
-     toast.error("Failed to reopen transfer request. Please try again.");
-
-     // Reset the state if there was an error so user can try again
-     setIsReopenClicked(false);
-   }
- };
-
- // Show error state
- // if (error) {
- //   const errorMessage =
- //     "data" in error
- //       ? JSON.stringify(error.data)
- //       : "message" in error
- //       ? error.message
- //       : "Failed to load transfer details";
-
- //   return (
- //     <div className="flex items-center justify-center min-h-[400px]">
- //       <div className="text-lg text-red-600">Error: {errorMessage}</div>
- //     </div>
- //   );
- // }
-
- // Show loading state while data is being fetched
- if (isLoading || isLoadingSegmentTypes) {
-   return (
-     <div className="flex items-center justify-center min-h-screen">
-       <div className="flex flex-col items-center gap-4">
-         <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#4E8476]"></div>
-         <p className="text-gray-600 text-lg">Loading transfer details...</p>
-       </div>
-     </div>
-   );
- }
+      // The API returns an array with multiple budget records
+      const records = result.data || [];
+
+      if (records.length === 0) {
+        console.log(`Row ${rowId}: No financial data found in API response`);
+        return {};
+      }
+
+      console.log(
+        `Row ${rowId}: Processing ${records.length} budget record(s):`,
+        records
+      );
+
+      // Use the FIRST record (MOFA_CASH) for main column values
+      const firstRecord = records[0];
+      console.log(firstRecord);
+
+      // Find MOFA_COST_2 record for cost value calculation
+      const mofaCost2Record = records.find(
+        (r) => r.Control_budget_name === "MOFA_COST_2"
+      );
+
+      // Calculate cost value from MOFA_COST_2 (Funds_available / 2)
+      const costValue = mofaCost2Record
+        ? (mofaCost2Record.Funds_available || 0) / 2
+        : 0;
+
+      // Collect all budget names
+      const controlBudgetNames = records
+        .map((r) => r.Control_budget_name)
+        .filter(Boolean);
+
+      // Apply financial data using FIRST record values
+      const financialUpdates = {
+        encumbrance: firstRecord.Encumbrance || 0,
+        availableBudget: firstRecord.Funds_available || 0,
+        actual: firstRecord.Actual || 0,
+        approvedBudget: firstRecord.Budget || 0,
+        other_ytd: firstRecord.Other || 0,
+        period: firstRecord.Period_name || "",
+        control_budget_name: controlBudgetNames.join(", "),
+        costValue: costValue, // From MOFA_COST_2 (second record)
+      };
+
+      console.log(
+        `Row ${rowId}: Using first record (${firstRecord.Control_budget_name}) for main values`
+      );
+      console.log(`Row ${rowId}: Cost value from MOFA_COST_2: ${costValue}`);
+      console.log(
+        `Row ${rowId}: Applying financial updates:`,
+        financialUpdates
+      );
+
+      return financialUpdates;
+    } catch (error) {
+      console.error(`Error fetching financial data for row ${rowId}:`, error);
+      return {};
+    }
+  };
+
+  const addNewRow = () => {
+    const newRow: TransferTableRow = {
+      id: `new-${Date.now()}`,
+      to: 0,
+      from: 0,
+      encumbrance: 0,
+      availableBudget: 0,
+      actual: 0,
+      approvedBudget: 0,
+      other_ytd: 0,
+      period: "",
+      validation_errors: [], // Explicitly set as empty array (no errors)
+      commitments: "0",
+      obligations: "0",
+      other_consumption: "0",
+    };
+
+    // Add dynamic segment fields
+    requiredSegments.forEach((segment) => {
+      const segmentKey = `segment${segment.segment_type_oracle_number}`;
+      newRow[segmentKey] = "";
+      newRow[`${segmentKey}_name`] = "";
+    });
+
+    setLocalRows((prevRows) => {
+      const updatedRows = [...prevRows, newRow];
+      // Save to localStorage when adding new rows
+      localStorage.setItem(
+        `localRows_${transactionId}`,
+        JSON.stringify(updatedRows)
+      );
+      return updatedRows;
+    });
+  };
+
+  // Function to delete a row
+  const deleteRow = (rowId: string) => {
+    // Check if this is a local row (new row)
+    if (rowId.startsWith("new-")) {
+      setLocalRows((prevRows) => {
+        const updatedRows = prevRows.filter((row) => row.id !== rowId);
+
+        // Update localStorage when deleting local rows
+        if (updatedRows.length > 0) {
+          localStorage.setItem(
+            `localRows_${transactionId}`,
+            JSON.stringify(updatedRows)
+          );
+        } else {
+          localStorage.removeItem(`localRows_${transactionId}`);
+        }
+
+        console.log(`Deleted local row ${rowId}`);
+        return updatedRows;
+      });
+    } else {
+      // For existing API rows, remove from editedRows
+      setEditedRows((prevRows) => {
+        const updatedRows = prevRows.filter((row) => row.id !== rowId);
+        console.log(`Deleted API row ${rowId}`);
+        return updatedRows;
+      });
+    }
+  };
+
+  const updateRow = async (
+    rowId: string,
+    field: keyof TransferTableRow,
+    value: string | number
+  ) => {
+    // Handle business logic for from/to mutual exclusivity
+    const updatedValue = value;
+    const additionalUpdates: Partial<TransferTableRow> = {};
+
+    if (field === "from" && Number(value) > 0) {
+      additionalUpdates.to = 0;
+    } else if (field === "to" && Number(value) > 0) {
+      additionalUpdates.from = 0;
+    }
+
+    // Update the row state immediately first (don't wait for API)
+    // Check if this is a local row (new row)
+    if (rowId.startsWith("new-")) {
+      setLocalRows((prevRows) => {
+        const updatedRows = prevRows.map((row) => {
+          if (row.id === rowId) {
+            return { ...row, [field]: updatedValue, ...additionalUpdates };
+          }
+          return row;
+        });
+
+        // Save to localStorage when updating local rows
+        localStorage.setItem(
+          `localRows_${transactionId}`,
+          JSON.stringify(updatedRows)
+        );
+        return updatedRows;
+      });
+    } else {
+      // For existing API rows (including default rows), update editedRows
+      setEditedRows((prevRows) =>
+        prevRows.map((row) => {
+          if (row.id === rowId) {
+            return { ...row, [field]: updatedValue, ...additionalUpdates };
+          }
+          return row;
+        })
+      );
+    }
+
+    // Now handle financial data API call if needed (after UI update)
+    // Check if this is a dynamic segment field
+    const isDynamicSegmentField = requiredSegments.some(
+      (seg) => field === `segment${seg.segment_type_oracle_number}`
+    );
+
+    if (isDynamicSegmentField) {
+      // Determine which state array to check based on row type
+      const isNewRow = rowId.startsWith("new-");
+      const currentRowArray = isNewRow ? localRows : editedRows;
+      const currentRow = currentRowArray.find((r) => r.id === rowId);
+
+      if (currentRow) {
+        // Build segments object from current row values
+        const segments: Record<number, string> = {};
+        requiredSegments.forEach((seg) => {
+          const segmentKey = `segment${seg.segment_type_oracle_number}`;
+          if (field === segmentKey) {
+            segments[seg.segment_type_oracle_number] = value.toString();
+          } else {
+            segments[seg.segment_type_oracle_number] =
+              (currentRow[segmentKey] as string) || "";
+          }
+        });
+
+        console.log(`Row ${rowId}: Current segments state:`, segments);
+
+        // Check if all required segments are filled
+        const allSegmentsFilled = requiredSegments.every(
+          (seg) => segments[seg.segment_type_oracle_number]
+        );
+
+        // Only call API if ALL required segments are now complete
+        if (allSegmentsFilled) {
+          console.log(
+            `Row ${rowId}: ✅ All required segments complete! Calling financial data API...`
+          );
+          console.log(`Row ${rowId}: API call with segments:`, segments);
+
+          // Call API in background (don't await)
+          fetchFinancialDataForRow(rowId, segments)
+            .then((financialUpdates) => {
+              console.log(
+                `Row ${rowId}: Financial data received:`,
+                financialUpdates
+              );
+
+              // Apply financial data to the row after API response
+              if (isNewRow) {
+                setLocalRows((prevRows) => {
+                  const updatedRows = prevRows.map((row) => {
+                    if (row.id === rowId) {
+                      return { ...row, ...financialUpdates };
+                    }
+                    return row;
+                  });
+                  localStorage.setItem(
+                    `localRows_${transactionId}`,
+                    JSON.stringify(updatedRows)
+                  );
+                  return updatedRows;
+                });
+              } else {
+                setEditedRows((prevRows) =>
+                  prevRows.map((row) => {
+                    if (row.id === rowId) {
+                      return { ...row, ...financialUpdates };
+                    }
+                    return row;
+                  })
+                );
+              }
+            })
+            .catch((error) => {
+              console.error(
+                `Error fetching financial data for row ${rowId}:`,
+                error
+              );
+            });
+        } else {
+          console.log(
+            `Row ${rowId}: ⏳ Segments incomplete, waiting for all required segments. Missing:`,
+            requiredSegments
+              .filter((seg) => !segments[seg.segment_type_oracle_number])
+              .map((seg) => seg.segment_name)
+          );
+        }
+      }
+    }
+  };
+
+  // Define columns for SharedTable
+  const columns: TableColumn[] = [
+    {
+      id: "itemId",
+      header: "Item ID",
+      render: (_, row) => {
+        const detailRow = row as unknown as TransferDetailRow;
+        return (
+          <span className="text-sm text-gray-900">{detailRow.itemId}</span>
+        );
+      },
+    },
+    {
+      id: "itemName",
+      header: "Item Name",
+      render: (_, row) => {
+        const detailRow = row as unknown as TransferDetailRow;
+        return (
+          <span className="text-sm text-gray-900">{detailRow.itemName}</span>
+        );
+      },
+    },
+    {
+      id: "accountId",
+      header: "Account ID",
+      render: (_, row) => {
+        const detailRow = row as unknown as TransferDetailRow;
+        return (
+          <span className="text-sm text-gray-900">{detailRow.accountId}</span>
+        );
+      },
+    },
+    {
+      id: "accountName",
+      header: "Account Name",
+      render: (_, row) => {
+        const detailRow = row as unknown as TransferDetailRow;
+        return (
+          <span className="text-sm text-gray-900">{detailRow.accountName}</span>
+        );
+      },
+    },
+    {
+      id: "from",
+      header: "From",
+      showSum: true,
+      render: (_, row) => {
+        const detailRow = row as unknown as TransferDetailRow;
+        return (
+          <span className="text-sm text-gray-900">
+            {detailRow.from.toLocaleString()}
+          </span>
+        );
+      },
+    },
+    {
+      id: "to",
+      header: "To",
+      showSum: true,
+      render: (_, row) => {
+        const detailRow = row as unknown as TransferDetailRow;
+        return (
+          <span className="text-sm text-gray-900">
+            {detailRow.to.toLocaleString()}
+          </span>
+        );
+      },
+    },
+    {
+      id: "approvedBudget",
+      header: "Approved Budget",
+      showSum: true,
+      render: (_, row) => {
+        const detailRow = row as unknown as TransferDetailRow;
+        return (
+          <span className="text-sm text-gray-900">
+            {detailRow.approvedBudget.toLocaleString()}
+          </span>
+        );
+      },
+    },
+    {
+      id: "current",
+      header: "Current",
+      showSum: true,
+      render: (_, row) => {
+        const detailRow = row as unknown as TransferDetailRow;
+        return (
+          <span className="text-sm text-gray-900">
+            {detailRow.current.toLocaleString()}
+          </span>
+        );
+      },
+    },
+    {
+      id: "availableBudget",
+      header: "Available Budget",
+      showSum: true,
+      render: (_, row) => {
+        const detailRow = row as unknown as TransferDetailRow;
+        return (
+          <span className="text-sm text-gray-900">
+            {detailRow.availableBudget.toLocaleString()}
+          </span>
+        );
+      },
+    },
+  ];
+
+  // Helper function to generate dynamic segment columns
+  const generateDynamicSegmentColumns = (): TableColumn[] => {
+    const dynamicColumns: TableColumn[] = [];
+
+    requiredSegments.forEach((segment) => {
+      const segmentKey = `segment${segment.segment_type_oracle_number}`;
+      const segmentOptions = createSegmentOptions(segment.segment_id);
+
+      // Add code column with dropdown
+      dynamicColumns.push({
+        id: segmentKey,
+        header: segment.segment_name, // Display the Arabic name
+
+        render: (_, row) => {
+          const transferRow = row as unknown as TransferTableRow;
+          return isSubmitted ? (
+            <span className="text-sm text-gray-900">
+              {transferRow[segmentKey] as string}
+            </span>
+          ) : (
+            <Select
+              value={
+                segmentOptions.find(
+                  (o) => o.value === transferRow[segmentKey]
+                ) ?? null
+              }
+              onChange={(opt) => {
+                updateRow(transferRow.id, segmentKey, opt?.value || "");
+                if (opt)
+                  updateRow(transferRow.id, `${segmentKey}_name`, opt.name);
+              }}
+              options={segmentOptions}
+              placeholder={`Select ${segment.segment_name}`}
+              isSearchable
+              isClearable
+              className="w-full"
+              classNamePrefix="react-select"
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  border: "1px solid #E2E2E2",
+                  borderRadius: "6px",
+                  minHeight: "38px",
+                  fontSize: "12px",
+                }),
+                menu: (base) => ({
+                  ...base,
+                  zIndex: 9999,
+                }),
+                menuPortal: (base) => ({
+                  ...base,
+                  zIndex: 9999,
+                }),
+              }}
+              menuPortalTarget={document.body}
+            />
+          );
+        },
+      });
+
+      // Add name column (read-only display)
+      dynamicColumns.push({
+        id: `${segmentKey}_name`,
+        header: `${segment.segment_name}`, // With "Name" to differentiate
+
+        render: (_, row) => {
+          const transferRow = row as unknown as TransferTableRow;
+          return (
+            <span className="text-sm text-gray-900">
+              {transferRow[`${segmentKey}_name`] as string}
+            </span>
+          );
+        },
+      });
+    });
+
+    return dynamicColumns;
+  };
+
+  // Keep the old columns for the main transfer table
+  const columnsDetails: TableColumn[] = [
+    {
+      id: "validation",
+      header: "Status",
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const hasErrors =
+          transferRow.validation_errors &&
+          transferRow.validation_errors.length > 0;
+
+        return (
+          <div className="flex items-center  gap-3 justify-center">
+            {apiData?.status.status === "not yet sent for approval" ||
+            apiData?.summary?.status === "not yet sent for approval" ? (
+              <button
+                onClick={() => deleteRow(transferRow.id)}
+                className="flex items-center justify-center w-6 h-6 bg-red-100 border border-red-300 rounded-full text-red-600 hover:bg-red-200 transition-colors"
+                title="Delete row"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M9 3L3 9M3 3L9 9"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            ) : null}
+
+            {hasErrors ? (
+              <button
+                onClick={() =>
+                  handleValidationErrorClick(
+                    transferRow.validation_errors || []
+                  )
+                }
+                className="flex items-center justify-center w-6 h-6 bg-yellow-100 border border-yellow-300 rounded-full text-yellow-600 hover:bg-yellow-200 transition-colors"
+                title="Click to view validation errors"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M6 1L11 10H1L6 1Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M6 4V6.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="6" cy="8.5" r="0.5" fill="currentColor" />
+                </svg>
+              </button>
+            ) : (
+              <div className="w-6 h-6 bg-green-100 border border-green-300 rounded-full flex items-center justify-center">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M2.5 6L4.5 8L9.5 3"
+                    stroke="#16a34a"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+
+    // Dynamic segment columns will be inserted here
+    ...generateDynamicSegmentColumns(),
+
+    {
+      id: "encumbrance",
+      header: "Encumbrance",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = transferRow.encumbrance || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "availableBudget",
+      header: "Available Budget",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = transferRow.availableBudget || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+
+    {
+      id: "actual",
+      header: "Actual",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = transferRow.actual || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "commitments",
+      header: "Commitments",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = Number(transferRow.commitments) || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "obligations",
+      header: "Obligations",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = Number(transferRow.obligations) || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "other_consumption",
+      header: "Other Consumption",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = Number(transferRow.other_consumption) || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "approvedBudget",
+      header: "Approved Budget",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = transferRow.approvedBudget || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "other_ytd",
+      header: "Other YTD",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = transferRow.other_ytd || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "period",
+      header: "Period",
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        return (
+          <span className="text-sm text-gray-900">{transferRow.period}</span>
+        );
+      },
+    },
+    {
+      id: "costValue",
+      header: "قيمة التكاليف",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        // Show cost value only if it's greater than 0
+        const value = transferRow.costValue || 0;
+        if (value > 0) {
+          return (
+            <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+          );
+        }
+        return <span className="text-sm text-gray-400">-</span>;
+      },
+    },
+    {
+      id: "from",
+      header: "From",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+
+        return isSubmitted ? (
+          <span className={`text-sm text-gray-900 `}>
+            {formatNumber(transferRow.from)}
+          </span>
+        ) : (
+          <input
+            type="number"
+            value={transferRow.from || ""}
+            onChange={(e) =>
+              updateRow(transferRow.id, "from", Number(e.target.value) || 0)
+            }
+            className={`w-full px-3 py-2 border rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-[#AFAFAF] `}
+            placeholder="From"
+          />
+        );
+      },
+    },
+    {
+      id: "to",
+      header: "To",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+
+        return isSubmitted ? (
+          <span className={`text-sm text-gray-900 `}>
+            {formatNumber(transferRow.to)}
+          </span>
+        ) : (
+          <input
+            type="number"
+            value={transferRow.to || ""}
+            onChange={(e) =>
+              updateRow(transferRow.id, "to", Number(e.target.value) || 0)
+            }
+            className={`w-full px-3 py-2 border rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-[#AFAFAF] `}
+            placeholder="To"
+          />
+        );
+      },
+    },
+  ];
+
+  // Handler for validation error click
+  const handleValidationErrorClick = (errors: string[]) => {
+    setSelectedValidationErrors(errors);
+    setIsValidationErrorModalOpen(true);
+  };
+
+  const [isAttachmentsModalOpen, setIsAttachmentsModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isValidationErrorModalOpen, setIsValidationErrorModalOpen] =
+    useState(false);
+  const [selectedValidationErrors, setSelectedValidationErrors] = useState<
+    string[]
+  >([]);
+
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isReopenClicked, setIsReopenClicked] = useState(false);
+
+  // Handler for attachments click
+  const handleAttachmentsClick = () => {
+    setIsAttachmentsModalOpen(true);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const validFile = files.find(
+      (file) =>
+        file.type ===
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+        file.type === "application/pdf" ||
+        file.type === "application/msword" ||
+        file.type ===
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        file.name.endsWith(".xlsx") ||
+        file.name.endsWith(".pdf") ||
+        file.name.endsWith(".doc") ||
+        file.name.endsWith(".docx")
+    );
+
+    if (validFile) {
+      handleFileSelect(validFile);
+    } else {
+      alert("Please upload a valid file (.xlsx, .pdf, .doc, .docx)");
+    }
+  };
+
+  const handleFileSelect = (file: File) => {
+    console.log("File selected:", file.name, file.size, file.type);
+    setSelectedFile(file);
+  };
+
+  const handleUploadFile = async () => {
+    if (!selectedFile) {
+      toast.error("Please select a file to upload");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      await uploadExcel({
+        file: selectedFile,
+        transaction: parseInt(transactionId),
+      }).unwrap();
+
+      toast.success("Excel file uploaded successfully!");
+      setIsAttachmentsModalOpen(false);
+      setSelectedFile(null);
+
+      console.log("Excel file uploaded successfully");
+    } catch (error) {
+      console.error("Error uploading Excel file:", error);
+      toast.error("Failed to upload Excel file. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleReopenRequest = async () => {
+    try {
+      // Set the state immediately to hide the button
+      setIsReopenClicked(true);
+
+      await reopenTransfer({
+        transaction: parseInt(transactionId),
+        action: "reopen",
+      }).unwrap();
+
+      toast.success("Transfer request reopened successfully!");
+      console.log("Transfer request reopened successfully");
+
+      // Optionally navigate back to transfer list or refresh the page
+      // navigate('/app/transfer');
+    } catch (error) {
+      console.error("Error reopening transfer request:", error);
+      toast.error("Failed to reopen transfer request. Please try again.");
+
+      // Reset the state if there was an error so user can try again
+      setIsReopenClicked(false);
+    }
+  };
+
+  // Show error state
+  // if (error) {
+  //   const errorMessage =
+  //     "data" in error
+  //       ? JSON.stringify(error.data)
+  //       : "message" in error
+  //       ? error.message
+  //       : "Failed to load transfer details";
+
+  //   return (
+  //     <div className="flex items-center justify-center min-h-[400px]">
+  //       <div className="text-lg text-red-600">Error: {errorMessage}</div>
+  //     </div>
+  //   );
+  // }
+
+  // Show loading state while data is being fetched
+  if (isLoading || isLoadingSegmentTypes) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#4E8476]"></div>
+          <p className="text-gray-600 text-lg">Loading transfer details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

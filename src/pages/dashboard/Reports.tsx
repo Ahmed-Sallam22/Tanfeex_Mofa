@@ -5,36 +5,35 @@ import { SharedSelect } from "@/shared/SharedSelect";
 import type { SelectOption } from "@/shared/SharedSelect";
 import { useMemo, useState } from "react";
 import {
-  useGetBalanceReportQuery,
-  type BalanceReportItem,
+  useGetSegmentsFundQuery,
+  type SegmentFundItem,
 } from "@/api/reports.api";
 
 export default function Reports() {
   // State management
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
-  const [selectedBudget, setSelectedBudget] =
-    useState<string>("MIC_HQ_MONTHLY");
+  const [selectedBudget, setSelectedBudget] = useState<string>("MOFA_CASH");
   const [isChangingSelection, setIsChangingSelection] =
     useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 10;
 
-  // Only make API call when both selections are made
+  // Only make API call when period is selected (budget has default)
   const {
     data: reportResponse,
     isLoading,
     error,
     isFetching,
-  } = useGetBalanceReportQuery(
+  } = useGetSegmentsFundQuery(
     {
       control_budget_name: selectedBudget,
-      as_of_period: selectedPeriod,
+      period_name: selectedPeriod,
       page: currentPage,
       page_size: itemsPerPage,
     },
     {
-      skip: !selectedPeriod || !selectedBudget, // Skip query if selections not made
+      skip: !selectedPeriod, // Skip query if period not selected
     }
   );
 
@@ -57,32 +56,21 @@ export default function Reports() {
   // Transform API data to table format - no client-side filtering with server pagination
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const transformedData: TableRow[] =
-    reportResponse?.data?.data?.map(
-      (item: BalanceReportItem, index: number) => ({
-        id: index + 1,
-        control_budget_name: safeValue(item.control_budget_name),
-        ledger_name: safeValue(item.ledger_name),
-        as_of_period: safeValue(item.as_of_period),
-        segment1: safeValue(item.segment1),
-        segment2: safeValue(item.segment2),
-        segment3: safeValue(item.segment3),
-        encumbrance_ytd: item.encumbrance_ytd || 0,
-        other_ytd: item.other_ytd || 0,
-        actual_ytd: item.actual_ytd || 0,
-        funds_available_asof: item.funds_available_asof || 0,
-        budget_ytd: item.budget_ytd || 0,
-        budget_adjustments: item.budget_adjustments || 0,
-        commitments: item.commitments || 0,
-        expenditures: item.expenditures || 0,
-        initial_budget: item.initial_budget || 0,
-        obligations: item.obligations || 0,
-        other_consumption: item.other_consumption || 0,
-        total_budget: item.total_budget || 0,
-        total_consumption: item.total_consumption || 0,
-        // Include original item for detail view
-        original: item,
-      })
-    ) || [];
+    reportResponse?.data?.map((item: SegmentFundItem, index: number) => ({
+      id: item.id || index + 1,
+      control_budget_name: safeValue(item.Control_budget_name),
+      period_name: safeValue(item.Period_name),
+      budget: item.Budget || 0,
+      encumbrance: item.Encumbrance || 0,
+      funds_available: item.Funds_available || 0,
+      commitment: item.Commitment || 0,
+      obligation: item.Obligation || 0,
+      actual: item.Actual || 0,
+      other: item.Other || 0,
+      created_at: safeValue(item.Created_at),
+      // Include original item for detail view
+      original: item,
+    })) || [];
 
   // Table columns configuration
   const reportColumns: TableColumn[] = [
@@ -96,54 +84,18 @@ export default function Reports() {
       ),
     },
     {
-      id: "ledger_name",
-      header: "Ledger Name",
-      accessor: "ledger_name",
-      minWidth: 150,
-      render: (value) => (
-        <span className="text-[#282828]">{safeValue(value)}</span>
-      ),
-    },
-    {
-      id: "as_of_period",
-      header: "As Of Period",
-      accessor: "as_of_period",
+      id: "period_name",
+      header: "Period Name",
+      accessor: "period_name",
       minWidth: 120,
       render: (value) => (
         <span className="text-[#282828]">{safeValue(value)}</span>
       ),
     },
     {
-      id: "segment1",
-      header: "Legal Entity",
-      accessor: "segment1",
-      minWidth: 120,
-      render: (value) => (
-        <span className="text-[#282828]">{safeValue(value)}</span>
-      ),
-    },
-    {
-      id: "segment2",
-      header: "Account",
-      accessor: "segment2",
-      minWidth: 120,
-      render: (value) => (
-        <span className="text-[#282828]">{safeValue(value)}</span>
-      ),
-    },
-    {
-      id: "segment3",
-      header: "Project",
-      accessor: "segment3",
-      minWidth: 120,
-      render: (value) => (
-        <span className="text-[#282828]">{safeValue(value)}</span>
-      ),
-    },
-    {
-      id: "encumbrance_ytd",
-      header: "Encumbrance PTD",
-      accessor: "encumbrance_ytd",
+      id: "budget",
+      header: "Budget",
+      accessor: "budget",
       showSum: true,
       minWidth: 140,
       render: (value) => (
@@ -153,11 +105,11 @@ export default function Reports() {
       ),
     },
     {
-      id: "other_ytd",
-      header: "Other PTD",
-      accessor: "other_ytd",
+      id: "encumbrance",
+      header: "Encumbrance",
+      accessor: "encumbrance",
       showSum: true,
-      minWidth: 120,
+      minWidth: 140,
       render: (value) => (
         <span className="font-medium text-[#282828]">
           {formatNumber(Number(value))}
@@ -165,21 +117,9 @@ export default function Reports() {
       ),
     },
     {
-      id: "actual_ytd",
-      header: "Actual PTD",
-      accessor: "actual_ytd",
-      showSum: true,
-      minWidth: 120,
-      render: (value) => (
-        <span className="font-medium text-[#282828]">
-          {formatNumber(Number(value))}
-        </span>
-      ),
-    },
-    {
-      id: "funds_available_asof",
+      id: "funds_available",
       header: "Funds Available",
-      accessor: "funds_available_asof",
+      accessor: "funds_available",
       showSum: true,
       minWidth: 140,
       render: (value) => (
@@ -187,31 +127,9 @@ export default function Reports() {
       ),
     },
     {
-      id: "budget_ytd",
-      header: "Budget PTD",
-      accessor: "budget_ytd",
-      showSum: true,
-      minWidth: 120,
-      render: (value) => (
-        <span className="font-medium ">{formatNumber(Number(value))}</span>
-      ),
-    },
-    {
-      id: "budget_adjustments",
-      header: "Budget Adjustments",
-      accessor: "budget_adjustments",
-      showSum: true,
-      minWidth: 150,
-      render: (value) => (
-        <span className="font-medium text-[#282828]">
-          {formatNumber(Number(value))}
-        </span>
-      ),
-    },
-    {
-      id: "commitments",
-      header: "Commitments",
-      accessor: "commitments",
+      id: "commitment",
+      header: "Commitment",
+      accessor: "commitment",
       showSum: true,
       minWidth: 120,
       render: (value) => (
@@ -221,9 +139,9 @@ export default function Reports() {
       ),
     },
     {
-      id: "expenditures",
-      header: "Expenditures",
-      accessor: "expenditures",
+      id: "obligation",
+      header: "Obligation",
+      accessor: "obligation",
       showSum: true,
       minWidth: 120,
       render: (value) => (
@@ -233,21 +151,9 @@ export default function Reports() {
       ),
     },
     {
-      id: "initial_budget",
-      header: "Initial Budget",
-      accessor: "initial_budget",
-      showSum: true,
-      minWidth: 130,
-      render: (value) => (
-        <span className="font-medium text-[#282828]">
-          {formatNumber(Number(value))}
-        </span>
-      ),
-    },
-    {
-      id: "obligations",
-      header: "Obligations",
-      accessor: "obligations",
+      id: "actual",
+      header: "Actual",
+      accessor: "actual",
       showSum: true,
       minWidth: 120,
       render: (value) => (
@@ -257,35 +163,11 @@ export default function Reports() {
       ),
     },
     {
-      id: "other_consumption",
-      header: "Other Consumption",
-      accessor: "other_consumption",
+      id: "other",
+      header: "Other",
+      accessor: "other",
       showSum: true,
-      minWidth: 150,
-      render: (value) => (
-        <span className="font-medium text-[#282828]">
-          {formatNumber(Number(value))}
-        </span>
-      ),
-    },
-    {
-      id: "total_budget",
-      header: "Total Budget",
-      accessor: "total_budget",
-      showSum: true,
-      minWidth: 130,
-      render: (value) => (
-        <span className="font-medium text-[#282828]">
-          {formatNumber(Number(value))}
-        </span>
-      ),
-    },
-    {
-      id: "total_consumption",
-      header: "Total Consumption",
-      accessor: "total_consumption",
-      showSum: true,
-      minWidth: 150,
+      minWidth: 120,
       render: (value) => (
         <span className="font-medium text-[#282828]">
           {formatNumber(Number(value))}
@@ -347,28 +229,17 @@ export default function Reports() {
     return transformedData.filter((r) => {
       // text fields
       const textHit =
-        includesI(r.control_budget_name, q) ||
-        includesI(r.ledger_name, q) ||
-        includesI(r.as_of_period, q) ||
-        includesI(r.segment1, q) ||
-        includesI(r.segment2, q) ||
-        includesI(r.segment3, q);
+        includesI(r.control_budget_name, q) || includesI(r.period_name, q);
 
       // numeric fields
       const numHit =
-        numMatches(r.encumbrance_ytd, q) ||
-        numMatches(r.other_ytd, q) ||
-        numMatches(r.actual_ytd, q) ||
-        numMatches(r.funds_available_asof, q) ||
-        numMatches(r.budget_ytd, q) ||
-        numMatches(r.budget_adjustments, q) ||
-        numMatches(r.commitments, q) ||
-        numMatches(r.expenditures, q) ||
-        numMatches(r.initial_budget, q) ||
-        numMatches(r.obligations, q) ||
-        numMatches(r.other_consumption, q) ||
-        numMatches(r.total_budget, q) ||
-        numMatches(r.total_consumption, q);
+        numMatches(r.budget, q) ||
+        numMatches(r.encumbrance, q) ||
+        numMatches(r.funds_available, q) ||
+        numMatches(r.commitment, q) ||
+        numMatches(r.obligation, q) ||
+        numMatches(r.actual, q) ||
+        numMatches(r.other, q);
 
       return textHit || numHit;
     });
@@ -377,25 +248,50 @@ export default function Reports() {
   // Determine if we should show loading (initial load, refetching, or changing selection)
   const shouldShowLoading = isLoading || isFetching || isChangingSelection;
 
-  // Select options for periods (months)
+  // Select options for periods (format: month-year like 1-25, 2-25, etc.)
   const periodOptions: SelectOption[] = [
-    { value: "jan-25", label: "January 2025" },
-    { value: "feb-25", label: "February 2025" },
-    { value: "mar-25", label: "March 2025" },
-    { value: "apr-25", label: "April 2025" },
-    { value: "may-25", label: "May 2025" },
-    { value: "jun-25", label: "June 2025" },
-    { value: "jul-25", label: "July 2025" },
-    { value: "aug-25", label: "August 2025" },
-    { value: "sep-25", label: "September 2025" },
-    { value: "oct-25", label: "October 2025" },
-    { value: "nov-25", label: "November 2025" },
-    { value: "dec-25", label: "December 2025" },
+    { value: "1-23", label: "January 2023" },
+    { value: "2-23", label: "February 2023" },
+    { value: "3-23", label: "March 2023" },
+    { value: "4-23", label: "April 2023" },
+    { value: "5-23", label: "May 2023" },
+    { value: "6-23", label: "June 2023" },
+    { value: "7-23", label: "July 2023" },
+    { value: "8-23", label: "August 2023" },
+    { value: "9-23", label: "September 2023" },
+    { value: "10-23", label: "October 2023" },
+    { value: "11-23", label: "November 2023" },
+    { value: "12-23", label: "December 2023" },
+    { value: "1-24", label: "January 2024" },
+    { value: "2-24", label: "February 2024" },
+    { value: "3-24", label: "March 2024" },
+    { value: "4-24", label: "April 2024" },
+    { value: "5-24", label: "May 2024" },
+    { value: "6-24", label: "June 2024" },
+    { value: "7-24", label: "July 2024" },
+    { value: "8-24", label: "August 2024" },
+    { value: "9-24", label: "September 2024" },
+    { value: "10-24", label: "October 2024" },
+    { value: "11-24", label: "November 2024" },
+    { value: "12-24", label: "December 2024" },
+    { value: "1-25", label: "January 2025" },
+    { value: "2-25", label: "February 2025" },
+    { value: "3-25", label: "March 2025" },
+    { value: "4-25", label: "April 2025" },
+    { value: "5-25", label: "May 2025" },
+    { value: "6-25", label: "June 2025" },
+    { value: "7-25", label: "July 2025" },
+    { value: "8-25", label: "August 2025" },
+    { value: "9-25", label: "September 2025" },
+    { value: "10-25", label: "October 2025" },
+    { value: "11-25", label: "November 2025" },
+    { value: "12-25", label: "December 2025" },
   ];
 
   // Select options for control budget
   const budgetOptions: SelectOption[] = [
-    { value: "MIC_HQ_MONTHLY", label: "MIC HQ Monthly" },
+    { value: "MOFA_CASH", label: "MOFA CASH" },
+    { value: "MOFA_COST_2", label: "MOFA COST 2" },
   ];
 
   return (
@@ -440,7 +336,7 @@ export default function Reports() {
           </div>
         </div>
       </div>
-      {selectedPeriod && selectedBudget ? (
+      {selectedPeriod ? (
         <div className="my-4 bg-white p-4 rounded-lg shadow-sm">
           <SearchBar
             placeholder="Search reports..."
@@ -454,7 +350,7 @@ export default function Reports() {
       ) : null}
 
       {/* Report Table */}
-      {!selectedPeriod || !selectedBudget ? (
+      {!selectedPeriod ? (
         <></>
       ) : shouldShowLoading ? (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
@@ -505,17 +401,17 @@ export default function Reports() {
           )}
 
           <SharedTable
-            title="Balance Report"
+            title="Segment Funds Report"
             columns={reportColumns}
             data={filteredData}
             maxHeight="600px"
             className="shadow-lg"
             showPagination={false}
             totalCount={
-              reportResponse?.data?.total_records || reportResponse?.data?.count
+              reportResponse?.total_records_in_db || reportResponse?.count
             }
-            hasNext={!!reportResponse?.data?.next}
-            hasPrevious={!!reportResponse?.data?.previous}
+            hasNext={!!reportResponse?.next}
+            hasPrevious={!!reportResponse?.previous}
             showActions={false}
             showFooter={true}
             showColumnSelector={true}

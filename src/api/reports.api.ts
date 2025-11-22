@@ -45,6 +45,47 @@ export interface BalanceReportParams {
   page_size?: number;
 }
 
+// New segment fund item structure
+export interface SegmentFundItem {
+  id: number;
+  Control_budget_name: string;
+  Period_name: string;
+  Budget: number;
+  Encumbrance: number;
+  Funds_available: number;
+  Commitment: number;
+  Obligation: number;
+  Actual: number;
+  Other: number;
+  Created_at: string;
+  control_budget_name: string;
+  period_name: string;
+}
+
+// New segment fund response structure
+export interface SegmentFundResponse {
+  message: string;
+  count: number;
+  total_records_in_db: number;
+  filters_applied: {
+    CONTROL_BUDGET_NAME: string;
+    PERIOD_NAME: string;
+  };
+  next: string | null;
+  previous: string | null;
+  page: number;
+  page_size: number;
+  data: SegmentFundItem[];
+}
+
+// New segment fund params
+export interface SegmentFundParams {
+  control_budget_name?: string;
+  period_name: string;
+  page?: number;
+  page_size?: number;
+}
+
 export const reportsApi = createApi({
   reducerPath: 'reportsApi',
   baseQuery: customBaseQuery,
@@ -63,9 +104,24 @@ export const reportsApi = createApi({
       }),
       providesTags: ['Report'],
     }),
+    // New endpoint for segment funds
+    getSegmentsFund: builder.query<SegmentFundResponse, SegmentFundParams>({
+      query: ({ control_budget_name = 'MOFA_CASH', period_name, page = 1, page_size = 10 }) => ({
+        url: `/accounts-entities/segments/get_segments_fund/`,
+        method: 'GET',
+        params: {
+          control_budget_name,
+          period_name,
+          page,
+          page_size,
+        },
+      }),
+      providesTags: ['Report'],
+    }),
   }),
 });
 
 export const { 
   useGetBalanceReportQuery,
+  useGetSegmentsFundQuery,
 } = reportsApi;
