@@ -201,9 +201,10 @@ export default function Reports() {
     setTimeout(() => setIsChangingSelection(false), 100);
   };
 
-  // const handlePageChange = (page: number) => {
-  //   setCurrentPage(page);
-  // };
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   // helpers (place above component return)
   const includesI = (hay: unknown, needle: string) =>
     String(hay ?? "")
@@ -250,42 +251,9 @@ export default function Reports() {
 
   // Select options for periods (format: month-year like 1-25, 2-25, etc.)
   const periodOptions: SelectOption[] = [
-    { value: "1-23", label: "January 2023" },
-    { value: "2-23", label: "February 2023" },
-    { value: "3-23", label: "March 2023" },
-    { value: "4-23", label: "April 2023" },
-    { value: "5-23", label: "May 2023" },
-    { value: "6-23", label: "June 2023" },
-    { value: "7-23", label: "July 2023" },
-    { value: "8-23", label: "August 2023" },
-    { value: "9-23", label: "September 2023" },
-    { value: "10-23", label: "October 2023" },
-    { value: "11-23", label: "November 2023" },
-    { value: "12-23", label: "December 2023" },
-    { value: "1-24", label: "January 2024" },
-    { value: "2-24", label: "February 2024" },
-    { value: "3-24", label: "March 2024" },
-    { value: "4-24", label: "April 2024" },
-    { value: "5-24", label: "May 2024" },
-    { value: "6-24", label: "June 2024" },
-    { value: "7-24", label: "July 2024" },
-    { value: "8-24", label: "August 2024" },
-    { value: "9-24", label: "September 2024" },
-    { value: "10-24", label: "October 2024" },
-    { value: "11-24", label: "November 2024" },
-    { value: "12-24", label: "December 2024" },
     { value: "1-25", label: "January 2025" },
-    { value: "2-25", label: "February 2025" },
-    { value: "3-25", label: "March 2025" },
-    { value: "4-25", label: "April 2025" },
-    { value: "5-25", label: "May 2025" },
-    { value: "6-25", label: "June 2025" },
-    { value: "7-25", label: "July 2025" },
-    { value: "8-25", label: "August 2025" },
-    { value: "9-25", label: "September 2025" },
-    { value: "10-25", label: "October 2025" },
-    { value: "11-25", label: "November 2025" },
-    { value: "12-25", label: "December 2025" },
+    { value: "1-24", label: "January 2024" },
+    { value: "1-23", label: "January 2023" },
   ];
 
   // Select options for control budget
@@ -406,7 +374,10 @@ export default function Reports() {
             data={filteredData}
             maxHeight="600px"
             className="shadow-lg"
-            showPagination={false}
+            showPagination={true}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
+            itemsPerPage={itemsPerPage}
             totalCount={
               reportResponse?.total_records_in_db || reportResponse?.count
             }
