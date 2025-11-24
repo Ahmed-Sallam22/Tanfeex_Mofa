@@ -363,6 +363,9 @@ export default function Reports() {
         </div>
       ) : null}
 
+      {/* Note: Column filters are now enabled in the table by default */}
+      {/* You can disable them by adding showColumnFilters={false} to SharedTable */}
+
       {/* Report Table */}
       {!selectedPeriod ? (
         <></>
@@ -432,6 +435,8 @@ export default function Reports() {
             showActions={false}
             showFooter={true}
             showColumnSelector={true}
+            showColumnFilters={true} // Column filters enabled - search under each column header
+            // Set to false to disable: showColumnFilters={false}
           />
         </div>
       )}

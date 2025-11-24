@@ -1052,6 +1052,19 @@ export default function TransferDetails() {
     },
   ];
 
+  // Helper function to translate segment names
+  const getSegmentHeader = (
+    segmentNumber: number,
+    segmentName: string
+  ): string => {
+    const translations: Record<number, string> = {
+      5: "Mofa Geographic",
+      9: "Mofa Cost Center",
+      11: "Mofa Budget",
+    };
+    return translations[segmentNumber] || segmentName;
+  };
+
   // Helper function to generate dynamic segment columns
   const generateDynamicSegmentColumns = (): TableColumn[] => {
     const dynamicColumns: TableColumn[] = [];
@@ -1059,11 +1072,15 @@ export default function TransferDetails() {
     requiredSegments.forEach((segment) => {
       const segmentKey = `segment${segment.segment_type_oracle_number}`;
       const segmentOptions = createSegmentOptions(segment.segment_id);
+      const translatedHeader = getSegmentHeader(
+        segment.segment_type_oracle_number,
+        segment.segment_name
+      );
 
       // Add code column with dropdown
       dynamicColumns.push({
         id: segmentKey,
-        header: segment.segment_name, // Display the Arabic name
+        header: translatedHeader,
 
         render: (_, row) => {
           const transferRow = row as unknown as TransferTableRow;
@@ -1115,7 +1132,7 @@ export default function TransferDetails() {
       // Add name column (read-only display)
       dynamicColumns.push({
         id: `${segmentKey}_name`,
-        header: `${segment.segment_name}`, // With "Name" to differentiate
+        header: `${translatedHeader}`,
 
         render: (_, row) => {
           const transferRow = row as unknown as TransferTableRow;
@@ -1346,7 +1363,7 @@ export default function TransferDetails() {
     },
     {
       id: "costValue",
-      header: "قيمة التكاليف",
+      header: "50% of Cost Budget",
       showSum: true,
 
       render: (_, row) => {

@@ -7,6 +7,7 @@ export interface FundRequestItem {
   amount: number;
   status: string;
   requested_by: string;
+  budget_control: string;
   user_id: number;
   request_date: string;
   code: string;

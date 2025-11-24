@@ -52,19 +52,18 @@ export default function PendingTransferDetails() {
     isLoading,
   } = useGetTransferDetailsQuery(transactionId);
 
+  // Fetch segment types for dynamic columns
+  const { data: segmentTypesData, isLoading: isLoadingSegmentTypes } =
+    useGetSegmentTypesQuery();
+  const requiredSegments = useMemo(() => {
+    if (!segmentTypesData?.data) return [];
+    return segmentTypesData.data
+      .filter((segment) => segment.segment_type_is_required)
+      .sort(
+        (a, b) => a.segment_type_oracle_number - b.segment_type_oracle_number
+      );
+  }, [segmentTypesData]);
 
-    // Fetch segment types for dynamic columns
-    const { data: segmentTypesData, isLoading: isLoadingSegmentTypes } =
-      useGetSegmentTypesQuery();
-    const requiredSegments = useMemo(() => {
-      if (!segmentTypesData?.data) return [];
-      return segmentTypesData.data
-        .filter((segment) => segment.segment_type_is_required)
-        .sort(
-          (a, b) => a.segment_type_oracle_number - b.segment_type_oracle_number
-        );
-    }, [segmentTypesData]);
-  
   // State for processed rows
   const [rows, setRows] = useState<TransferTableRow[]>([]);
   const createDefaultRow = (): TransferTableRow => {
@@ -183,212 +182,231 @@ export default function PendingTransferDetails() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-   const generateDynamicSegmentColumns = (): TableColumn[] => {
-     const dynamicColumns: TableColumn[] = [];
 
-     requiredSegments.forEach((segment) => {
-       const segmentKey = `segment${segment.segment_type_oracle_number}`;
-       // Add code column with dropdown
-       dynamicColumns.push({
-         id: segmentKey,
-         header: segment.segment_name, // Display the Arabic name
+  // Helper function to translate segment names
+  const getSegmentHeader = (
+    segmentNumber: number,
+    segmentName: string
+  ): string => {
+    const translations: Record<number, string> = {
+      5: "Mofa Geographic",
+      9: "Mofa Cost Center",
+      11: "Mofa Budget",
+    };
+    return translations[segmentNumber] || segmentName;
+  };
 
-         render: (_, row) => {
-           const transferRow = row as unknown as TransferTableRow;
-           return (
-             <span className="text-sm text-gray-900">
-               {transferRow[segmentKey] as string}
-             </span>
-           );
-         },
-       });
+  const generateDynamicSegmentColumns = (): TableColumn[] => {
+    const dynamicColumns: TableColumn[] = [];
 
-       // Add name column (read-only display)
-       dynamicColumns.push({
-         id: `${segmentKey}_name`,
-         header: `${segment.segment_name}`, // With "Name" to differentiate
+    requiredSegments.forEach((segment) => {
+      const segmentKey = `segment${segment.segment_type_oracle_number}`;
+      const translatedHeader = getSegmentHeader(
+        segment.segment_type_oracle_number,
+        segment.segment_name
+      );
 
-         render: (_, row) => {
-           const transferRow = row as unknown as TransferTableRow;
-           return (
-             <span className="text-sm text-gray-900">
-               {transferRow[`${segmentKey}_name`] as string}
-             </span>
-           );
-         },
-       });
-     });
+      // Add code column with dropdown
+      dynamicColumns.push({
+        id: segmentKey,
+        header: translatedHeader,
 
-     return dynamicColumns;
-   };
+        render: (_, row) => {
+          const transferRow = row as unknown as TransferTableRow;
+          return (
+            <span className="text-sm text-gray-900">
+              {transferRow[segmentKey] as string}
+            </span>
+          );
+        },
+      });
+
+      // Add name column (read-only display)
+      dynamicColumns.push({
+        id: `${segmentKey}_name`,
+        header: `${translatedHeader}`,
+
+        render: (_, row) => {
+          const transferRow = row as unknown as TransferTableRow;
+          return (
+            <span className="text-sm text-gray-900">
+              {transferRow[`${segmentKey}_name`] as string}
+            </span>
+          );
+        },
+      });
+    });
+
+    return dynamicColumns;
+  };
   // Keep the old columns for the main transfer table
   const columnsDetails: TableColumn[] = [
-     // Dynamic segment columns will be inserted here
-     ...generateDynamicSegmentColumns(),
- 
-     {
-       id: "encumbrance",
-       header: "Encumbrance",
-       showSum: true,
- 
-       render: (_, row) => {
-         const transferRow = row as unknown as TransferTableRow;
-         const value = transferRow.encumbrance || 0;
-         return (
-           <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-         );
-       },
-     },
-     {
-       id: "availableBudget",
-       header: "Available Budget",
-       showSum: true,
- 
-       render: (_, row) => {
-         const transferRow = row as unknown as TransferTableRow;
-         const value = transferRow.availableBudget || 0;
-         return (
-           <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-         );
-       },
-     },
- 
-     {
-       id: "actual",
-       header: "Actual",
-       showSum: true,
- 
-       render: (_, row) => {
-         const transferRow = row as unknown as TransferTableRow;
-         const value = transferRow.actual || 0;
-         return (
-           <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-         );
-       },
-     },
-     {
-       id: "commitments",
-       header: "Commitments",
-       showSum: true,
- 
-       render: (_, row) => {
-         const transferRow = row as unknown as TransferTableRow;
-         const value = Number(transferRow.commitments) || 0;
-         return (
-           <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-         );
-       },
-     },
-     {
-       id: "obligations",
-       header: "Obligations",
-       showSum: true,
- 
-       render: (_, row) => {
-         const transferRow = row as unknown as TransferTableRow;
-         const value = Number(transferRow.obligations) || 0;
-         return (
-           <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-         );
-       },
-     },
-     {
-       id: "other_consumption",
-       header: "Other Consumption",
-       showSum: true,
- 
-       render: (_, row) => {
-         const transferRow = row as unknown as TransferTableRow;
-         const value = Number(transferRow.other_consumption) || 0;
-         return (
-           <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-         );
-       },
-     },
-     {
-       id: "approvedBudget",
-       header: "Approved Budget",
-       showSum: true,
- 
-       render: (_, row) => {
-         const transferRow = row as unknown as TransferTableRow;
-         const value = transferRow.approvedBudget || 0;
-         return (
-           <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-         );
-       },
-     },
-     {
-       id: "other_ytd",
-       header: "Other YTD",
-       showSum: true,
- 
-       render: (_, row) => {
-         const transferRow = row as unknown as TransferTableRow;
-         const value = transferRow.other_ytd || 0;
-         return (
-           <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-         );
-       },
-     },
-     {
-       id: "period",
-       header: "Period",
- 
-       render: (_, row) => {
-         const transferRow = row as unknown as TransferTableRow;
-         return (
-           <span className="text-sm text-gray-900">{transferRow.period}</span>
-         );
-       },
-     },
-     {
-       id: "costValue",
-       header: "قيمة التكاليف",
-       showSum: true,
- 
-       render: (_, row) => {
-         const transferRow = row as unknown as TransferTableRow;
-         // Show cost value only if it's greater than 0
-         const value = transferRow.costValue || 0;
-         if (value > 0) {
-           return (
-             <span className="text-sm text-gray-900">{formatNumber(value)}</span>
-           );
-         }
-         return <span className="text-sm text-gray-400">-</span>;
-       },
-     },
-     {
-       id: "from",
-       header: "From",
-       showSum: true,
- 
-       render: (_, row) => {
-         const transferRow = row as unknown as TransferTableRow;
- 
-         return (
-           <span className={`text-sm text-gray-900 `}>
-             {formatNumber(transferRow.from)}
-           </span>
-         );
-       },
-     },
-     {
-       id: "to",
-       header: "To",
-       showSum: true,
- 
-       render: (_, row) => {
-         const transferRow = row as unknown as TransferTableRow;
- 
-         return (
-           <span className={`text-sm text-gray-900 `}>
-             {formatNumber(transferRow.to)}
-           </span>
-         );
-       },
-     },
+    // Dynamic segment columns will be inserted here
+    ...generateDynamicSegmentColumns(),
+
+    {
+      id: "encumbrance",
+      header: "Encumbrance",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = transferRow.encumbrance || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "availableBudget",
+      header: "Available Budget",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = transferRow.availableBudget || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+
+    {
+      id: "actual",
+      header: "Actual",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = transferRow.actual || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "commitments",
+      header: "Commitments",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = Number(transferRow.commitments) || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "obligations",
+      header: "Obligations",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = Number(transferRow.obligations) || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "other_consumption",
+      header: "Other Consumption",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = Number(transferRow.other_consumption) || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "approvedBudget",
+      header: "Approved Budget",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = transferRow.approvedBudget || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "other_ytd",
+      header: "Other YTD",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = transferRow.other_ytd || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "period",
+      header: "Period",
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        return (
+          <span className="text-sm text-gray-900">{transferRow.period}</span>
+        );
+      },
+    },
+    {
+      id: "costValue",
+      header: "50% of Cost Budget",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        // Show cost value only if it's greater than 0
+        const value = transferRow.costValue || 0;
+        if (value > 0) {
+          return (
+            <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+          );
+        }
+        return <span className="text-sm text-gray-400">-</span>;
+      },
+    },
+    {
+      id: "from",
+      header: "From",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+
+        return (
+          <span className={`text-sm text-gray-900 `}>
+            {formatNumber(transferRow.from)}
+          </span>
+        );
+      },
+    },
+    {
+      id: "to",
+      header: "To",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+
+        return (
+          <span className={`text-sm text-gray-900 `}>
+            {formatNumber(transferRow.to)}
+          </span>
+        );
+      },
+    },
   ];
 
   const [isApproveModalOpen, setIsApproveModalOpen] = useState<boolean>(false);

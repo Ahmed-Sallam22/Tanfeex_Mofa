@@ -182,15 +182,34 @@ export default function PendingAdjustmentsDetails() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+
+  // Helper function to translate segment names
+  const getSegmentHeader = (
+    segmentNumber: number,
+    segmentName: string
+  ): string => {
+    const translations: Record<number, string> = {
+      5: "Mofa Geographic",
+      9: "Mofa Cost Center",
+      11: "Mofa Budget",
+    };
+    return translations[segmentNumber] || segmentName;
+  };
+
   const generateDynamicSegmentColumns = (): TableColumn[] => {
     const dynamicColumns: TableColumn[] = [];
 
     requiredSegments.forEach((segment) => {
       const segmentKey = `segment${segment.segment_type_oracle_number}`;
+      const translatedHeader = getSegmentHeader(
+        segment.segment_type_oracle_number,
+        segment.segment_name
+      );
+
       // Add code column with dropdown
       dynamicColumns.push({
         id: segmentKey,
-        header: segment.segment_name, // Display the Arabic name
+        header: translatedHeader,
 
         render: (_, row) => {
           const transferRow = row as unknown as TransferTableRow;
@@ -205,7 +224,7 @@ export default function PendingAdjustmentsDetails() {
       // Add name column (read-only display)
       dynamicColumns.push({
         id: `${segmentKey}_name`,
-        header: `${segment.segment_name}`, // With "Name" to differentiate
+        header: `${translatedHeader}`,
 
         render: (_, row) => {
           const transferRow = row as unknown as TransferTableRow;
@@ -343,7 +362,7 @@ export default function PendingAdjustmentsDetails() {
     },
     {
       id: "costValue",
-      header: "قيمة التكاليف",
+      header: "50% of Cost Budget",
       showSum: true,
 
       render: (_, row) => {

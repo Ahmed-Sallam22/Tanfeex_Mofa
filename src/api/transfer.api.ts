@@ -11,6 +11,7 @@ export interface TransferItem {
   request_date: string;
   code: string;
   notes:string;
+  budget_control: string;
   gl_posting_status: string;
   approvel_1: string;
   approvel_2: string;
@@ -48,6 +49,7 @@ export interface TransferListParams {
 
 export interface CreateTransferRequest {
   transaction_date: string;
+  budget_control: string;
   notes: string;
   type: string;
 }

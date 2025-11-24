@@ -227,6 +227,8 @@ export interface SharedTableProps {
   onView?: (row: TableRow, index: number) => void;
   // Column management props
   showColumnSelector?: boolean;
+  // Column filter props
+  showColumnFilters?: boolean; // Default true - show search inputs under each column
 }
 
 export function SharedTable({
@@ -263,6 +265,7 @@ export function SharedTable({
   onReject,
   onView,
   showColumnSelector = false,
+  showColumnFilters = true, // Default to true
 }: SharedTableProps) {
   const [columnWidths, setColumnWidths] = useState<{ [key: string]: number }>(
     {}
@@ -281,6 +284,11 @@ export function SharedTable({
     new Set(columns.map((col) => col.id))
   );
 
+  // Column filters state
+  const [columnFilters, setColumnFilters] = useState<{ [key: string]: string }>(
+    {}
+  );
+
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{
     key: string | null;
@@ -295,11 +303,70 @@ export function SharedTable({
   } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Calculate pagination values
+  // Column filter handler
+  const handleColumnFilterChange = (columnId: string, value: string) => {
+    setColumnFilters((prev) => ({
+      ...prev,
+      [columnId]: value,
+    }));
+
+    // Reset to first page when filtering
+    if (onPageChange) {
+      onPageChange(1);
+    }
+  };
+
+  // Filter data based on column filters
+  const filteredData = React.useMemo(() => {
+    if (!showColumnFilters || Object.keys(columnFilters).length === 0) {
+      return data;
+    }
+
+    return data.filter((row) => {
+      return Object.entries(columnFilters).every(([columnId, filterValue]) => {
+        if (!filterValue || filterValue.trim() === "") return true;
+
+        const column = columns.find((col) => col.id === columnId);
+        if (!column) return true;
+
+        const accessor = column.accessor || column.id;
+        const cellValue = row[accessor];
+
+        // Handle different value types
+        if (cellValue === null || cellValue === undefined) {
+          return false;
+        }
+
+        // Convert to string for comparison
+        const cellString = String(cellValue).toLowerCase();
+        const filterString = filterValue.toLowerCase();
+
+        // Check if it's a number and do numeric comparison as well
+        if (typeof cellValue === "number") {
+          const numericFilter = parseFloat(filterValue);
+          if (!isNaN(numericFilter)) {
+            // Check if the formatted number includes the search term
+            const formattedNumber = new Intl.NumberFormat("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }).format(cellValue);
+            return (
+              formattedNumber.toLowerCase().includes(filterString) ||
+              cellValue.toString().includes(filterValue)
+            );
+          }
+        }
+
+        return cellString.includes(filterString);
+      });
+    });
+  }, [data, columnFilters, columns, showColumnFilters]);
+
+  // Calculate pagination values (after filteredData is available)
   const isServerSidePagination = totalCount !== undefined;
   const totalPages = isServerSidePagination
     ? Math.ceil(totalCount / itemsPerPage)
-    : Math.ceil(data.length / itemsPerPage);
+    : Math.ceil(filteredData.length / itemsPerPage);
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -318,16 +385,16 @@ export function SharedTable({
     setSortConfig({ key: columnId, direction });
   };
 
-  // Sort data function
+  // Sort data function (now works on filtered data)
   const sortedData = React.useMemo(() => {
-    if (!sortConfig.key) return data;
+    if (!sortConfig.key) return filteredData;
 
     const column = columns.find((col) => col.id === sortConfig.key);
-    if (!column) return data;
+    if (!column) return filteredData;
 
     const accessor = column.accessor || column.id;
 
-    return [...data].sort((a, b) => {
+    return [...filteredData].sort((a, b) => {
       const aValue = a[accessor];
       const bValue = b[accessor];
 
@@ -371,7 +438,7 @@ export function SharedTable({
       }
       return 0;
     });
-  }, [data, sortConfig, columns]);
+  }, [filteredData, sortConfig, columns]);
 
   // For server-side pagination, use data as-is (already paginated from API)
   // For client-side pagination, slice the data
@@ -401,10 +468,10 @@ export function SharedTable({
     });
   };
 
-  // Calculate column sums for footer
+  // Calculate column sums for footer (use filtered data)
   const calculateColumnSum = (columnId: string, accessor?: string) => {
     const key = accessor || columnId;
-    const sum = data.reduce((sum, row) => {
+    const sum = filteredData.reduce((sum, row) => {
       const value = row[key];
       const numValue =
         typeof value === "number" ? value : parseFloat(String(value)) || 0;
@@ -982,6 +1049,46 @@ export function SharedTable({
                   </th>
                 )}
               </tr>
+
+              {/* Column Filters Row */}
+              {showColumnFilters && (
+                <tr className="bg-white border-b border-gray-200">
+                  {filteredColumns.map((column) => (
+                    <th
+                      key={`filter-${column.id}`}
+                      className="px-4 py-2"
+                      style={{
+                        width: columnWidths[column.id] || column.width || 150,
+                        minWidth: column.minWidth || 100,
+                      }}
+                    >
+                      <input
+                        type="text"
+                        placeholder={`Filter ${column.header}...`}
+                        value={columnFilters[column.id] || ""}
+                        onChange={(e) =>
+                          handleColumnFilterChange(column.id, e.target.value)
+                        }
+                        className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-[#4E8476] focus:ring-1 focus:ring-[#4E8476]"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </th>
+                  ))}
+
+                  {/* Empty cell for actions column */}
+                  {showActions && (
+                    <th
+                      className="px-4 py-2"
+                      style={{
+                        width: columnWidths["actions"] || 120,
+                        minWidth: 100,
+                      }}
+                    >
+                      {/* Empty space for actions column */}
+                    </th>
+                  )}
+                </tr>
+              )}
             </thead>
 
             {/* Table Body */}
@@ -1043,59 +1150,72 @@ export function SharedTable({
                                   <ChatIcon />
                                 </button>
                               )}
-                                {documents && (
+                              {documents && (
                                 <button
                                   onClick={() => handleView(row, globalIndex)}
                                   className="p-1.5   hover:bg-green-200    border rounded-full border-[#EEEEEE] cursor-pointer  transition-colors"
                                   title="View"
                                 >
-                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M2.18391 10.1965C1.61729 9.46033 1.33398 9.09227 1.33398 7.99935C1.33398 6.90643 1.61729 6.53837 2.18391 5.80224C3.31529 4.33239 5.21273 2.66602 8.00065 2.66602C10.7886 2.66602 12.686 4.33239 13.8174 5.80224C14.384 6.53837 14.6673 6.90643 14.6673 7.99935C14.6673 9.09227 14.384 9.46033 13.8174 10.1965C12.686 11.6663 10.7886 13.3327 8.00065 13.3327C5.21273 13.3327 3.31529 11.6663 2.18391 10.1965Z" stroke="#757575" stroke-width="1.5"/>
-<path d="M10 8C10 9.10457 9.10457 10 8 10C6.89543 10 6 9.10457 6 8C6 6.89543 6.89543 6 8 6C9.10457 6 10 6.89543 10 8Z" stroke="#757575" stroke-width="1.5"/>
-</svg>
-
+                                  <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 16 16"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      d="M2.18391 10.1965C1.61729 9.46033 1.33398 9.09227 1.33398 7.99935C1.33398 6.90643 1.61729 6.53837 2.18391 5.80224C3.31529 4.33239 5.21273 2.66602 8.00065 2.66602C10.7886 2.66602 12.686 4.33239 13.8174 5.80224C14.384 6.53837 14.6673 6.90643 14.6673 7.99935C14.6673 9.09227 14.384 9.46033 13.8174 10.1965C12.686 11.6663 10.7886 13.3327 8.00065 13.3327C5.21273 13.3327 3.31529 11.6663 2.18391 10.1965Z"
+                                      stroke="#757575"
+                                      stroke-width="1.5"
+                                    />
+                                    <path
+                                      d="M10 8C10 9.10457 9.10457 10 8 10C6.89543 10 6 9.10457 6 8C6 6.89543 6.89543 6 8 6C9.10457 6 10 6.89543 10 8Z"
+                                      stroke="#757575"
+                                      stroke-width="1.5"
+                                    />
+                                  </svg>
                                 </button>
                               )}
-                              {!documents&&(
-  <button
-                                onClick={() => handleEdit(row, globalIndex)}
-                                className="p-1.5  hover:bg-blue-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-blue-700 transition-colors"
-                                title="Edit"
-                              >
-                                <svg
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 16 16"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
+                              {!documents && (
+                                <button
+                                  onClick={() => handleEdit(row, globalIndex)}
+                                  className="p-1.5  hover:bg-blue-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-blue-700 transition-colors"
+                                  title="Edit"
                                 >
-                                  <path
-                                    d="M9.03564 12.9827H13.3335"
-                                    stroke="#757575"
-                                    strokeWidth="1.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                  <path
-                                    fillRule="evenodd"
-                                    clipRule="evenodd"
-                                    d="M8.46206 3.11698C8.9217 2.56765 9.74798 2.4871 10.3087 2.93739C10.3397 2.96182 11.3358 3.73565 11.3358 3.73565C11.9518 4.10804 12.1432 4.89969 11.7624 5.50383C11.7422 5.53618 6.11062 12.5805 6.11062 12.5805C5.92326 12.8142 5.63885 12.9522 5.33489 12.9555L3.17822 12.9826L2.6923 10.9259C2.62423 10.6367 2.6923 10.333 2.87966 10.0992L8.46206 3.11698Z"
-                                    stroke="#757575"
-                                    strokeWidth="1.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                  <path
-                                    d="M7.41992 4.42432L10.6509 6.90558"
-                                    stroke="#757575"
-                                    strokeWidth="1.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              </button>
+                                  <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 16 16"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      d="M9.03564 12.9827H13.3335"
+                                      stroke="#757575"
+                                      strokeWidth="1.5"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                    <path
+                                      fillRule="evenodd"
+                                      clipRule="evenodd"
+                                      d="M8.46206 3.11698C8.9217 2.56765 9.74798 2.4871 10.3087 2.93739C10.3397 2.96182 11.3358 3.73565 11.3358 3.73565C11.9518 4.10804 12.1432 4.89969 11.7624 5.50383C11.7422 5.53618 6.11062 12.5805 6.11062 12.5805C5.92326 12.8142 5.63885 12.9522 5.33489 12.9555L3.17822 12.9826L2.6923 10.9259C2.62423 10.6367 2.6923 10.333 2.87966 10.0992L8.46206 3.11698Z"
+                                      stroke="#757575"
+                                      strokeWidth="1.5"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                    <path
+                                      d="M7.41992 4.42432L10.6509 6.90558"
+                                      stroke="#757575"
+                                      strokeWidth="1.5"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </button>
                               )}
-                            
+
                               <button
                                 onClick={() =>
                                   handleDeleteClick(row, globalIndex)

@@ -37,6 +37,7 @@ export default function FundAdjustments() {
     useState<FundAdjustmentItem | null>(null);
   const [time_period, settime_period] = useState<string>("");
   const [reason, setreason] = useState<string>("");
+  const [budget_control, setBudgetControl] = useState<string>("");
 
   // Attachments state
   const [isAttachmentsModalOpen, setIsAttachmentsModalOpen] = useState(false);
@@ -63,6 +64,7 @@ export default function FundAdjustments() {
   const [validationErrors, setValidationErrors] = useState<{
     time_period?: string;
     reason?: string;
+    budget_control?: string;
   }>({});
 
   // API calls
@@ -475,9 +477,15 @@ export default function FundAdjustments() {
     setreason(notes); // Use HTML directly
     console.log("✅ Set reason to:", notes);
 
+    // Set budget control if available
+    const budgetControl = originalFundAdjustment.budget_control || "";
+    setBudgetControl(budgetControl);
+    console.log("✅ Set budget_control to:", budgetControl);
+
     console.log("AFTER setting form values:", {
       time_period_set: finalDateValue,
       reason_set: notes,
+      budget_control_set: budgetControl,
     });
 
     // Trigger modal opening via useEffect after state updates
@@ -524,6 +532,7 @@ export default function FundAdjustments() {
     // Clear form values
     settime_period("");
     setreason("");
+    setBudgetControl("");
 
     // Open modal after clearing values
     setIsCreateModalOpen(true);
@@ -537,6 +546,7 @@ export default function FundAdjustments() {
     setSelectedFundAdjustment(null);
     settime_period("");
     setreason("");
+    setBudgetControl("");
     setValidationErrors({});
     setShouldOpenModal(false); // Reset the modal trigger
   };
@@ -546,7 +556,11 @@ export default function FundAdjustments() {
     setValidationErrors({});
 
     // Validation
-    const errors: { time_period?: string; reason?: string } = {};
+    const errors: {
+      time_period?: string;
+      reason?: string;
+      budget_control?: string;
+    } = {};
 
     if (!time_period.trim()) {
       errors.time_period = "Please select a transaction date";
@@ -554,6 +568,10 @@ export default function FundAdjustments() {
 
     if (!reason.trim()) {
       errors.reason = "Please enter notes for the fund adjustment";
+    }
+
+    if (!budget_control.trim()) {
+      errors.budget_control = "Please select a budget control";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -567,6 +585,7 @@ export default function FundAdjustments() {
         transaction_date: time_period,
         notes: reason, // reason already contains HTML from RichTextEditor
         type: "FAD", // Static as requested
+        budget_control: budget_control,
       };
 
       if (isEditMode && selectedFundAdjustment) {
@@ -609,6 +628,12 @@ export default function FundAdjustments() {
     { value: "Dec", label: "December" },
   ];
 
+  // Select options for budget control
+  const budgetControlOptions: SelectOption[] = [
+    { value: "MOFA_CASH", label: "Cash" },
+    { value: "MOFA_COST_2", label: "Cost" },
+  ];
+
   const handleReasonChange = (value: string) => {
     setreason(value);
     // Clear validation error when user types
@@ -621,7 +646,7 @@ export default function FundAdjustments() {
   const isSubmitting = isCreating || isUpdating;
 
   // Check if form has data
-  const hasData = time_period.trim() || reason.trim();
+  const hasData = budget_control.trim() || time_period.trim() || reason.trim();
   const handleChat = (row: TableRow) => {
     // Navigate to chat page with transaction/request ID
     navigate(`/app/chat/${row.id}`, { state: { txCode: row.code } });
@@ -713,6 +738,26 @@ export default function FundAdjustments() {
         size="md"
       >
         <div className="p-4 space-y-4">
+          {/* Budget Control */}
+          <div className="space-y-2">
+            <SharedSelect
+              key={`budget-control-${
+                isEditMode ? selectedFundAdjustment?.transaction_id : "create"
+              }`}
+              title="Budget Control"
+              options={budgetControlOptions}
+              value={budget_control}
+              onChange={(value) => setBudgetControl(String(value))}
+              placeholder="Select budget control"
+              required
+            />
+            {validationErrors.budget_control && (
+              <p className="mt-1 text-sm text-red-600">
+                {validationErrors.budget_control}
+              </p>
+            )}
+          </div>
+
           {/* Transaction Date */}
           <div className="space-y-2">
             <SharedSelect
