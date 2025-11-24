@@ -313,6 +313,10 @@ export function SharedTable({
     columnId: string;
   } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Track focused filter input to restore focus after re-render
+  const focusedFilterRef = useRef<string | null>(null);
+  const filterInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   // Column filter handler
   const handleColumnFilterChange = (columnId: string, value: string) => {
@@ -561,6 +565,19 @@ export function SharedTable({
       return next;
     });
   }, [columns]);
+
+  // Restore focus to filter input after data updates
+  useEffect(() => {
+    if (focusedFilterRef.current && filterInputRefs.current[focusedFilterRef.current]) {
+      const input = filterInputRefs.current[focusedFilterRef.current];
+      if (input && document.activeElement !== input) {
+        // Restore focus and cursor position
+        const cursorPosition = input.selectionStart || 0;
+        input.focus();
+        input.setSelectionRange(cursorPosition, cursorPosition);
+      }
+    }
+  }, [data, currentData]); // Run when data changes
 
   // Click outside handler for column dropdown
   useEffect(() => {
@@ -1083,12 +1100,24 @@ export function SharedTable({
                       }}
                     >
                       <input
+                        ref={(el) => {
+                          filterInputRefs.current[column.id] = el;
+                        }}
                         type="text"
                         placeholder={`Filter ${column.header}...`}
                         value={columnFilters[column.id] || ""}
                         onChange={(e) =>
                           handleColumnFilterChange(column.id, e.target.value)
                         }
+                        onFocus={() => {
+                          focusedFilterRef.current = column.id;
+                        }}
+                        onBlur={() => {
+                          // Clear focused ref when user explicitly leaves the input
+                          if (focusedFilterRef.current === column.id) {
+                            focusedFilterRef.current = null;
+                          }
+                        }}
                         className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-[#4E8476] focus:ring-1 focus:ring-[#4E8476]"
                         onClick={(e) => e.stopPropagation()}
                       />
