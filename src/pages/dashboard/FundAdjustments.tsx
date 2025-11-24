@@ -612,26 +612,20 @@ export default function FundAdjustments() {
     }
   };
 
-  // Select options for transaction dates
+  // Select options for transaction dates - Current year (2025), Previous (2024), Next (2026)
   const accountOptions: SelectOption[] = [
-    { value: "Jan", label: "January" },
-    { value: "Feb", label: "February" },
-    { value: "Mar", label: "March" },
-    { value: "Apr", label: "April" },
-    { value: "May", label: "May" },
-    { value: "Jun", label: "June" },
-    { value: "Jul", label: "July" },
-    { value: "Aug", label: "August" },
-    { value: "Sep", label: "September" },
-    { value: "Oct", label: "October" },
-    { value: "Nov", label: "November" },
-    { value: "Dec", label: "December" },
+    // Previous Year (2024)
+    { value: "1-24", label: "1-24" },
+    // Current Year (2025)
+    { value: "1-25", label: "1-25" },
+    // Next Year (2026)
+    { value: "1-26", label: "1-26" },
   ];
 
   // Select options for budget control
   const budgetControlOptions: SelectOption[] = [
-    { value: "MOFA_CASH", label: "Cash" },
-    { value: "MOFA_COST_2", label: "Cost" },
+    { value: "سيولة", label: "Cash" },
+    { value: "تكاليف", label: "Cost" },
   ];
 
   const handleReasonChange = (value: string) => {

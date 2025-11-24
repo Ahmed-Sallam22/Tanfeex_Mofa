@@ -313,10 +313,12 @@ export function SharedTable({
     columnId: string;
   } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
+
   // Track focused filter input to restore focus after re-render
   const focusedFilterRef = useRef<string | null>(null);
-  const filterInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+  const filterInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>(
+    {}
+  );
 
   // Column filter handler
   const handleColumnFilterChange = (columnId: string, value: string) => {
@@ -568,13 +570,20 @@ export function SharedTable({
 
   // Restore focus to filter input after data updates
   useEffect(() => {
-    if (focusedFilterRef.current && filterInputRefs.current[focusedFilterRef.current]) {
+    if (
+      focusedFilterRef.current &&
+      filterInputRefs.current[focusedFilterRef.current]
+    ) {
       const input = filterInputRefs.current[focusedFilterRef.current];
       if (input && document.activeElement !== input) {
-        // Restore focus and cursor position
-        const cursorPosition = input.selectionStart || 0;
-        input.focus();
-        input.setSelectionRange(cursorPosition, cursorPosition);
+        // Use setTimeout to ensure this runs after React finishes rendering
+        setTimeout(() => {
+          if (input && focusedFilterRef.current) {
+            const cursorPosition = input.value.length; // Move cursor to end
+            input.focus();
+            input.setSelectionRange(cursorPosition, cursorPosition);
+          }
+        }, 0);
       }
     }
   }, [data, currentData]); // Run when data changes
@@ -1113,10 +1122,24 @@ export function SharedTable({
                           focusedFilterRef.current = column.id;
                         }}
                         onBlur={() => {
-                          // Clear focused ref when user explicitly leaves the input
-                          if (focusedFilterRef.current === column.id) {
-                            focusedFilterRef.current = null;
-                          }
+                          // Use setTimeout to check if focus moved to another element
+                          setTimeout(() => {
+                            // Only clear if the currently focused element is not another filter input
+                            const activeElement =
+                              document.activeElement as HTMLInputElement;
+                            const isAnotherFilterInput =
+                              activeElement &&
+                              Object.values(filterInputRefs.current).includes(
+                                activeElement
+                              );
+
+                            if (
+                              !isAnotherFilterInput &&
+                              focusedFilterRef.current === column.id
+                            ) {
+                              focusedFilterRef.current = null;
+                            }
+                          }, 0);
                         }}
                         className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-[#4E8476] focus:ring-1 focus:ring-[#4E8476]"
                         onClick={(e) => e.stopPropagation()}
