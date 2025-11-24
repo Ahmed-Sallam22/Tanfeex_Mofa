@@ -157,6 +157,10 @@ export default function TransferDetails() {
             : transfer.other_consumption || "0",
           // Calculate cost value from MOFA_COST_2
           costValue: mofaCost2 ? mofaCost2.Funds_available / 2 : 0,
+          // Add new budget tracking fields from MOFA_CASH
+          total_budget: mofaCash ? mofaCash.Total_budget || 0 : 0,
+          initial_budget: mofaCash ? mofaCash.Initial_budget || 0 : 0,
+          budget_adjustments: mofaCash ? mofaCash.Budget_adjustments || 0 : 0,
         };
 
         // Add dynamic segment fields from the transfer data
@@ -728,6 +732,10 @@ export default function TransferDetails() {
         period: firstRecord.Period_name || "",
         control_budget_name: controlBudgetNames.join(", "),
         costValue: costValue, // From MOFA_COST_2 (second record)
+        // Add new budget tracking fields
+        total_budget: firstRecord.Total_budget || 0,
+        initial_budget: firstRecord.Initial_budget || 0,
+        budget_adjustments: firstRecord.Budget_adjustments || 0,
       };
 
       console.log(

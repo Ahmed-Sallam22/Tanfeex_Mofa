@@ -728,6 +728,9 @@ export default function TransferDetails() {
         period: firstRecord.Period_name || "",
         control_budget_name: controlBudgetNames.join(", "),
         costValue: costValue, // From MOFA_COST_2 (second record)
+        total_budget: firstRecord.Total_budget || 0,
+        initial_budget: firstRecord.Initial_budget || 0,
+        budget_adjustments: firstRecord.Budget_adjustments || 0,
       };
 
       console.log(

@@ -25,6 +25,10 @@ export interface ControlBudget {
   segment5: string;
   segment9: string;
   segment11: string;
+  // New budget tracking fields
+  Total_budget?: number;
+  Initial_budget?: number;
+  Budget_adjustments?: number;
 }
 
 export interface TransferDetail {
@@ -161,6 +165,9 @@ export interface FinancialDataRecord {
   Period_name: string; // Capitalized in API response
   Control_budget_name: string; // Capitalized in API response
   Created_at?: string; // Capitalized in API response
+  Total_budget?: number; // New budget tracking field
+  Initial_budget?: number; // New budget tracking field
+  Budget_adjustments?: number; // New budget tracking field
 }
 
 export interface FinancialDataResponse {
