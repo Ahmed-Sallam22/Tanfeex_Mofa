@@ -1373,7 +1373,9 @@ export default function TransferDetails() {
         if (value > 0) {
           return (
             <div className="bg-amber-50 -mx-3 -my-2 px-3 py-2 border-l-4 border-amber-400">
-              <span className="text-sm font-semibold text-amber-900">{formatNumber(value)}</span>
+              <span className="text-sm font-semibold text-amber-900">
+                {formatNumber(value)}
+              </span>
             </div>
           );
         }

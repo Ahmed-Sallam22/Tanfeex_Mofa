@@ -100,13 +100,13 @@ export default function Reports() {
     const translations: Record<number, string> = {
       5: "MOFA GEOGRAPHIC CLASS",
       9: "MOFA_COST_CENTER",
-      11: "MOFA_BUDGET"
+      11: "MOFA_BUDGET",
     };
-    
+
     if (translations[segmentNumber]) {
       return translations[segmentNumber];
     }
-    
+
     // Fallback to API segment name if no translation exists
     const segment = segmentTypesData?.data?.find(
       (s) => s.segment_type_oracle_number === segmentNumber
