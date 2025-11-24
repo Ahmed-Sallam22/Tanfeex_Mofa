@@ -87,6 +87,17 @@ export interface SegmentFundParams {
   period_name: string;
   page?: number;
   page_size?: number;
+  // Column filters
+  segment5?: string;
+  segment9?: string;
+  segment11?: string;
+  budget?: string;
+  encumbrance?: string;
+  funds_available?: string;
+  commitment?: string;
+  obligation?: string;
+  actual?: string;
+  other?: string;
 }
 
 export const reportsApi = createApi({
@@ -109,16 +120,48 @@ export const reportsApi = createApi({
     }),
     // New endpoint for segment funds
     getSegmentsFund: builder.query<SegmentFundResponse, SegmentFundParams>({
-      query: ({ control_budget_name = 'MOFA_CASH', period_name, page = 1, page_size = 10 }) => ({
-        url: `/accounts-entities/segments/get_segments_fund/`,
-        method: 'GET',
-        params: {
+      query: ({ 
+        control_budget_name = 'MOFA_CASH', 
+        period_name, 
+        page = 1, 
+        page_size = 10,
+        // Column filters
+        segment5,
+        segment9,
+        segment11,
+        budget,
+        encumbrance,
+        funds_available,
+        commitment,
+        obligation,
+        actual,
+        other,
+      }) => {
+        const params: Record<string, string | number> = {
           control_budget_name,
           period_name,
           page,
           page_size,
-        },
-      }),
+        };
+
+        // Add column filters to params if they exist
+        if (segment5) params.segment5 = segment5;
+        if (segment9) params.segment9 = segment9;
+        if (segment11) params.segment11 = segment11;
+        if (budget) params.budget = budget;
+        if (encumbrance) params.encumbrance = encumbrance;
+        if (funds_available) params.funds_available = funds_available;
+        if (commitment) params.commitment = commitment;
+        if (obligation) params.obligation = obligation;
+        if (actual) params.actual = actual;
+        if (other) params.other = other;
+
+        return {
+          url: `/accounts-entities/segments/get_segments_fund/`,
+          method: 'GET',
+          params,
+        };
+      },
       providesTags: ['Report'],
     }),
   }),

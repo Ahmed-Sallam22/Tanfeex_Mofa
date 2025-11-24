@@ -371,10 +371,16 @@ export default function PendingAdjustmentsDetails() {
         const value = transferRow.costValue || 0;
         if (value > 0) {
           return (
-            <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+            <div className="bg-amber-50 -mx-3 -my-2 px-3 py-2 border-l-4 border-amber-400">
+              <span className="text-sm font-semibold text-amber-900">{formatNumber(value)}</span>
+            </div>
           );
         }
-        return <span className="text-sm text-gray-400">-</span>;
+        return (
+          <div className="bg-amber-50 -mx-3 -my-2 px-3 py-2 border-l-4 border-amber-400">
+            <span className="text-sm text-gray-400">-</span>
+          </div>
+        );
       },
     },
     {

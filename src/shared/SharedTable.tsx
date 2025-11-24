@@ -229,6 +229,7 @@ export interface SharedTableProps {
   showColumnSelector?: boolean;
   // Column filter props
   showColumnFilters?: boolean; // Default true - show search inputs under each column
+  onColumnFilterChange?: (filters: { [key: string]: string }) => void; // Callback when filters change
 }
 
 export function SharedTable({
@@ -266,6 +267,7 @@ export function SharedTable({
   onView,
   showColumnSelector = false,
   showColumnFilters = true, // Default to true
+  onColumnFilterChange, // Callback when filters change
 }: SharedTableProps) {
   const [columnWidths, setColumnWidths] = useState<{ [key: string]: number }>(
     {}
@@ -305,10 +307,19 @@ export function SharedTable({
 
   // Column filter handler
   const handleColumnFilterChange = (columnId: string, value: string) => {
-    setColumnFilters((prev) => ({
-      ...prev,
-      [columnId]: value,
-    }));
+    setColumnFilters((prev) => {
+      const newFilters = {
+        ...prev,
+        [columnId]: value,
+      };
+
+      // Call parent callback if provided
+      if (onColumnFilterChange) {
+        onColumnFilterChange(newFilters);
+      }
+
+      return newFilters;
+    });
 
     // Reset to first page when filtering
     if (onPageChange) {

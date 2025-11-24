@@ -20,6 +20,11 @@ export default function Reports() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 10;
 
+  // Column filters state - will be passed to API
+  const [columnFilters, setColumnFilters] = useState<{ [key: string]: string }>(
+    {}
+  );
+
   // Fetch segment types for dynamic column names
   const { data: segmentTypesData } = useGetSegmentTypesQuery();
 
@@ -35,6 +40,17 @@ export default function Reports() {
       period_name: selectedPeriod,
       page: currentPage,
       page_size: itemsPerPage,
+      // Pass column filters to API
+      segment5: columnFilters.segment5,
+      segment9: columnFilters.segment9,
+      segment11: columnFilters.segment11,
+      budget: columnFilters.budget,
+      encumbrance: columnFilters.encumbrance,
+      funds_available: columnFilters.funds_available,
+      commitment: columnFilters.commitment,
+      obligation: columnFilters.obligation,
+      actual: columnFilters.actual,
+      other: columnFilters.other,
     },
     {
       skip: !selectedPeriod, // Skip query if period not selected
@@ -79,12 +95,28 @@ export default function Reports() {
       original: item,
     })) || [];
 
-  // Get segment names from segment types data
-  const getSegmentName = (oracleNumber: number): string => {
+  // Helper function to translate segment names
+  const getSegmentHeader = (segmentNumber: number): string => {
+    const translations: Record<number, string> = {
+      5: "MOFA GEOGRAPHIC CLASS",
+      9: "MOFA_COST_CENTER",
+      11: "MOFA_BUDGET"
+    };
+    
+    if (translations[segmentNumber]) {
+      return translations[segmentNumber];
+    }
+    
+    // Fallback to API segment name if no translation exists
     const segment = segmentTypesData?.data?.find(
-      (s) => s.segment_type_oracle_number === oracleNumber
+      (s) => s.segment_type_oracle_number === segmentNumber
     );
-    return segment?.segment_name || `Segment ${oracleNumber}`;
+    return segment?.segment_name || `Segment ${segmentNumber}`;
+  };
+
+  // Get segment names from segment types data (kept for backward compatibility if needed elsewhere)
+  const getSegmentName = (oracleNumber: number): string => {
+    return getSegmentHeader(oracleNumber);
   };
 
   // Table columns configuration
@@ -245,6 +277,12 @@ export default function Reports() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  // Handler for column filter changes - will trigger API call
+  const handleColumnFilterChange = (filters: { [key: string]: string }) => {
+    setColumnFilters(filters);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   // helpers (place above component return)
@@ -436,6 +474,7 @@ export default function Reports() {
             showFooter={true}
             showColumnSelector={true}
             showColumnFilters={true} // Column filters enabled - search under each column header
+            onColumnFilterChange={handleColumnFilterChange} // Pass filter changes to API
             // Set to false to disable: showColumnFilters={false}
           />
         </div>
