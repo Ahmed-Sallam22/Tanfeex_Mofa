@@ -106,9 +106,9 @@ export default function PendingTransferDetails() {
         );
 
         // Get MOFA_COST_2 budget data (second control budget)
-        const mofaCost2 = transfer.control_budgets?.find(
-          (cb) => cb.Control_budget_name === "MOFA_COST_2"
-        );
+        // const mofaCost2 = transfer.control_budgets?.find(
+        //   (cb) => cb.Control_budget_name === "MOFA_COST_2"
+        // );
 
         const row: TransferTableRow = {
           id: transfer.transfer_id?.toString() || "0",
@@ -141,7 +141,11 @@ export default function PendingTransferDetails() {
             ? mofaCash.Other.toString()
             : transfer.other_consumption || "0",
           // Calculate cost value from MOFA_COST_2
-          costValue: mofaCost2 ? mofaCost2.Funds_available / 2 : 0,
+          costValue: mofaCash ? Number(mofaCash.Total_budget) / 2 : 0,
+          // Add new budget tracking fields from MOFA_CASH
+          total_budget: mofaCash ? mofaCash.Total_budget || 0 : 0,
+          initial_budget: mofaCash ? mofaCash.Initial_budget || 0 : 0,
+          budget_adjustments: mofaCash ? mofaCash.Budget_adjustments || 0 : 0,
         };
 
         // Add dynamic segment fields from the transfer data
