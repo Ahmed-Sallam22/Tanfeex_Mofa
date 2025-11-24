@@ -33,6 +33,10 @@ interface TransferTableRow {
   commitments?: string;
   obligations?: string;
   other_consumption?: string;
+  // New budget tracking fields
+  total_budget?: number;
+  initial_budget?: number;
+  budget_adjustments?: number;
   // Dynamic segments (segment1, segment2, etc.)
   [key: string]: string | number | string[] | undefined;
 }
@@ -331,6 +335,45 @@ export default function PendingTransferDetails() {
       render: (_, row) => {
         const transferRow = row as unknown as TransferTableRow;
         const value = transferRow.approvedBudget || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "total_budget",
+      header: "Total Budget",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = transferRow.total_budget || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "initial_budget",
+      header: "Initial Budget",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = transferRow.initial_budget || 0;
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(value)}</span>
+        );
+      },
+    },
+    {
+      id: "budget_adjustments",
+      header: "Budget Adjustments",
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const value = transferRow.budget_adjustments || 0;
         return (
           <span className="text-sm text-gray-900">{formatNumber(value)}</span>
         );

@@ -637,10 +637,10 @@ export default function FundRequests() {
   ];
 
   // Select options for budget control
-  const budgetControlOptions: SelectOption[] = [
-    { value: "سيولة", label: "Cash" },
-    { value: "تكاليف", label: "Cost" },
-  ];
+const budgetControlOptions: SelectOption[] = [
+  { value: "سيولة", label: "سيولة" },
+  { value: "تكاليف", label: "تكاليف" },
+];
   const handleChat = (row: TableRow) => {
     // Navigate to chat page with transaction/request ID
     navigate(`/app/chat/${row.id}`, { state: { txCode: row.code } });
