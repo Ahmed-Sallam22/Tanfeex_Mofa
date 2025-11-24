@@ -36,6 +36,19 @@ export interface LoadSegmentsResponse {
   total_records: number;
 }
 
+export interface LoadFundsResult {
+  control_budget: string;
+  success: boolean;
+  message: string;
+}
+
+export interface LoadFundsResponse {
+  message: string;
+  total_success: number;
+  total_failed: number;
+  results: LoadFundsResult[];
+}
+
 export interface Segment {
   id: number;
   segment_type: number;
@@ -139,6 +152,15 @@ export const segmentConfigurationApi = createApi({
       invalidatesTags: ['SegmentTypes'],
     }),
 
+    // Load funds data for segments
+    loadSegmentsFunds: builder.mutation<LoadFundsResponse, { period_name: string }>({
+      query: ({ period_name }) => ({
+        url: `/accounts-entities/segments/load_Segments_oracle/Funds/?period_name=${period_name}`,
+        method: 'GET',
+      }),
+      invalidatesTags: ['SegmentTypes'],
+    }),
+
     // Get segments by segment type
     getSegmentsByType: builder.query<SegmentsResponse, number>({
       query: (segmentType) => ({
@@ -158,5 +180,6 @@ export const {
   useToggleSegmentRequiredMutation,
   useToggleSegmentHierarchyMutation,
   useLoadSegmentsValuesMutation,
+  useLoadSegmentsFundsMutation,
   useGetSegmentsByTypeQuery,
 } = segmentConfigurationApi;

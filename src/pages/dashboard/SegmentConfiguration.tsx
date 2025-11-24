@@ -13,9 +13,11 @@ import {
   useCreateSegmentTypeMutation,
   useUpdateSegmentTypeMutation,
   useLoadSegmentsValuesMutation,
+  useLoadSegmentsFundsMutation,
   type SegmentType,
   type CreateSegmentTypeRequest,
   type LoadSegmentsResponse,
+  type LoadFundsResponse,
 } from "@/api/segmentConfiguration.api";
 import toast from "react-hot-toast";
 import SharedModal from "@/shared/SharedModal";
@@ -32,6 +34,9 @@ export default function SegmentConfiguration() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isLoadResultModalOpen, setIsLoadResultModalOpen] = useState(false);
+  const [isLoadFundsModalOpen, setIsLoadFundsModalOpen] = useState(false);
+  const [isPeriodModalOpen, setIsPeriodModalOpen] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [editingSegment, setEditingSegment] = useState<SegmentType | null>(
     null
   );
@@ -41,6 +46,8 @@ export default function SegmentConfiguration() {
   const [loadResult, setLoadResult] = useState<LoadSegmentsResponse | null>(
     null
   );
+  const [loadFundsResult, setLoadFundsResult] =
+    useState<LoadFundsResponse | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<CreateSegmentTypeRequest>({
@@ -63,6 +70,8 @@ export default function SegmentConfiguration() {
     useUpdateSegmentTypeMutation();
   const [loadSegmentsValues, { isLoading: isLoadingSegments }] =
     useLoadSegmentsValuesMutation();
+  const [loadSegmentsFunds, { isLoading: isLoadingFunds }] =
+    useLoadSegmentsFundsMutation();
 
   // Toggle mutations
   const [toggleRequired] = useToggleSegmentRequiredMutation();
@@ -179,6 +188,30 @@ export default function SegmentConfiguration() {
     } catch (error) {
       console.error("Failed to load segments:", error);
       toast.error("Failed to load segments");
+    }
+  };
+
+  const handleLoadFundsClick = () => {
+    setIsPeriodModalOpen(true);
+  };
+
+  const handleLoadFunds = async () => {
+    if (!selectedPeriod.trim()) {
+      toast.error("Please enter a period name");
+      return;
+    }
+
+    try {
+      const result = await loadSegmentsFunds({
+        period_name: selectedPeriod,
+      }).unwrap();
+      setLoadFundsResult(result);
+      setIsPeriodModalOpen(false);
+      setIsLoadFundsModalOpen(true);
+      toast.success(result.message || "Funds loaded successfully");
+    } catch (error) {
+      console.error("Failed to load funds:", error);
+      toast.error("Failed to load funds");
     }
   };
 
@@ -679,8 +712,8 @@ export default function SegmentConfiguration() {
         )}
       </div>
 
-      {/* Load Segments Button - Bottom Right */}
-      <div className="flex justify-end">
+      {/* Load Segments Buttons - Bottom Right */}
+      <div className="flex justify-end gap-4">
         <button
           onClick={handleLoadSegments}
           disabled={isLoadingSegments}
@@ -695,6 +728,24 @@ export default function SegmentConfiguration() {
             <>
               <Download className="h-5 w-5" />
               Load Segments Values
+            </>
+          )}
+        </button>
+
+        <button
+          onClick={handleLoadFundsClick}
+          disabled={isLoadingFunds}
+          className="inline-flex items-center gap-2 px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg transition-colors font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoadingFunds ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              Loading...
+            </>
+          ) : (
+            <>
+              <Download className="h-5 w-5" />
+              Load Segments Funds
             </>
           )}
         </button>
@@ -1066,6 +1117,273 @@ export default function SegmentConfiguration() {
               type="button"
               variant="primary"
               onClick={handleCloseLoadResultModal}
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+      </SharedModal>
+
+      {/* Period Input Modal */}
+      <SharedModal
+        isOpen={isPeriodModalOpen}
+        onClose={() => setIsPeriodModalOpen(false)}
+        title="Load Segments Funds"
+        size="md"
+      >
+        <div className="p-6 space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Period Name
+            </label>
+            <Input
+              type="text"
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              placeholder="e.g., 1-25"
+              className="w-full"
+            />
+            <p className="mt-2 text-sm text-gray-500">
+              Enter the period in format: month-year (e.g., 1-25 for January
+              2025)
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setIsPeriodModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleLoadFunds}
+              loading={isLoadingFunds}
+            >
+              Load Funds
+            </Button>
+          </div>
+        </div>
+      </SharedModal>
+
+      {/* Load Funds Result Modal */}
+      <SharedModal
+        isOpen={isLoadFundsModalOpen}
+        onClose={() => setIsLoadFundsModalOpen(false)}
+        title="Load Funds Results"
+        size="lg"
+      >
+        <div className="p-6 space-y-6">
+          {loadFundsResult && (
+            <>
+              {/* Success Message */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <svg
+                    className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <div>
+                    <h4 className="font-semibold text-green-900 mb-1">
+                      {loadFundsResult.message}
+                    </h4>
+                    <p className="text-sm text-green-700">
+                      Successfully processed {loadFundsResult.total_success} out
+                      of{" "}
+                      {loadFundsResult.total_success +
+                        loadFundsResult.total_failed}{" "}
+                      control budgets
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Success Count Card */}
+                <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-green-600 mb-1">
+                        Successful
+                      </p>
+                      <p className="text-3xl font-bold text-green-900">
+                        {loadFundsResult.total_success}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Failed Count Card */}
+                <div className="bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-red-600 mb-1">
+                        Failed
+                      </p>
+                      <p className="text-3xl font-bold text-red-900">
+                        {loadFundsResult.total_failed}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-red-200 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-red-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Results Table */}
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Control Budget
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Message
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {loadFundsResult.results.map((result, index) => (
+                      <tr key={index}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm font-medium text-gray-900">
+                            {result.control_budget}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {result.success ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <svg
+                                className="w-4 h-4 mr-1"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              Success
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              <svg
+                                className="w-4 h-4 mr-1"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              Failed
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm text-gray-600">
+                            {result.message}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Summary Section */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg
+                    className="w-5 h-5 text-[#4E8476]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                  Summary
+                </h4>
+                <div className="space-y-2 text-sm text-gray-700">
+                  <p>
+                    • Successfully downloaded funds data for{" "}
+                    <span className="font-semibold text-green-600">
+                      {loadFundsResult.total_success}
+                    </span>{" "}
+                    control budget(s)
+                  </p>
+                  {loadFundsResult.total_failed > 0 && (
+                    <p>
+                      • Failed to download for{" "}
+                      <span className="font-semibold text-red-600">
+                        {loadFundsResult.total_failed}
+                      </span>{" "}
+                      control budget(s)
+                    </p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Action Button */}
+          <div className="flex justify-end pt-4 border-t border-gray-200">
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => setIsLoadFundsModalOpen(false)}
             >
               Close
             </Button>
