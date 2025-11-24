@@ -475,6 +475,7 @@ export default function Reports() {
             showColumnSelector={true}
             showColumnFilters={true} // Column filters enabled - search under each column header
             onColumnFilterChange={handleColumnFilterChange} // Pass filter changes to API
+            initialColumnFilters={columnFilters} // Pass current filters to maintain input values
             // Set to false to disable: showColumnFilters={false}
           />
         </div>

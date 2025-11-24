@@ -230,6 +230,7 @@ export interface SharedTableProps {
   // Column filter props
   showColumnFilters?: boolean; // Default true - show search inputs under each column
   onColumnFilterChange?: (filters: { [key: string]: string }) => void; // Callback when filters change
+  initialColumnFilters?: { [key: string]: string }; // Initial filter values from parent
 }
 
 export function SharedTable({
@@ -266,8 +267,9 @@ export function SharedTable({
   onReject,
   onView,
   showColumnSelector = false,
-  showColumnFilters = true, // Default to true
+  showColumnFilters = false, // Default to true
   onColumnFilterChange, // Callback when filters change
+  initialColumnFilters, // Initial filter values from parent
 }: SharedTableProps) {
   const [columnWidths, setColumnWidths] = useState<{ [key: string]: number }>(
     {}
@@ -286,10 +288,17 @@ export function SharedTable({
     new Set(columns.map((col) => col.id))
   );
 
-  // Column filters state
+  // Column filters state - initialize with parent's filters if provided
   const [columnFilters, setColumnFilters] = useState<{ [key: string]: string }>(
-    {}
+    initialColumnFilters || {}
   );
+
+  // Sync columnFilters with initialColumnFilters when they change (from parent)
+  useEffect(() => {
+    if (initialColumnFilters) {
+      setColumnFilters(initialColumnFilters);
+    }
+  }, [initialColumnFilters]);
 
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{
