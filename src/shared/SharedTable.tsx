@@ -402,7 +402,7 @@ export function SharedTable({
     const column = columns.find((col) => col.id === columnId);
     if (column?.sortable === false) return; // Only skip sorting if explicitly set to false
 
-    let direction: "asc" | "desc" = "desc"; // Default to descending
+    let direction: "asc" | "desc" = "asc"; // Default to descending
 
     if (sortConfig.key === columnId && sortConfig.direction === "desc") {
       direction = "asc";
