@@ -425,25 +425,6 @@ export default function Reports() {
             </button>
           </div>
         </div>
-      ) : transformedData.length === 0 ? (
-        <div className="flex justify-center items-center h-64 bg-white rounded-lg">
-          <div className="text-center">
-            <div className="text-gray-400 text-2xl mb-2">📄</div>
-            <p className="text-gray-600">
-              {searchQuery
-                ? "No data found matching your search"
-                : "No report data found"}
-            </p>
-            {searchQuery && (
-              <button
-                className="mt-2 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-                onClick={() => setSearchQuery("")}
-              >
-                Clear Search
-              </button>
-            )}
-          </div>
-        </div>
       ) : (
         <div>
           {isFetching && !isLoading && !isChangingSelection && (
