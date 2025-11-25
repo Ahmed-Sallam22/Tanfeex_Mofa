@@ -8,6 +8,7 @@ import { RichTextEditor } from "@/components/ui";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import {
   useGetFundAdjustmentListQuery,
   useCreateFundAdjustmentMutation,
@@ -27,6 +28,7 @@ import {
 
 export default function FundAdjustments() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // State management
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -157,7 +159,7 @@ export default function FundAdjustments() {
   const fundAdjustmentColumns: TableColumn[] = [
     {
       id: "code",
-      header: "Code",
+      header: t("fundAdjustmentsPage.code"),
       accessor: "code",
       render: (value, row) => (
         <span
@@ -170,7 +172,7 @@ export default function FundAdjustments() {
     },
     {
       id: "requested_by",
-      header: "Requested By",
+      header: t("fundAdjustmentsPage.requestedBy"),
       accessor: "requested_by",
       render: (value) => (
         <span className="font-medium text-[#282828]">{safeValue(value)}</span>
@@ -178,13 +180,13 @@ export default function FundAdjustments() {
     },
     {
       id: "description",
-      header: "Description",
+      header: t("fundAdjustmentsPage.description"),
       accessor: "description",
       render: (value) => (
         <div
           className="text-[#282828] max-w-xs prose prose-sm prose-p:my-1 prose-p:leading-5"
           dangerouslySetInnerHTML={{
-            __html: safeValue(value, "No description"),
+            __html: safeValue(value, t("fundAdjustments.noDescription")),
           }}
           style={{
             wordBreak: "break-word",
@@ -196,7 +198,7 @@ export default function FundAdjustments() {
     },
     {
       id: "request_date",
-      header: "Request Date",
+      header: t("fundAdjustmentsPage.requestDate"),
       accessor: "request_date",
       render: (value) => (
         <span className="text-[#282828]">{safeValue(value)}</span>
@@ -204,28 +206,30 @@ export default function FundAdjustments() {
     },
     {
       id: "transaction_date",
-      header: "Transaction Date",
+      header: t("fundAdjustmentsPage.transactionDate"),
       accessor: "transaction_date",
       render: (value) => (
-        <span className="text-[#282828]">{safeValue(value, "Not set")}</span>
+        <span className="text-[#282828]">
+          {safeValue(value, t("fundAdjustmentsPage.notSet"))}
+        </span>
       ),
     },
     {
       id: "track",
-      header: "Track",
+      header: t("fundAdjustmentsPage.track"),
       accessor: "track",
       render: (_value, row) => (
         <span
           className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
           onClick={() => handleTrackClick(row)}
         >
-          Track
+          {t("fundAdjustmentsPage.track")}
         </span>
       ),
     },
     {
       id: "status",
-      header: "Status",
+      header: t("fundAdjustmentsPage.status"),
       accessor: "status",
       render: (value, row) => (
         <span
@@ -248,20 +252,18 @@ export default function FundAdjustments() {
     },
     {
       id: "attachment",
-      header: "Attachments",
+      header: t("fundAdjustmentsPage.attachments"),
       accessor: "attachment",
       render: (_value, row) => (
         <span
           className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
           onClick={() => handleAttachmentsClick(row)}
         >
-          Attachments
+          {t("fundAdjustmentsPage.attachments")}
         </span>
       ),
     },
-  ];
-
-  // Event handlers
+  ]; // Event handlers
   const handleCodeClick = (row: TableRow) => {
     const originalFundAdjustment = row.original as FundAdjustmentItem;
     const status = originalFundAdjustment.status || "pending";
@@ -293,7 +295,7 @@ export default function FundAdjustments() {
   // File upload handlers
   const handleFileSelect = async (file: File) => {
     if (!selectedTransactionId) {
-      toast.error("No transaction selected");
+      toast.error(t("fundAdjustments.noTransactionSelected"));
       return;
     }
 
@@ -303,12 +305,12 @@ export default function FundAdjustments() {
         file: file,
       }).unwrap();
 
-      toast.success("File uploaded successfully!");
+      toast.success(t("fundAdjustments.uploadSuccess"));
       // Refresh the attachments list
       refetchAttachments();
     } catch (error: unknown) {
       console.error("Error uploading file:", error);
-      toast.error("Failed to upload file");
+      toast.error(t("fundAdjustments.uploadFailed"));
     }
   };
 
@@ -334,10 +336,10 @@ export default function FundAdjustments() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast.success("File downloaded successfully!");
+      toast.success(t("fundAdjustments.downloadSuccess"));
     } catch (error) {
       console.error("Error downloading file:", error);
-      toast.error("Failed to download file");
+      toast.error(t("fundAdjustments.downloadFailed"));
     }
   };
 
@@ -373,7 +375,7 @@ export default function FundAdjustments() {
     if (validFile) {
       handleFileSelect(validFile);
     } else {
-      alert("Please upload a valid file (.xlsx, .pdf, .doc, .docx)");
+      alert(t("fundAdjustments.pleaseUploadValidExcelFile"));
     }
   };
 
@@ -498,16 +500,18 @@ export default function FundAdjustments() {
     // Check if fund adjustment can be deleted
     if (fundAdjustmentStatus !== "pending") {
       toast.error(
-        `Cannot delete fund adjustment with status "${fundAdjustmentStatus}". Only pending fund adjustments can be deleted.`
+        t("fundAdjustmentsPage.cannotDeleteStatus", {
+          status: fundAdjustmentStatus,
+        })
       );
       return;
     }
 
     try {
       await deleteFundAdjustment(Number(row.id)).unwrap();
-      toast.success("Fund adjustment deleted successfully!");
+      toast.success(t("fundAdjustments.deleteSuccess"));
     } catch (error: unknown) {
-      let errorMessage = "Failed to delete fund adjustment";
+      let errorMessage = t("fundAdjustments.deleteFailed");
       if (
         error &&
         typeof error === "object" &&
@@ -563,15 +567,15 @@ export default function FundAdjustments() {
     } = {};
 
     if (!time_period.trim()) {
-      errors.time_period = "Please select a transaction date";
+      errors.time_period = t("fundAdjustments.pleaseSelectTimePeriod");
     }
 
     if (!reason.trim()) {
-      errors.reason = "Please enter notes for the fund adjustment";
+      errors.reason = t("fundAdjustments.pleaseEnterNotes");
     }
 
     if (!budget_control.trim()) {
-      errors.budget_control = "Please select a budget control";
+      errors.budget_control = t("fundAdjustments.pleaseSelectBudgetControl");
     }
 
     if (Object.keys(errors).length > 0) {
@@ -595,20 +599,20 @@ export default function FundAdjustments() {
           body: fundAdjustmentData,
         }).unwrap();
 
-        toast.success("Fund adjustment updated successfully!");
+        toast.success(t("fundAdjustments.updateSuccess"));
         console.log("Fund adjustment updated successfully");
       } else {
         // Create new fund adjustment
         await createFundAdjustment(fundAdjustmentData).unwrap();
 
-        toast.success("Fund adjustment created successfully!");
+        toast.success(t("fundAdjustments.createSuccess"));
         console.log("Fund adjustment created successfully");
       }
 
       handleCloseModal();
     } catch (error: unknown) {
       console.error("Error saving fund adjustment:", error);
-      toast.error("Failed to save fund adjustment");
+      toast.error(t("fundAdjustments.createFailed"));
     }
   };
 
@@ -623,10 +627,10 @@ export default function FundAdjustments() {
   ];
 
   // Select options for budget control
-const budgetControlOptions: SelectOption[] = [
-  { value: "سيولة", label: "سيولة" },
-  { value: "تكاليف", label: "تكاليف" },
-];
+  const budgetControlOptions: SelectOption[] = [
+    { value: "سيولة", label: "سيولة" },
+    { value: "تكاليف", label: "تكاليف" },
+  ];
 
   const handleReasonChange = (value: string) => {
     setreason(value);
@@ -650,23 +654,24 @@ const budgetControlOptions: SelectOption[] = [
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Fund Adjustments</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          {t("fundAdjustmentsPage.title")}
+        </h1>
         <button
           onClick={handleCreateRequest}
           className="px-4 py-2 bg-[#4E8476] text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Create Fund Adjustment
+          {t("fundAdjustmentsPage.createFundAdjustment")}
         </button>
       </div>
 
       {/* Search Bar */}
       <div className="p-4 bg-white rounded-2xl mb-6">
         <SearchBar
-          placeholder="Search fund adjustments..."
+          placeholder={t("fundAdjustmentsPage.searchPlaceholder")}
           value={_searchQuery}
           onChange={handleSearchChange}
           onSubmit={handleSearchSubmit}
-          dir="ltr"
           debounce={250}
         />
       </div>
@@ -676,19 +681,21 @@ const budgetControlOptions: SelectOption[] = [
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           <span className="ml-2 text-gray-600">
-            Loading Fund Adjustments...
+            {t("fundAdjustmentsPage.loading")}
           </span>
         </div>
       ) : error ? (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
           <div className="text-center">
             <div className="text-red-500 text-lg mb-2">⚠️</div>
-            <p className="text-gray-600">Failed to load Fund Adjustments</p>
+            <p className="text-gray-600">
+              {t("fundAdjustmentsPage.failedToLoad")}
+            </p>
             <button
               className="mt-2 px-4 py-2 bg-[#4E8476] text-white rounded hover:bg-blue-700"
               onClick={() => window.location.reload()}
             >
-              Retry
+              {t("fundAdjustmentsPage.retry")}
             </button>
           </div>
         </div>
@@ -696,12 +703,14 @@ const budgetControlOptions: SelectOption[] = [
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
           <div className="text-center">
             <div className="text-gray-400 text-2xl mb-2">📄</div>
-            <p className="text-gray-600">No Fund Adjustments found</p>
+            <p className="text-gray-600">
+              {t("fundAdjustmentsPage.noAdjustmentsFound")}
+            </p>
           </div>
         </div>
       ) : (
         <SharedTable
-          title="Fund Adjustments"
+          title={t("fundAdjustmentsPage.title")}
           columns={fundAdjustmentColumns}
           data={transformedData}
           maxHeight="600px"
@@ -720,7 +729,7 @@ const budgetControlOptions: SelectOption[] = [
           transactions={true}
           onChat={handleChat}
           onFilter={handleFilter}
-          filterLabel="Filter Transfers"
+          filterLabel={t("fundAdjustmentsPage.filterTransfers")}
         />
       )}
 
@@ -728,7 +737,11 @@ const budgetControlOptions: SelectOption[] = [
       <SharedModal
         isOpen={isCreateModalOpen}
         onClose={handleCloseModal}
-        title={isEditMode ? "Edit Fund Adjustment" : "Create Fund Adjustment"}
+        title={
+          isEditMode
+            ? t("fundAdjustmentsPage.editFundAdjustment")
+            : t("fundAdjustmentsPage.createFundAdjustment")
+        }
         size="md"
       >
         <div className="p-4 space-y-4">
@@ -738,11 +751,11 @@ const budgetControlOptions: SelectOption[] = [
               key={`budget-control-${
                 isEditMode ? selectedFundAdjustment?.transaction_id : "create"
               }`}
-              title="Budget Control"
+              title={t("fundAdjustmentsPage.budgetControl")}
               options={budgetControlOptions}
               value={budget_control}
               onChange={(value) => setBudgetControl(String(value))}
-              placeholder="Select budget control"
+              placeholder={t("fundAdjustmentsPage.selectBudgetControl")}
               required
             />
             {validationErrors.budget_control && (
@@ -758,11 +771,11 @@ const budgetControlOptions: SelectOption[] = [
               key={`transaction-date-${
                 isEditMode ? selectedFundAdjustment?.transaction_id : "create"
               }`}
-              title="Transaction Date"
+              title={t("fundAdjustmentsPage.transactionDateLabel")}
               options={accountOptions}
               value={time_period}
               onChange={(value) => settime_period(String(value))}
-              placeholder="Select transaction date"
+              placeholder={t("fundAdjustmentsPage.selectTransactionDate")}
               required
             />
           </div>
@@ -770,13 +783,13 @@ const budgetControlOptions: SelectOption[] = [
           {/* Reason */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              Notes *
+              {t("fundAdjustmentsPage.notes")}
             </label>
             <div className="space-y-1">
               <RichTextEditor
                 value={reason}
                 onChange={handleReasonChange}
-                placeholder="Enter notes for the fund adjustment..."
+                placeholder={t("fundAdjustmentsPage.enterNotes")}
                 className={
                   validationErrors.reason
                     ? "border-red-500 focus:border-red-500"
@@ -797,7 +810,7 @@ const budgetControlOptions: SelectOption[] = [
               disabled={isSubmitting}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Cancel
+              {t("fundAdjustmentsPage.cancel")}
             </button>
             <button
               onClick={handleSave}
@@ -811,7 +824,9 @@ const budgetControlOptions: SelectOption[] = [
               {isSubmitting && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               )}
-              {isEditMode ? "Update" : "Create"} Fund Adjustment
+              {isEditMode
+                ? t("fundAdjustmentsPage.updateFundAdjustment")
+                : t("fundAdjustmentsPage.createFundAdjustment")}
             </button>
           </div>
         </div>
@@ -821,7 +836,7 @@ const budgetControlOptions: SelectOption[] = [
       <SharedModal
         isOpen={isAttachmentsModalOpen}
         onClose={() => setIsAttachmentsModalOpen(false)}
-        title="Manage Attachments"
+        title={t("fundAdjustmentsPage.manageAttachments")}
         size="lg"
       >
         <div className="p-4">
@@ -861,7 +876,7 @@ const budgetControlOptions: SelectOption[] = [
             </div>
             <div className="text-center">
               <div className="font-semibold text-base mb-1">
-                Drag & drop file or{" "}
+                {t("fundAdjustmentsPage.dragDropFile")}{" "}
                 <button
                   onClick={() =>
                     document.getElementById("file-upload")?.click()
@@ -869,11 +884,11 @@ const budgetControlOptions: SelectOption[] = [
                   className="text-[#4E8476] underline hover:text-blue-700 transition-colors"
                   disabled={isUploading}
                 >
-                  browse
+                  {t("fundAdjustmentsPage.browse")}
                 </button>
               </div>
               <div className="text-xs text-[#757575] mb-2">
-                Supported formats: .xlsx, .pdf, .doc, .docx
+                {t("fundAdjustmentsPage.supportedFormats")}
               </div>
               <input
                 id="file-upload"
@@ -893,7 +908,9 @@ const budgetControlOptions: SelectOption[] = [
             {isUploading && (
               <div className="flex items-center gap-2 text-blue-600">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="text-sm">Uploading...</span>
+                <span className="text-sm">
+                  {t("fundAdjustmentsPage.uploading")}
+                </span>
               </div>
             )}
           </div>
@@ -901,14 +918,14 @@ const budgetControlOptions: SelectOption[] = [
           {/* Attachments list */}
           <div className="space-y-3">
             <h4 className="font-semibold text-gray-800">
-              Existing Attachments
+              {t("fundAdjustmentsPage.existingAttachments")}
             </h4>
 
             {isLoadingAttachments ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                 <span className="ml-2 text-gray-600">
-                  Loading attachments...
+                  {t("fundAdjustmentsPage.loadingAttachments")}
                 </span>
               </div>
             ) : attachmentsData &&
@@ -974,7 +991,7 @@ const budgetControlOptions: SelectOption[] = [
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <div className="text-gray-400 text-2xl mb-2">📎</div>
-                <p>No attachments found</p>
+                <p>{t("fundAdjustmentsPage.noAttachmentsFound")}</p>
               </div>
             )}
           </div>
@@ -985,7 +1002,7 @@ const budgetControlOptions: SelectOption[] = [
               onClick={() => setIsAttachmentsModalOpen(false)}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Close
+              {t("fundAdjustmentsPage.close")}
             </button>
           </div>
         </div>

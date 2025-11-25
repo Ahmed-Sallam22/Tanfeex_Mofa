@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   SharedTable,
   type TableColumn,
@@ -42,6 +43,7 @@ interface TransferTableRow {
 }
 
 export default function PendingAdjustmentsDetails() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
@@ -197,9 +199,9 @@ export default function PendingAdjustmentsDetails() {
     segmentName: string
   ): string => {
     const translations: Record<number, string> = {
-      5: "Mofa Geographic",
-      9: "Mofa Cost Center",
-      11: "Mofa Budget",
+      5: t("pendingAdjustmentsDetails.columns.mofaGeographic"),
+      9: t("pendingAdjustmentsDetails.columns.mofaCostCenter"),
+      11: t("pendingAdjustmentsDetails.columns.mofaBudget"),
     };
     return translations[segmentNumber] || segmentName;
   };
@@ -254,7 +256,7 @@ export default function PendingAdjustmentsDetails() {
 
     {
       id: "encumbrance",
-      header: "Encumbrance",
+      header: t("pendingAdjustmentsDetails.columns.encumbrance"),
       showSum: true,
 
       render: (_, row) => {
@@ -267,7 +269,7 @@ export default function PendingAdjustmentsDetails() {
     },
     {
       id: "availableBudget",
-      header: "Available Budget",
+      header: t("pendingAdjustmentsDetails.columns.availableBudget"),
       showSum: true,
 
       render: (_, row) => {
@@ -281,7 +283,7 @@ export default function PendingAdjustmentsDetails() {
 
     {
       id: "actual",
-      header: "Actual",
+      header: t("pendingAdjustmentsDetails.columns.actual"),
       showSum: true,
 
       render: (_, row) => {
@@ -294,7 +296,7 @@ export default function PendingAdjustmentsDetails() {
     },
     {
       id: "commitments",
-      header: "Commitments",
+      header: t("pendingAdjustmentsDetails.columns.commitments"),
       showSum: true,
 
       render: (_, row) => {
@@ -307,7 +309,7 @@ export default function PendingAdjustmentsDetails() {
     },
     {
       id: "obligations",
-      header: "Obligations",
+      header: t("pendingAdjustmentsDetails.columns.obligations"),
       showSum: true,
 
       render: (_, row) => {
@@ -320,7 +322,7 @@ export default function PendingAdjustmentsDetails() {
     },
     {
       id: "other_consumption",
-      header: "Other Consumption",
+      header: t("pendingAdjustmentsDetails.columns.otherConsumption"),
       showSum: true,
 
       render: (_, row) => {
@@ -333,7 +335,7 @@ export default function PendingAdjustmentsDetails() {
     },
     {
       id: "approvedBudget",
-      header: "Approved Budget",
+      header: t("pendingAdjustmentsDetails.columns.approvedBudget"),
       showSum: true,
 
       render: (_, row) => {
@@ -346,7 +348,7 @@ export default function PendingAdjustmentsDetails() {
     },
     {
       id: "total_budget",
-      header: "Total Budget",
+      header: t("pendingAdjustmentsDetails.columns.totalBudget"),
       showSum: true,
 
       render: (_, row) => {
@@ -359,7 +361,7 @@ export default function PendingAdjustmentsDetails() {
     },
     {
       id: "initial_budget",
-      header: "Initial Budget",
+      header: t("pendingAdjustmentsDetails.columns.initialBudget"),
       showSum: true,
 
       render: (_, row) => {
@@ -372,7 +374,7 @@ export default function PendingAdjustmentsDetails() {
     },
     {
       id: "budget_adjustments",
-      header: "Budget Adjustments",
+      header: t("pendingAdjustmentsDetails.columns.budgetAdjustments"),
       showSum: true,
 
       render: (_, row) => {
@@ -385,7 +387,7 @@ export default function PendingAdjustmentsDetails() {
     },
     {
       id: "other_ytd",
-      header: "Other YTD",
+      header: t("pendingAdjustmentsDetails.columns.otherYTD"),
       showSum: true,
 
       render: (_, row) => {
@@ -398,7 +400,7 @@ export default function PendingAdjustmentsDetails() {
     },
     {
       id: "period",
-      header: "Period",
+      header: t("pendingAdjustmentsDetails.columns.period"),
 
       render: (_, row) => {
         const transferRow = row as unknown as TransferTableRow;
@@ -409,7 +411,7 @@ export default function PendingAdjustmentsDetails() {
     },
     {
       id: "costValue",
-      header: "50% of Cost Budget",
+      header: t("pendingAdjustmentsDetails.columns.costBudget50"),
       showSum: true,
 
       render: (_, row) => {
@@ -434,7 +436,7 @@ export default function PendingAdjustmentsDetails() {
     },
     {
       id: "from",
-      header: "From",
+      header: t("pendingAdjustmentsDetails.columns.from"),
       showSum: true,
 
       render: (_, row) => {
@@ -449,7 +451,7 @@ export default function PendingAdjustmentsDetails() {
     },
     {
       id: "to",
-      header: "To",
+      header: t("pendingAdjustmentsDetails.columns.to"),
       showSum: true,
 
       render: (_, row) => {
@@ -495,7 +497,7 @@ export default function PendingAdjustmentsDetails() {
           other_user_id: [],
         }).unwrap();
         console.log("Transfer approved successfully:", selectedRow);
-        toast.success("Transfer approved successfully");
+        toast.success(t("pendingAdjustmentsDetails.approveSuccess"));
         navigate("/app/PendingTransfer");
         setReason(""); // Clear reason after success
       } catch (error) {
@@ -518,7 +520,7 @@ export default function PendingAdjustmentsDetails() {
           other_user_id: [],
         }).unwrap();
         console.log("Transfer rejected successfully:", id);
-        toast.success("Transfer rejected successfully");
+        toast.success(t("pendingAdjustmentsDetails.rejectSuccess"));
         navigate("/app/PendingTransfer");
 
         setReason(""); // Clear reason after success
@@ -536,7 +538,9 @@ export default function PendingAdjustmentsDetails() {
     return (
       <div className="flex justify-center items-center h-64 bg-white rounded-lg">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Loading transfers...</span>
+        <span className="ml-2 text-gray-600">
+          {t("pendingAdjustmentsDetails.loadingTransfers")}
+        </span>
       </div>
     );
   }
@@ -548,11 +552,13 @@ export default function PendingAdjustmentsDetails() {
         ? JSON.stringify(error.data)
         : "message" in error
         ? error.message
-        : "Failed to load transfer details";
+        : t("pendingAdjustmentsDetails.failedToLoadDetails");
 
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg text-red-600">Error: {errorMessage}</div>
+        <div className="text-lg text-red-600">
+          {t("pendingAdjustmentsDetails.errorLoading")}: {errorMessage}
+        </div>
       </div>
     );
   }
@@ -565,11 +571,11 @@ export default function PendingAdjustmentsDetails() {
           onClick={handleBack}
           className="flex items-center gap-2  cursor-pointer py-2 text-lg text-[#4E8476] hover:text-[#4E8476] "
         >
-          Pendeing Fund Adjustments
+          {t("pendingAdjustmentsDetails.pendingFundAdjustments")}
         </button>
         <span className="text-[#737373] text-lg">/</span>
         <h1 className="text-lg  text-[#737373] font-light tracking-wide">
-          Code
+          {t("pendingAdjustmentsDetails.code")}
         </h1>
       </div>
 
@@ -583,7 +589,7 @@ export default function PendingAdjustmentsDetails() {
           currentPage={currentPage}
           onPageChange={handlePageChange}
           itemsPerPage={itemsPerPage}
-          addRowButtonText="Add New Row"
+          addRowButtonText={t("pendingAdjustmentsDetails.addNewRow")}
           showColumnSelector={true}
         />
       </div>
@@ -593,7 +599,7 @@ export default function PendingAdjustmentsDetails() {
           onClick={() => handleReject(selectedRow!)}
           className="px-4 py-1.5 border border-[#D44333] text-[#D44333] rounded-md hover:bg-red-50 transition"
         >
-          Reject
+          {t("pendingAdjustmentsDetails.reject")}
         </button>
 
         {/* مسافة صغيرة */}
@@ -604,7 +610,7 @@ export default function PendingAdjustmentsDetails() {
           onClick={() => handleApprove(selectedRow!)}
           className="px-4 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
         >
-          Approve
+          {t("pendingAdjustmentsDetails.approve")}
         </button>
       </div>
 
@@ -615,29 +621,29 @@ export default function PendingAdjustmentsDetails() {
           setIsApproveModalOpen(false);
           setReason(""); // Clear reason when closing modal
         }}
-        title="Approve Budget Request"
+        title={t("pendingAdjustmentsDetails.approveBudgetRequest")}
         size="md"
       >
         <div className="p-4">
           <div className="flex items-center gap-3 mb-4">
             <p className="text-sm text-[#282828]">
               {" "}
-              You're about to approve this budget request. Once approved, the
-              requester will be notified, and the process will move to the next
-              stage. Are you sure you want to continue?
+              {t("pendingAdjustmentsDetails.approveMessage")}
             </p>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
-              Reason (Optional)
+              {t("pendingAdjustmentsDetails.reasonOptional")}
             </label>
             <textarea
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
-              placeholder="Add any comments or notes (optional)..."
+              placeholder={t(
+                "pendingAdjustmentsDetails.addCommentsPlaceholder"
+              )}
             />
           </div>
 
@@ -649,13 +655,13 @@ export default function PendingAdjustmentsDetails() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700  border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              {t("pendingAdjustmentsDetails.cancel")}
             </button>
             <button
               onClick={confirmApprove}
               className="px-4 py-2 text-sm font-medium text-white bg-[#00A350]  border border-green-600 rounded-md hover:bg-green-700 transition-colors"
             >
-              Approve
+              {t("pendingAdjustmentsDetails.approve")}
             </button>
           </div>
         </div>
@@ -668,30 +674,30 @@ export default function PendingAdjustmentsDetails() {
           setIsRejectModalOpen(false);
           setReason(""); // Clear reason when closing modal
         }}
-        title="Reject Transfer"
+        title={t("pendingAdjustmentsDetails.rejectTransfer")}
         size="md"
       >
         <div className="p-4">
           <div className="flex items-center gap-3 mb-4">
             <div>
               <p className="text-sm text-[#282828]">
-                You're about to reject this budget request. This action cannot
-                be undone. Please provide a clear reason for rejection so the
-                requester understands the next steps.
+                {t("pendingAdjustmentsDetails.rejectMessage")}
               </p>
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
-              Reason for rejection (Optional)
+              {t("pendingAdjustmentsDetails.reasonForRejection")}
             </label>
             <textarea
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
-              placeholder="Describe the reason for rejection (optional)..."
+              placeholder={t(
+                "pendingAdjustmentsDetails.rejectReasonPlaceholder"
+              )}
             />
           </div>
 
@@ -703,13 +709,13 @@ export default function PendingAdjustmentsDetails() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700  border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              {t("pendingAdjustmentsDetails.cancel")}
             </button>
             <button
               onClick={confirmReject}
               className="px-4 py-2 text-sm font-medium text-white bg-[#D44333] border border-red-600 rounded-md hover:bg-red-700 transition-colors"
             >
-              Reject Transfer
+              {t("pendingAdjustmentsDetails.reject")}
             </button>
           </div>
         </div>

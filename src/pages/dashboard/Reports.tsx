@@ -9,8 +9,13 @@ import {
   type SegmentFundItem,
 } from "@/api/reports.api";
 import { useGetSegmentTypesQuery } from "@/api/segmentConfiguration.api";
+import { useTranslation } from "react-i18next";
+import { cn } from "@/utils/cn";
 
 export default function Reports() {
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
+
   // State management
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
@@ -98,9 +103,9 @@ export default function Reports() {
   // Helper function to translate segment names
   const getSegmentHeader = (segmentNumber: number): string => {
     const translations: Record<number, string> = {
-      5: "MOFA GEOGRAPHIC CLASS",
-      9: "MOFA_COST_CENTER",
-      11: "MOFA_BUDGET",
+      5: t("reports.mofaGeographicClass"),
+      9: t("reports.mofaCostCenter"),
+      11: t("reports.mofaBudget"),
     };
 
     if (translations[segmentNumber]) {
@@ -123,7 +128,7 @@ export default function Reports() {
   const reportColumns: TableColumn[] = [
     {
       id: "control_budget_name",
-      header: "Control Budget Name",
+      header: t("reports.controlBudgetName"),
       accessor: "control_budget_name",
       minWidth: 180,
       render: (value) => (
@@ -132,7 +137,7 @@ export default function Reports() {
     },
     {
       id: "period_name",
-      header: "Period Name",
+      header: t("reports.periodName"),
       accessor: "period_name",
       minWidth: 120,
       render: (value) => (
@@ -168,7 +173,7 @@ export default function Reports() {
     },
     {
       id: "budget",
-      header: "Budget",
+      header: t("reports.budget"),
       accessor: "budget",
       showSum: true,
       minWidth: 140,
@@ -180,7 +185,7 @@ export default function Reports() {
     },
     {
       id: "encumbrance",
-      header: "Encumbrance",
+      header: t("reports.encumbrance"),
       accessor: "encumbrance",
       showSum: true,
       minWidth: 140,
@@ -192,7 +197,7 @@ export default function Reports() {
     },
     {
       id: "funds_available",
-      header: "Funds Available",
+      header: t("reports.fundsAvailable"),
       accessor: "funds_available",
       showSum: true,
       minWidth: 140,
@@ -202,7 +207,7 @@ export default function Reports() {
     },
     {
       id: "commitment",
-      header: "Commitment",
+      header: t("reports.commitment"),
       accessor: "commitment",
       showSum: true,
       minWidth: 120,
@@ -214,7 +219,7 @@ export default function Reports() {
     },
     {
       id: "obligation",
-      header: "Obligation",
+      header: t("reports.obligation"),
       accessor: "obligation",
       showSum: true,
       minWidth: 120,
@@ -226,7 +231,7 @@ export default function Reports() {
     },
     {
       id: "actual",
-      header: "Actual",
+      header: t("reports.actual"),
       accessor: "actual",
       showSum: true,
       minWidth: 120,
@@ -238,7 +243,7 @@ export default function Reports() {
     },
     {
       id: "other",
-      header: "Other",
+      header: t("reports.other"),
       accessor: "other",
       showSum: true,
       minWidth: 120,
@@ -335,9 +340,9 @@ export default function Reports() {
 
   // Select options for periods (format: month-year like 1-25, 2-25, etc.)
   const periodOptions: SelectOption[] = [
-    { value: "1-25", label: "January 2025" },
-    { value: "1-24", label: "January 2024" },
-    { value: "1-23", label: "January 2023" },
+    { value: "1-25", label: `${t("reports.january")} 2025` },
+    { value: "1-24", label: `${t("reports.january")} 2024` },
+    { value: "1-23", label: `${t("reports.january")} 2023` },
   ];
 
   // Select options for control budget
@@ -349,8 +354,20 @@ export default function Reports() {
   return (
     <div>
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold tracking-wide">Reports</h1>
+      <div
+        className={cn(
+          "flex justify-between items-center mb-6",
+          isRTL && "flex-row-reverse"
+        )}
+      >
+        <h1
+          className={cn(
+            "text-2xl font-bold tracking-wide",
+            isRTL ? "text-right" : "text-left"
+          )}
+        >
+          {t("reports.title")}
+        </h1>
       </div>
 
       {/* Filters */}
@@ -358,30 +375,34 @@ export default function Reports() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div className="relative">
             <SharedSelect
-              title="Period"
+              title={t("reports.period")}
               options={periodOptions}
               value={selectedPeriod}
               onChange={(value) => handlePeriodChange(String(value))}
-              placeholder="Select period"
+              placeholder={t("reports.selectPeriod")}
               required
             />
             {isChangingSelection && selectedPeriod && (
-              <div className="absolute top-2 right-2">
+              <div
+                className={cn("absolute top-2", isRTL ? "left-2" : "right-2")}
+              >
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
               </div>
             )}
           </div>
           <div className="relative">
             <SharedSelect
-              title="Control Budget Name"
+              title={t("reports.controlBudgetName")}
               options={budgetOptions}
               value={selectedBudget}
               onChange={(value) => handleBudgetChange(String(value))}
-              placeholder="Select budget"
+              placeholder={t("reports.selectBudget")}
               required
             />
             {isChangingSelection && selectedBudget && (
-              <div className="absolute top-2 right-2">
+              <div
+                className={cn("absolute top-2", isRTL ? "left-2" : "right-2")}
+              >
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
               </div>
             )}
@@ -391,18 +412,14 @@ export default function Reports() {
       {selectedPeriod ? (
         <div className="my-4 bg-white p-4 rounded-lg shadow-sm">
           <SearchBar
-            placeholder="Search reports..."
+            placeholder={t("reports.searchReports")}
             value={searchQuery}
             onChange={handleSearchChange}
             onSubmit={handleSearchSubmit}
-            dir="ltr"
             debounce={250}
           />
         </div>
       ) : null}
-
-      {/* Note: Column filters are now enabled in the table by default */}
-      {/* You can disable them by adding showColumnFilters={false} to SharedTable */}
 
       {/* Report Table */}
       {!selectedPeriod ? (
@@ -410,18 +427,20 @@ export default function Reports() {
       ) : shouldShowLoading ? (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">Loading report data...</span>
+          <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
+            {t("reports.loadingReportData")}
+          </span>
         </div>
       ) : error ? (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
           <div className="text-center">
             <div className="text-red-500 text-lg mb-2">⚠️</div>
-            <p className="text-gray-600">Failed to load report data</p>
+            <p className="text-gray-600">{t("reports.failedToLoad")}</p>
             <button
               className="mt-2 px-4 py-2 bg-[#4E8476] text-white rounded hover:bg-blue-700"
               onClick={() => window.location.reload()}
             >
-              Retry
+              {t("common.retry")}
             </button>
           </div>
         </div>
@@ -429,15 +448,22 @@ export default function Reports() {
         <div>
           {isFetching && !isLoading && !isChangingSelection && (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center gap-2 text-blue-700">
+              <div
+                className={cn(
+                  "flex items-center gap-2 text-blue-700",
+                  isRTL && "flex-row-reverse"
+                )}
+              >
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="text-sm">Refreshing report data...</span>
+                <span className="text-sm">
+                  {t("reports.refreshingReportData")}
+                </span>
               </div>
             </div>
           )}
 
           <SharedTable
-            title="Segment Funds Report"
+            title={t("reports.segmentFundsReport")}
             columns={reportColumns}
             data={filteredData}
             maxHeight="600px"

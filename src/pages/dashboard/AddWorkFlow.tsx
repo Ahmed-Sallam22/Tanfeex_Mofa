@@ -3,6 +3,7 @@ import SharedModal from "@/shared/SharedModal";
 import { SharedSelect, type SelectOption } from "@/shared/SharedSelect";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   useGetUserLevelsQuery,
   useCreateWorkflowTemplateMutation,
@@ -16,6 +17,7 @@ export default function AddWorkFlow() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = Boolean(id);
+  const { t } = useTranslation();
 
   // API hooks
   const { data: userLevelsData } = useGetUserLevelsQuery();
@@ -280,7 +282,9 @@ export default function AddWorkFlow() {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4E8476]"></div>
-        <span className="ml-2 text-gray-600">Loading workflow...</span>
+        <span className="ml-2 text-gray-600">
+          {t("workflow.loadingWorkflow")}
+        </span>
       </div>
     );
   }
@@ -290,15 +294,17 @@ export default function AddWorkFlow() {
       <SharedModal
         isOpen={isCreateModalOpen}
         onClose={handleCloseModal}
-        title={isStageEditMode ? "Edit Stage" : "Create Stage"}
+        title={
+          isStageEditMode ? t("workflow.editStage") : t("workflow.createStage")
+        }
         size="md"
       >
         <div className="p-4 space-y-4">
           <div className="grid grid-cols-1 gap-4">
             <Input
-              label="Stage Name"
+              label={t("workflow.stageName")}
               type="text"
-              placeholder="Enter stage name"
+              placeholder={t("workflow.enterStageName")}
               value={stageForm.name}
               onChange={(e) =>
                 setStageForm((prev) => ({ ...prev, name: e.target.value }))
@@ -307,7 +313,7 @@ export default function AddWorkFlow() {
             />
 
             <SharedSelect
-              title="Decision Policy"
+              title={t("workflow.decisionPolicy")}
               size="text-sm"
               options={decisionPolicyOptions}
               value={stageForm.decisionPolicy}
@@ -317,11 +323,11 @@ export default function AddWorkFlow() {
                   decisionPolicy: value as "ALL" | "ANY" | "QUORUM",
                 }))
               }
-              placeholder="Select decision policy"
+              placeholder={t("workflow.selectDecisionPolicy")}
             />
 
             <SharedSelect
-              title="Required User Level"
+              title={t("workflow.requiredUserLevel")}
               size="text-sm"
               options={userLevelOptions}
               value={stageForm.requiredUserLevel?.toString() || ""}
@@ -331,13 +337,13 @@ export default function AddWorkFlow() {
                   requiredUserLevel: value ? Number(value) : undefined,
                 }))
               }
-              placeholder="Select user level"
+              placeholder={t("workflow.selectUserLevel")}
             />
 
             <Input
-              label="SLA Hours"
+              label={t("workflow.slaHours")}
               type="number"
-              placeholder="Enter SLA hours (e.g., 24)"
+              placeholder={t("workflow.enterSlaHours")}
               value={stageForm.slaHours?.toString() || ""}
               onChange={(e) =>
                 setStageForm((prev) => ({
@@ -351,7 +357,7 @@ export default function AddWorkFlow() {
             <div className="space-y-4">
               <Toggle
                 id="allowReject"
-                label="Allow Reject"
+                label={t("workflow.allowReject")}
                 checked={stageForm.allowReject}
                 onChange={(checked) =>
                   setStageForm((prev) => ({
@@ -368,7 +374,7 @@ export default function AddWorkFlow() {
               onClick={handleCloseModal}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Cancel
+              {t("workflow.cancel")}
             </button>
             <button
               onClick={handleCreateStage}
@@ -379,7 +385,9 @@ export default function AddWorkFlow() {
               }
               className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#4E8476] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {isStageEditMode ? "Update Stage" : "Create Stage"}
+              {isStageEditMode
+                ? t("workflow.updateStage")
+                : t("workflow.createStage")}
             </button>
           </div>
         </div>
@@ -391,11 +399,13 @@ export default function AddWorkFlow() {
             onClick={handleBack}
             className="flex items-center gap-2  cursor-pointer py-2 text-md text-[#4E8476] hover:text-[#4E8476] "
           >
-            Workflows
+            {t("workflow.workflows")}
           </button>
           <span className="text-[#737373] text-lg">/</span>
           <h1 className="text-md  text-[#282828] font-meduim tracking-wide">
-            {isEditMode ? "Edit Workflow" : "Create New Workflow"}
+            {isEditMode
+              ? t("workflow.editWorkflow")
+              : t("workflow.createNewWorkflow")}
           </h1>
         </div>
 
@@ -404,7 +414,7 @@ export default function AddWorkFlow() {
             onClick={handleBack}
             className="flex items-center gap-2  cursor-pointer p-1   text-md  text-[#282828] px-4 py-2 rounded-md border border-[#BBBBBB] transition"
           >
-            Cancel
+            {t("workflow.cancel")}
           </button>
           <button
             onClick={handleCreateWorkflow}
@@ -422,18 +432,20 @@ export default function AddWorkFlow() {
             {(isCreating || isUpdating) && (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             )}
-            {isEditMode ? "Update Workflow" : "Add Workflow"}
+            {isEditMode
+              ? t("workflow.updateWorkflow")
+              : t("workflow.addWorkflow")}
           </button>
         </div>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-3 ">
-          <h2 className="text-md ">Workflow Information</h2>
+          <h2 className="text-md ">{t("workflow.workflowInformation")}</h2>
 
           <Toggle
             id="workflowStatus"
-            label="Active"
+            label={t("workflow.active")}
             checked={workflowForm.isActive}
             onChange={(checked) =>
               setWorkflowForm((prev) => ({
@@ -446,9 +458,9 @@ export default function AddWorkFlow() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
           <Input
-            label="Code"
+            label={t("workflow.workflowCode")}
             type="text"
-            placeholder="Enter Code"
+            placeholder={t("workflow.enterCode")}
             value={workflowForm.code}
             onChange={(e) =>
               setWorkflowForm((prev) => ({ ...prev, code: e.target.value }))
@@ -457,9 +469,9 @@ export default function AddWorkFlow() {
           />
 
           <Input
-            label="Workflow Name"
+            label={t("workflow.workflowName")}
             type="text"
-            placeholder="Enter Workflow Name"
+            placeholder={t("workflow.enterWorkflowName")}
             value={workflowForm.name}
             onChange={(e) =>
               setWorkflowForm((prev) => ({ ...prev, name: e.target.value }))
@@ -467,17 +479,17 @@ export default function AddWorkFlow() {
             autoComplete="off"
           />
           <SharedSelect
-            title="Transfer Type"
+            title={t("workflow.transferType")}
             size="text-sm"
             options={TranstypeOptions}
             value={Transtype}
             onChange={handleSelectChange}
-            placeholder="Select transaction date"
+            placeholder={t("workflow.selectTransactionDate")}
           />
           <Input
-            label="Version"
+            label={t("workflow.workflowVersion")}
             type="number"
-            placeholder="Enter Version (e.g., 1)"
+            placeholder={t("workflow.enterVersion")}
             value={workflowForm.version?.toString() || ""}
             onChange={(e) =>
               setWorkflowForm((prev) => ({
@@ -490,10 +502,10 @@ export default function AddWorkFlow() {
 
           <div className="col-span-2">
             <label className="text-sm font-semibold " htmlFor="des">
-              Description
+              {t("workflow.workflowDescription")}
             </label>
             <textarea
-              placeholder="Describe your issue in detail...."
+              placeholder={t("workflow.describeIssue")}
               rows={6}
               value={workflowForm.description}
               onChange={(e) =>
@@ -512,19 +524,19 @@ export default function AddWorkFlow() {
 
       <div className="bg-white p-6 mt-4 rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-3">
-          <h2 className="text-md ">Workflow Stages</h2>
+          <h2 className="text-md ">{t("workflow.workflowStages")}</h2>
 
           <button
             onClick={handleCreateWorkFlow}
             className="flex items-center gap-2 text-sm  cursor-pointer p-1   text-md bg-[#4E8476] text-white px-4 py-2 rounded-md hover:bg-[#4E8476] transition"
           >
-            Add Stage
+            {t("workflow.addStage")}
           </button>
         </div>
 
         {stages.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            No stages added yet. Click "Add Stage" to create your first stage.
+            {t("workflow.noStagesYet")}
           </div>
         ) : (
           <div className="space-y-4">
@@ -544,13 +556,22 @@ export default function AddWorkFlow() {
                     <div className="flex flex-col gap-2">
                       <DotSeparated
                         items={[
-                          `Decision Policy: ${stage.decision_policy}`,
-                          `Allow Reject: ${stage.allow_reject ? "Yes" : "No"}`,
-                          `User Level: ${stage.required_user_level}`,
+                          `${t("workflow.decisionPolicy")}: ${
+                            stage.decision_policy
+                          }`,
+                          `${t("workflow.allowReject")}: ${
+                            stage.allow_reject
+                              ? t("workflow.yes")
+                              : t("workflow.no")
+                          }`,
+                          `${t("workflow.userLevel")}: ${
+                            stage.required_user_level
+                          }`,
                         ]}
                       />
                       <p className="text-xs text-[#757575]">
-                        SLA: {stage.sla_hours}H
+                        {t("workflow.sla")}: {stage.sla_hours}
+                        {t("workflow.hours")}
                       </p>
                     </div>
                     <div className="flex gap-1.5">
@@ -558,7 +579,7 @@ export default function AddWorkFlow() {
                       <button
                         onClick={() => handleEditStage(index)}
                         className="p-1.5 text-[#4E8476] hover:bg-[#4E8476] rounded-md transition-colors"
-                        title="Edit stage"
+                        title={t("workflow.editStageTitle")}
                       >
                         <svg
                           width="16"
@@ -577,7 +598,7 @@ export default function AddWorkFlow() {
                       <button
                         onClick={() => handleDeleteStage(index)}
                         className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                        title="Delete stage"
+                        title={t("workflow.deleteStageTitle")}
                       >
                         <svg
                           width="16"

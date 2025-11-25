@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { ArrowLeft, Plus, Check } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import type { UploadInvoiceResponse } from "@/api/invoice.api";
 import {
   useSaveInvoiceMutation,
@@ -66,7 +67,10 @@ const ACCOUNT_CODE_OPTIONS = [
   { code: "5040137", label: "Board And Committee Membership Fee" },
   { code: "5040138", label: "Long-Term Incentive Plan Expense" },
   { code: "5040141", label: "Special Compensation Payment" },
-  { code: "5040200", label: "G&A - Depreciation Of Property, Plant And Equipment" },
+  {
+    code: "5040200",
+    label: "G&A - Depreciation Of Property, Plant And Equipment",
+  },
   { code: "5040201", label: "Depreciation Expense Buildings" },
   { code: "5040202", label: "Depreciation Expense Machinery And Equipment" },
   { code: "5040203", label: "Depreciation Expense Transportation Equipment" },
@@ -111,7 +115,12 @@ const sanitizeAmountString = (
     }
   }
 
-  if (!normalized || normalized === "." || normalized === "-" || normalized === "-.") {
+  if (
+    !normalized ||
+    normalized === "." ||
+    normalized === "-" ||
+    normalized === "-."
+  ) {
     return "0";
   }
 
@@ -162,6 +171,7 @@ const ACCOUNT_CODE_SELECT_OPTIONS: SelectOption[] = ACCOUNT_CODE_OPTIONS.map(
 );
 
 export default function InvoiceReview() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
@@ -237,29 +247,36 @@ export default function InvoiceReview() {
 
       const rawAccountDescription =
         data["Account Description"] ?? data.AccountDescription ?? "";
-      const formattedAccountDescription =
-        formatAccountDescription(rawAccountDescription);
+      const formattedAccountDescription = formatAccountDescription(
+        rawAccountDescription
+      );
       const initialAccountCode = data.AccountCode ?? "";
 
       const invoiceLines = data.invoiceLines ?? [];
-      const lineItems = invoiceLines.map((line: ExtractedInvoiceLine, idx: number) => {
-        const lineAmountRaw = line.LineAmount ?? "0";
-        const firstDistribution = line.invoiceDistributions?.[0];
-        const distributionAmountRaw =
-          firstDistribution?.DistributionAmount ?? lineAmountRaw ?? "0";
+      const lineItems = invoiceLines.map(
+        (line: ExtractedInvoiceLine, idx: number) => {
+          const lineAmountRaw = line.LineAmount ?? "0";
+          const firstDistribution = line.invoiceDistributions?.[0];
+          const distributionAmountRaw =
+            firstDistribution?.DistributionAmount ?? lineAmountRaw ?? "0";
 
-        const lineAmount = sanitizeAmountString(lineAmountRaw);
-        const distributionAmount = sanitizeAmountString(distributionAmountRaw);
+          const lineAmount = sanitizeAmountString(lineAmountRaw);
+          const distributionAmount = sanitizeAmountString(
+            distributionAmountRaw
+          );
 
-        return {
-          id: idx + 1,
-          lineNumber: line.LineNumber ?? idx + 1,
-          lineAmount,
-          distributionCombination: firstDistribution?.DistributionCombination ?? "",
-          distributionLineType: firstDistribution?.DistributionLineType ?? "Item",
-          distributionAmount,
-        };
-      });
+          return {
+            id: idx + 1,
+            lineNumber: line.LineNumber ?? idx + 1,
+            lineAmount,
+            distributionCombination:
+              firstDistribution?.DistributionCombination ?? "",
+            distributionLineType:
+              firstDistribution?.DistributionLineType ?? "Item",
+            distributionAmount,
+          };
+        }
+      );
 
       setForm({
         invoiceNo: data.InvoiceNumber || "",
@@ -289,8 +306,6 @@ export default function InvoiceReview() {
     }, 0);
     return { subtotal };
   }, [form.lineItems]);
-
- 
 
   const addRow = () => {
     const lastLineNumber =
@@ -332,7 +347,7 @@ export default function InvoiceReview() {
         (r) => parseAmountValue(r.lineAmount) > 0
       );
       if (!hasAmount) {
-        return toast.error("Each line must have an amount greater than 0");
+        return toast.error(t("invoice.lineAmountError"));
       }
 
       // Prepare the payload
@@ -366,7 +381,9 @@ export default function InvoiceReview() {
               {
                 DistributionLineNumber: 1,
                 DistributionLineType: line.distributionLineType,
-                DistributionAmount: sanitizeAmountString(line.distributionAmount || line.lineAmount),
+                DistributionAmount: sanitizeAmountString(
+                  line.distributionAmount || line.lineAmount
+                ),
                 DistributionCombination: line.distributionCombination,
               },
             ],
@@ -380,33 +397,33 @@ export default function InvoiceReview() {
       // If data comes from uploaded invoice (new), save first then submit
       if (uploadedData) {
         await saveInvoice(payload).unwrap();
-        toast.success("Invoice saved successfully!");
+        toast.success(t("invoice.invoiceSaved"));
       }
       // If data comes from API (existing invoice), update first then submit
       else if (apiInvoiceData) {
         await updateInvoice(payload).unwrap();
-        toast.success("Invoice updated successfully!");
+        toast.success(t("invoice.invoiceUpdated"));
       }
 
       // Then submit (for both cases)
       await submitInvoice({ InvoiceNumber: form.invoiceNo }).unwrap();
-      toast.success("Invoice submitted successfully!");
+      toast.success(t("invoice.invoiceSubmitted"));
       navigate("/app/Document_I/O");
     } catch (error) {
       console.error("Submit error:", error);
-      toast.error("Failed to submit invoice");
+      toast.error(t("invoice.submitFailed"));
     }
   };
 
   const handleModalSubmit = async () => {
     try {
       await submitInvoice({ InvoiceNumber: form.invoiceNo }).unwrap();
-      toast.success("Invoice submitted successfully!");
+      toast.success(t("invoice.invoiceSubmitted"));
       setShowSubmitModal(false);
       navigate("/app/Document_I/O");
     } catch (error) {
       console.error("Submit error:", error);
-      toast.error("Failed to submit invoice");
+      toast.error(t("invoice.submitFailed"));
     }
   };
 
@@ -496,12 +513,14 @@ export default function InvoiceReview() {
   if (invoiceError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <p className="text-red-600 text-lg">Failed to load invoice</p>
+        <p className="text-red-600 text-lg">
+          {t("invoice.failedToLoadInvoice")}
+        </p>
         <button
           onClick={() => navigate("/app/Document_I/O")}
           className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg"
         >
-          Back to Invoices
+          {t("invoice.backToInvoices")}
         </button>
       </div>
     );
@@ -515,7 +534,7 @@ export default function InvoiceReview() {
           onClick={() => navigate("/app/Document_I/O")}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
         >
-          <ArrowLeft className="h-5 w-5" /> Back to Invoices
+          <ArrowLeft className="h-5 w-5" /> {t("invoice.backToInvoices")}
         </button>
       </div>
 
@@ -524,7 +543,7 @@ export default function InvoiceReview() {
         <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-200  p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-gray-800 ">
-              Invoice PDF Preview
+              {t("invoice.pdfPreview")}
             </h3>
           </div>
 
@@ -552,10 +571,10 @@ export default function InvoiceReview() {
                 />
               </svg>
               <p className="text-gray-600  text-sm font-medium">
-                No PDF available
+                {t("invoice.noPdfAvailable")}
               </p>
               <p className="text-gray-400  text-xs mt-1">
-                Upload or generate an invoice to preview the PDF here
+                {t("invoice.noPdfMessage")}
               </p>
             </div>
           )}
@@ -566,19 +585,21 @@ export default function InvoiceReview() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-800">
               {apiInvoiceData
-                ? "Invoice Details (View Only)"
-                : "Extracted Data"}
+                ? t("invoice.invoiceDetailsViewOnly")
+                : t("invoice.extractedData")}
             </h3>
             {apiInvoiceData && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                Read Only
+                {t("invoice.readOnly")}
               </span>
             )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs text-gray-600">Invoice Number</label>
+              <label className="text-xs text-gray-600">
+                {t("invoice.invoiceNumber")}
+              </label>
               <input
                 value={form.invoiceNo}
                 onChange={(e) =>
@@ -593,7 +614,9 @@ export default function InvoiceReview() {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-600">Invoice Date</label>
+              <label className="text-xs text-gray-600">
+                {t("invoice.invoiceDate")}
+              </label>
               <div className="mt-1 relative">
                 <input
                   type="date"
@@ -611,7 +634,9 @@ export default function InvoiceReview() {
               </div>
             </div>
             <div>
-              <label className="text-xs text-gray-600">Supplier</label>
+              <label className="text-xs text-gray-600">
+                {t("invoice.supplier")}
+              </label>
               <input
                 value={form.supplier}
                 onChange={(e) => setForm({ ...form, supplier: e.target.value })}
@@ -624,7 +649,9 @@ export default function InvoiceReview() {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-600">Supplier Site</label>
+              <label className="text-xs text-gray-600">
+                {t("invoice.supplierSite")}
+              </label>
               <input
                 value={form.supplierSite}
                 onChange={(e) =>
@@ -639,7 +666,9 @@ export default function InvoiceReview() {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-600">Business Unit</label>
+              <label className="text-xs text-gray-600">
+                {t("invoice.businessUnit")}
+              </label>
               <input
                 value={form.businessUnit}
                 onChange={(e) =>
@@ -654,7 +683,9 @@ export default function InvoiceReview() {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-600">Description</label>
+              <label className="text-xs text-gray-600">
+                {t("invoice.description")}
+              </label>
               <input
                 value={form.description}
                 onChange={(e) =>
@@ -685,7 +716,9 @@ export default function InvoiceReview() {
               />
             </div> */}
             <div>
-              <label className="text-xs text-gray-600">Invoice Currency</label>
+              <label className="text-xs text-gray-600">
+                {t("invoice.invoiceCurrency")}
+              </label>
               <input
                 value={form.invoiceCurrency}
                 onChange={(e) =>
@@ -700,7 +733,9 @@ export default function InvoiceReview() {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-600">Invoice Group</label>
+              <label className="text-xs text-gray-600">
+                {t("invoice.invoiceGroup")}
+              </label>
               <input
                 value={form.invoiceGroup}
                 onChange={(e) =>
@@ -716,7 +751,7 @@ export default function InvoiceReview() {
             </div>
             <div>
               <label className="text-xs text-gray-600">
-                Total Amount (Calculated)
+                {t("invoice.totalAmountCalculated")}
               </label>
               <input
                 disabled
@@ -728,11 +763,13 @@ export default function InvoiceReview() {
 
           <div className="mt-6">
             <p className="text-sm font-medium text-gray-800">
-              Code Combinations
+              {t("invoice.codeCombinations")}
             </p>
             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs text-gray-600">Account Code</label>
+                <label className="text-xs text-gray-600">
+                  {t("invoice.accountCode")}
+                </label>
                 <SharedSelect
                   options={ACCOUNT_CODE_SELECT_OPTIONS}
                   value={form.accountCode}
@@ -749,7 +786,7 @@ export default function InvoiceReview() {
                       ),
                     }));
                   }}
-                  placeholder="Select account code"
+                  placeholder={t("invoice.selectAccountCode")}
                   disabled={!!apiInvoiceData}
                   clearable
                   searchable
@@ -757,12 +794,14 @@ export default function InvoiceReview() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-600">Account Description</label>
+                <label className="text-xs text-gray-600">
+                  {t("invoice.accountDescription")}
+                </label>
                 <input
                   value={form.accountDescription}
                   readOnly
                   className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-4 text-sm text-gray-700"
-                  placeholder="Select an account code to view"
+                  placeholder={t("invoice.selectAccountCodeToView")}
                 />
               </div>
             </div>
@@ -771,13 +810,15 @@ export default function InvoiceReview() {
           {/* Line items editable */}
           <div className="mt-6">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-gray-800">Line Items</p>
+              <p className="text-sm font-medium text-gray-800">
+                {t("invoice.lineItems")}
+              </p>
               {!apiInvoiceData && (
                 <button
                   onClick={addRow}
                   className="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-[#4E8476] text-white hover:bg-teal-700"
                 >
-                  <Plus className="h-4 w-4" /> Add Row
+                  <Plus className="h-4 w-4" /> {t("invoice.addRow")}
                 </button>
               )}
             </div>
@@ -786,11 +827,15 @@ export default function InvoiceReview() {
                 <thead className="bg-gray-50 text-gray-700">
                   <tr>
                     <th className="px-3 py-2 text-left w-16">#</th>
-                    <th className="px-3 py-2 text-left w-32">Amount</th>
-                    <th className="px-3 py-2 text-left">
-                      Distribution Combination
+                    <th className="px-3 py-2 text-left w-32">
+                      {t("invoice.amount")}
                     </th>
-                    <th className="px-3 py-2 text-left w-28">Type</th>
+                    <th className="px-3 py-2 text-left">
+                      {t("invoice.distributionCombination")}
+                    </th>
+                    <th className="px-3 py-2 text-left w-28">
+                      {t("invoice.type")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -856,15 +901,15 @@ export default function InvoiceReview() {
                 {isSaving || isUpdating ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                    {uploadedData ? "Saving..." : "Updating..."}
+                    {uploadedData ? t("invoice.saving") : t("invoice.updating")}
                   </>
                 ) : isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                    Submitting...
+                    {t("invoice.submitting")}
                   </>
                 ) : (
-                  <>Approve & Save</>
+                  <>{t("invoice.approveAndSave")}</>
                 )}
               </button>
             </div>
@@ -876,20 +921,17 @@ export default function InvoiceReview() {
       <SharedModal
         isOpen={showSubmitModal}
         onClose={handleModalCancel}
-        title="Invoice Saved Successfully"
+        title={t("invoice.invoiceSavedSuccess")}
         size="md"
       >
         <div className="space-y-4">
-          <p className="text-gray-600">
-            Your invoice has been saved successfully. Would you like to submit
-            it now?
-          </p>
+          <p className="text-gray-600">{t("invoice.invoiceSavedMessage")}</p>
           <div className="flex gap-3 justify-end">
             <button
               onClick={handleModalCancel}
               className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
             >
-              Later
+              {t("invoice.later")}
             </button>
             <button
               onClick={handleModalSubmit}
@@ -899,12 +941,12 @@ export default function InvoiceReview() {
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                  Submitting...
+                  {t("invoice.submitting")}
                 </>
               ) : (
                 <>
                   <Check className="h-4 w-4" />
-                  Submit Now
+                  {t("invoice.submitNow")}
                 </>
               )}
             </button>

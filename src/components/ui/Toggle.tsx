@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 interface ToggleProps {
   id?: string;
@@ -19,6 +20,8 @@ export const Toggle: React.FC<ToggleProps> = ({
   size = "md",
   className = "",
 }) => {
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
   const sizeClasses = {
     sm: "w-9 h-5",
     md: "w-11 h-6",
@@ -32,13 +35,35 @@ export const Toggle: React.FC<ToggleProps> = ({
   };
 
   const translateClasses = {
-    sm: checked ? "translate-x-4" : "translate-x-0",
-    md: checked ? "translate-x-5" : "translate-x-0",
-    lg: checked ? "translate-x-7" : "translate-x-0",
+    sm: checked
+      ? isRTL
+        ? "translate-x-0"
+        : "translate-x-4"
+      : isRTL
+      ? "-translate-x-4"
+      : "translate-x-0",
+    md: checked
+      ? isRTL
+        ? "translate-x-0"
+        : "translate-x-5"
+      : isRTL
+      ? "-translate-x-5"
+      : "translate-x-0",
+    lg: checked
+      ? isRTL
+        ? "translate-x-0"
+        : "translate-x-7"
+      : isRTL
+      ? "-translate-x-7"
+      : "translate-x-0",
   };
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div
+      className={`flex items-center gap-3 ${
+        isRTL ? "flex-row-reverse" : ""
+      } ${className}`}
+    >
       <button
         id={id}
         type="button"
@@ -72,7 +97,9 @@ export const Toggle: React.FC<ToggleProps> = ({
       <label
         id={id ? `${id}-label` : undefined}
         htmlFor={id}
-        className="text-sm font-medium text-gray-700 cursor-pointer select-none"
+        className={`text-sm font-medium text-gray-700 cursor-pointer select-none ${
+          isRTL ? "text-right" : "text-left"
+        }`}
         onClick={() => !disabled && onChange(!checked)}
       >
         {label}

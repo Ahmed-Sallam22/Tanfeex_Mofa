@@ -3,6 +3,8 @@ import { SharedTable } from "@/shared/SharedTable";
 import type { TableColumn, TableRow } from "@/shared/SharedTable";
 import SharedModal from "@/shared/SharedModal";
 import SharedSelect from "@/shared/SharedSelect";
+import { useTranslation } from "react-i18next";
+import { cn } from "@/utils/cn";
 
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -18,6 +20,8 @@ import { useGetUsersQuery } from "@/api/user.api";
 const PendingtransferData: TableRow[] = [];
 
 export default function PendingTransfer() {
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
   const navigate = useNavigate();
   const [q, setQ] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -163,7 +167,7 @@ export default function PendingTransfer() {
     const cols: TableColumn[] = [
       {
         id: "code",
-        header: "Transaction Code",
+        header: t("pendingTransfer.transactionCode"),
         accessor: "code",
         width: 160,
         minWidth: 140,
@@ -179,7 +183,7 @@ export default function PendingTransfer() {
       },
       {
         id: "requested_by",
-        header: "Requested By",
+        header: t("pendingTransfer.requestedBy"),
         accessor: "requested_by",
         width: 160,
         minWidth: 140,
@@ -187,7 +191,7 @@ export default function PendingTransfer() {
       },
       {
         id: "status",
-        header: "Status",
+        header: t("pendingTransfer.status"),
         accessor: "status",
         width: 110,
         minWidth: 90,
@@ -214,7 +218,7 @@ export default function PendingTransfer() {
       },
       {
         id: "transaction_date",
-        header: "Transaction Date",
+        header: t("pendingTransfer.transactionDate"),
         accessor: "transaction_date",
         width: 150,
         minWidth: 120,
@@ -222,7 +226,7 @@ export default function PendingTransfer() {
       },
       {
         id: "amount",
-        header: "Amount",
+        header: t("pendingTransfer.amount"),
         accessor: "amount",
         width: 120,
         minWidth: 100,
@@ -405,8 +409,15 @@ export default function PendingTransfer() {
 
   return (
     <div>
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold tracking-wide">Pending Transfer</h1>
+      <div
+        className={cn(
+          "flex justify-between items-center",
+          isRTL ? "text-right" : "text-left"
+        )}
+      >
+        <h1 className="text-2xl font-bold tracking-wide">
+          {t("pendingTransfer.title")}
+        </h1>
 
         {!isDelegateMode ? (
           <button
@@ -427,7 +438,7 @@ export default function PendingTransfer() {
                 strokeLinecap="round"
               />
             </svg>
-            Delegate
+            {t("pendingTransfer.delegate")}
           </button>
         ) : (
           <div className="flex items-center gap-2">
@@ -435,14 +446,14 @@ export default function PendingTransfer() {
               onClick={handleCancelDelegate}
               className="flex items-center gap-2 px-3 py-2 bg-transparent border border-[#4E8476] text-[#4E8476] hover:bg-[#4E8476] hover:text-white  rounded-md transition-colors font-medium"
             >
-              Cancel
+              {t("pendingTransfer.cancel")}
             </button>
             <button
               onClick={handleOpenDelegateModal}
               className="flex items-center gap-2 px-3 py-2 bg-[#4E8476] hover:bg-[#3d6b5f] text-white rounded-md transition-colors font-medium"
               disabled={selectedTransfers.size === 0}
             >
-              Proceed to Delegate
+              {t("pendingTransfer.proceedToDelegate")}
             </button>
           </div>
         )}
@@ -452,11 +463,10 @@ export default function PendingTransfer() {
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <SearchBar
-              placeholder="Search Pending Transfer"
+              placeholder={t("pendingTransfer.searchPlaceholder")}
               value={q}
               onChange={handleSearchChange}
               onSubmit={doSearch}
-              dir="ltr"
               debounce={250}
             />
           </div>
@@ -483,9 +493,16 @@ export default function PendingTransfer() {
       {/* Transfer Table */}
       <div className="mt-6">
         {isLoading ? (
-          <div className="flex justify-center items-center h-64 bg-white rounded-lg">
+          <div
+            className={cn(
+              "flex justify-center items-center h-64 bg-white rounded-lg",
+              isRTL ? "text-right" : "text-left"
+            )}
+          >
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-600">Loading transfers...</span>
+            <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
+              {t("pendingTransfer.loadingTransfers")}
+            </span>
           </div>
         ) : error ? (
           <div className="flex justify-center items-center h-64 bg-gradient-to-br from-red-50 to-rose-100 rounded-2xl border border-red-100 shadow-sm">
@@ -509,11 +526,10 @@ export default function PendingTransfer() {
               </div>
               <div className="space-y-3">
                 <h3 className="text-red-800 font-bold text-xl">
-                  Unable to load transfers
+                  {t("pendingTransfer.unableToLoad")}
                 </h3>
                 <p className="text-red-600 text-sm leading-relaxed">
-                  We're having trouble connecting to our servers. This might be
-                  a temporary issue.
+                  {t("pendingTransfer.connectionTrouble")}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2 justify-center mt-6">
                   <button
@@ -534,14 +550,14 @@ export default function PendingTransfer() {
                           d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                         />
                       </svg>
-                      Try Again
+                      {t("pendingTransfer.tryAgain")}
                     </span>
                   </button>
                   <button
                     className="px-6 py-3 bg-white text-red-600 border-2 border-red-200 rounded-xl font-medium hover:bg-red-50 transform hover:scale-105 transition-all duration-200"
                     onClick={() => setCurrentPage(1)}
                   >
-                    Reset Filters
+                    {t("pendingTransfer.resetFilters")}
                   </button>
                 </div>
               </div>
@@ -549,11 +565,11 @@ export default function PendingTransfer() {
           </div>
         ) : (
           <SharedTable
-            title="Recent Pending Transfers"
+            title={t("pendingTransfer.recentPendingTransfers")}
             columns={getPendingTransferColumns()}
             data={tableData}
             onFilter={handleFilter}
-            filterLabel="Filter Pending Transfers"
+            filterLabel={t("pendingTransfer.filterPendingTransfers")}
             maxHeight="600px"
             className="shadow-lg"
             showPagination={true}
@@ -580,29 +596,27 @@ export default function PendingTransfer() {
           setIsApproveModalOpen(false);
           setReason(""); // Clear reason when closing modal
         }}
-        title="Approve Budget Request"
+        title={t("pendingTransfer.approveBudgetRequest")}
         size="md"
       >
         <div className="p-4">
           <div className="flex items-center gap-3 mb-4">
             <p className="text-sm text-[#282828]">
               {" "}
-              You're about to approve this budget request. Once approved, the
-              requester will be notified, and the process will move to the next
-              stage. Are you sure you want to continue?
+              {t("pendingTransfer.approveMessage")}
             </p>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
-              Reason (Optional)
+              {t("pendingTransfer.reasonOptional")}
             </label>
             <textarea
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
-              placeholder="Add any comments or notes (optional)..."
+              placeholder={t("pendingTransfer.addComments")}
             />
           </div>
 
@@ -614,13 +628,13 @@ export default function PendingTransfer() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700  border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              {t("pendingTransfer.cancel")}
             </button>
             <button
               onClick={confirmApprove}
               className="px-4 py-2 text-sm font-medium text-white bg-[#00A350]  border border-green-600 rounded-md hover:bg-green-700 transition-colors"
             >
-              Approve
+              {t("pendingTransfer.approve")}
             </button>
           </div>
         </div>
@@ -633,30 +647,28 @@ export default function PendingTransfer() {
           setIsRejectModalOpen(false);
           setReason(""); // Clear reason when closing modal
         }}
-        title="Reject Transfer"
+        title={t("pendingTransfer.rejectTransfer")}
         size="md"
       >
         <div className="p-4">
           <div className="flex items-center gap-3 mb-4">
             <div>
               <p className="text-sm text-[#282828]">
-                You're about to reject this budget request. This action cannot
-                be undone. Please provide a clear reason for rejection so the
-                requester understands the next steps.
+                {t("pendingTransfer.rejectMessage")}
               </p>
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
-              Reason for rejection (Optional)
+              {t("pendingTransfer.reasonForRejectionOptional")}
             </label>
             <textarea
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
-              placeholder="Describe the reason for rejection (optional)..."
+              placeholder={t("pendingTransfer.describeReason")}
             />
           </div>
 
@@ -668,13 +680,13 @@ export default function PendingTransfer() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700  border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              {t("pendingTransfer.cancel")}
             </button>
             <button
               onClick={confirmReject}
               className="px-4 py-2 text-sm font-medium text-white bg-[#D44333] border border-red-600 rounded-md hover:bg-red-700 transition-colors"
             >
-              Reject Transfer
+              {t("pendingTransfer.rejectTransferButton")}
             </button>
           </div>
         </div>
@@ -687,20 +699,29 @@ export default function PendingTransfer() {
           setIsStatusModalOpen(false);
           setStatusTransactionId(null); // Clear the transaction ID when closing
         }}
-        title="Transfer Status Pipeline"
+        title={t("pendingTransfer.transferStatusPipeline")}
         size="lg"
       >
         <div className="p-6">
           {isLoadingStatus ? (
-            <div className="flex justify-center items-center py-12">
+            <div
+              className={cn(
+                "flex justify-center items-center py-12",
+                isRTL ? "text-right" : "text-left"
+              )}
+            >
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600">Loading status...</span>
+              <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
+                {t("pendingTransfer.loadingStatus")}
+              </span>
             </div>
           ) : statusError ? (
             <div className="flex justify-center items-center py-12">
               <div className="text-center">
                 <div className="text-red-500 text-lg mb-2">⚠️</div>
-                <p className="text-gray-600">Failed to load status</p>
+                <p className="text-gray-600">
+                  {t("pendingTransfer.failedToLoadStatus")}
+                </p>
               </div>
             </div>
           ) : statusData ? (
@@ -708,7 +729,7 @@ export default function PendingTransfer() {
               {/* Approval Stages Pipeline */}
               <div className="space-y-4">
                 <h4 className="text-md font-semibold text-gray-800 mb-4">
-                  Approval Stages
+                  {t("pendingTransfer.approvalStages")}
                 </h4>
 
                 <div className="relative">
@@ -806,14 +827,14 @@ export default function PendingTransfer() {
                               {stage.name}
                             </h5>
                             <span className="text-xs text-gray-500">
-                              Stage {stage.order_index}
+                              {t("pendingTransfer.stage")} {stage.order_index}
                             </span>
                           </div>
 
                           <div className="flex items-center justify-between text-sm text-gray-600">
                             <span>
                               <span className="font-medium">
-                                Decision Policy:
+                                {t("pendingTransfer.decisionPolicy")}:
                               </span>{" "}
                               {stage.decision_policy}
                             </span>
@@ -835,7 +856,9 @@ export default function PendingTransfer() {
                                     clipRule="evenodd"
                                   />
                                 </svg>
-                                <span className="font-medium">Approved</span>
+                                <span className="font-medium">
+                                  {t("pendingTransfer.approved")}
+                                </span>
                               </div>
                             ) : stage.status === "pending" ? (
                               <div className="flex items-center text-yellow-600">
@@ -851,7 +874,7 @@ export default function PendingTransfer() {
                                   />
                                 </svg>
                                 <span className="font-medium">
-                                  Awaiting Approval
+                                  {t("pendingTransfer.awaitingApproval")}
                                 </span>
                               </div>
                             ) : stage.status === "rejected" ? (
@@ -867,12 +890,16 @@ export default function PendingTransfer() {
                                     clipRule="evenodd"
                                   />
                                 </svg>
-                                <span className="font-medium">Rejected</span>
+                                <span className="font-medium">
+                                  {t("pendingTransfer.rejected")}
+                                </span>
                               </div>
                             ) : (
                               <div className="flex items-center text-blue-700">
                                 <div className="w-4 h-4 bg-blue-700 rounded-full mr-1"></div>
-                                <span className="font-medium">In Progress</span>
+                                <span className="font-medium">
+                                  {t("pendingTransfer.inProgress")}
+                                </span>
                               </div>
                             )}
                           </div>
@@ -886,7 +913,7 @@ export default function PendingTransfer() {
           ) : (
             <div className="text-center py-12 text-gray-500">
               <div className="text-gray-400 text-2xl mb-2">📋</div>
-              <p>No status information available</p>
+              <p>{t("pendingTransfer.noStatusAvailable")}</p>
             </div>
           )}
 
@@ -899,7 +926,7 @@ export default function PendingTransfer() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Close
+              {t("pendingTransfer.close")}
             </button>
           </div>
         </div>
@@ -913,15 +940,15 @@ export default function PendingTransfer() {
           setDelegateUser(null);
           setDelegateReason("");
         }}
-        title="Delegate Transfers"
+        title={t("pendingTransfer.delegateTransfers")}
         size="md"
       >
         <div className="p-4">
           <div className="mb-4">
             <p className="text-sm text-[#282828] mb-4">
-              You're about to delegate {selectedTransfers.size} transfer(s) to
-              another user. Please select the user and provide a reason for the
-              delegation.
+              {t("pendingTransfer.delegateMessage", {
+                count: selectedTransfers.size,
+              })}
             </p>
           </div>
 
@@ -929,7 +956,7 @@ export default function PendingTransfer() {
             {/* User Selection */}
             <div>
               <SharedSelect
-                title="Select User"
+                title={t("pendingTransfer.selectUser")}
                 required={true}
                 value={delegateUser !== null ? String(delegateUser) : ""}
                 onChange={(value) => {
@@ -937,7 +964,7 @@ export default function PendingTransfer() {
                     typeof value === "string" ? parseInt(value, 10) : value;
                   setDelegateUser(numericValue);
                 }}
-                placeholder="Choose a user to delegate to"
+                placeholder={t("pendingTransfer.chooseUser")}
                 options={userOptions}
               />
             </div>
@@ -945,14 +972,14 @@ export default function PendingTransfer() {
             {/* Reason */}
             <div>
               <label className="block text-sm font-bold text-[#282828] mb-2">
-                Reason for Delegation
+                {t("pendingTransfer.delegateReason")}
               </label>
               <textarea
                 rows={5}
                 value={delegateReason}
                 onChange={(e) => setDelegateReason(e.target.value)}
                 className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
-                placeholder="Provide a reason for delegating these transfers..."
+                placeholder={t("pendingTransfer.provideDelegateReason")}
               />
             </div>
           </div>
@@ -966,14 +993,14 @@ export default function PendingTransfer() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              {t("pendingTransfer.cancel")}
             </button>
             <button
               onClick={handleConfirmDelegate}
               disabled={!delegateUser}
               className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#3d6b5f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Confirm Delegation
+              {t("pendingTransfer.confirmDelegation")}
             </button>
           </div>
         </div>

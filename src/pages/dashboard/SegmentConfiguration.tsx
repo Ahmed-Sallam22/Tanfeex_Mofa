@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus, Download } from "lucide-react";
 import {
   SharedTable,
@@ -29,6 +30,7 @@ import { RichTextEditor } from "@/components/ui/RichTextEditor";
 type ViewMode = "list" | "card";
 
 export default function SegmentConfiguration() {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -103,17 +105,17 @@ export default function SegmentConfiguration() {
 
     // Validation
     if (!formData.segment_name.trim()) {
-      toast.error("Segment name is required");
+      toast.error(t("segmentConfiguration.segmentRequired"));
       return;
     }
 
     if (formData.oracle_segment_number <= 0) {
-      toast.error("Oracle segment number must be greater than 0");
+      toast.error(t("validation.oracleNumberRequired"));
       return;
     }
 
     if (formData.display_order <= 0) {
-      toast.error("Display order must be greater than 0");
+      toast.error(t("validation.displayOrderRequired"));
       return;
     }
 
@@ -124,19 +126,17 @@ export default function SegmentConfiguration() {
           id: editingSegment.segment_id,
           data: formData,
         }).unwrap();
-        toast.success("Segment type updated successfully");
+        toast.success(t("segmentConfiguration.updateSuccess"));
       } else {
         // Create new segment
         await createSegmentType(formData).unwrap();
-        toast.success("Segment type created successfully");
+        toast.success(t("segmentConfiguration.createSuccess"));
       }
       handleCloseModal();
     } catch (error) {
       console.error("Failed to save segment type:", error);
       toast.error(
-        editingSegment
-          ? "Failed to update segment type"
-          : "Failed to create segment type"
+        editingSegment ? t("messages.updateFailed") : t("messages.createFailed")
       );
     }
   };
@@ -165,12 +165,12 @@ export default function SegmentConfiguration() {
 
     try {
       await deleteSegmentType(deletingSegment.segment_id).unwrap();
-      toast.success("Segment type deleted successfully");
+      toast.success(t("segmentConfiguration.deleteSuccess"));
       setIsDeleteModalOpen(false);
       setDeletingSegment(null);
     } catch (error) {
       console.error("Failed to delete segment type:", error);
-      toast.error("Failed to delete segment type");
+      toast.error(t("messages.deleteFailed"));
     }
   };
 
@@ -184,10 +184,10 @@ export default function SegmentConfiguration() {
       const result = await loadSegmentsValues().unwrap();
       setLoadResult(result);
       setIsLoadResultModalOpen(true);
-      toast.success("Segments loaded successfully");
+      toast.success(t("segmentConfiguration.loadSuccess"));
     } catch (error) {
       console.error("Failed to load segments:", error);
-      toast.error("Failed to load segments");
+      toast.error(t("segmentConfiguration.loadError"));
     }
   };
 
@@ -197,7 +197,7 @@ export default function SegmentConfiguration() {
 
   const handleLoadFunds = async () => {
     if (!selectedPeriod.trim()) {
-      toast.error("Please enter a period name");
+      toast.error(t("messages.enterPeriod"));
       return;
     }
 
@@ -208,10 +208,10 @@ export default function SegmentConfiguration() {
       setLoadFundsResult(result);
       setIsPeriodModalOpen(false);
       setIsLoadFundsModalOpen(true);
-      toast.success(result.message || "Funds loaded successfully");
+      toast.success(result.message || t("messages.fundsLoadSuccess"));
     } catch (error) {
       console.error("Failed to load funds:", error);
-      toast.error("Failed to load funds");
+      toast.error(t("messages.fundsLoadFailed"));
     }
   };
 
@@ -226,10 +226,10 @@ export default function SegmentConfiguration() {
         id: segment.segment_id,
         is_required: !segment.segment_type_is_required,
       }).unwrap();
-      toast.success("Required status updated successfully");
+      toast.success(t("messages.requiredStatusUpdated"));
     } catch (error) {
       console.error("Failed to toggle required:", error);
-      toast.error("Failed to update required status");
+      toast.error(t("messages.requiredStatusFailed"));
     }
   };
 
@@ -239,10 +239,10 @@ export default function SegmentConfiguration() {
         id: segment.segment_id,
         has_hierarchy: !segment.segment_type_has_hierarchy,
       }).unwrap();
-      toast.success("Hierarchy status updated successfully");
+      toast.success(t("messages.hierarchyStatusUpdated"));
     } catch (error) {
       console.error("Failed to toggle hierarchy:", error);
-      toast.error("Failed to update hierarchy status");
+      toast.error(t("messages.hierarchyStatusFailed"));
     }
   };
 
@@ -250,7 +250,7 @@ export default function SegmentConfiguration() {
   const columns: TableColumn[] = [
     {
       id: "segment_name",
-      header: "Segment Name",
+      header: t("segmentConfiguration.segmentName"),
       render: (_, row) => {
         const segment = row as unknown as SegmentType;
         return (
@@ -262,7 +262,7 @@ export default function SegmentConfiguration() {
     },
     {
       id: "segment_type",
-      header: "Segment Type",
+      header: t("segmentConfiguration.segmentType"),
       render: (_, row) => {
         const segment = row as unknown as SegmentType;
         return (
@@ -274,7 +274,7 @@ export default function SegmentConfiguration() {
     },
     {
       id: "segment_type_oracle_number",
-      header: "Oracle Segment #",
+      header: t("segmentConfiguration.oracleNumber"),
       render: (_, row) => {
         const segment = row as unknown as SegmentType;
         return (
@@ -286,7 +286,7 @@ export default function SegmentConfiguration() {
     },
     {
       id: "segment_type_is_required",
-      header: "Required",
+      header: t("segmentConfiguration.required"),
       render: (_, row) => {
         const segment = row as unknown as SegmentType;
         return (
@@ -313,7 +313,7 @@ export default function SegmentConfiguration() {
     },
     {
       id: "segment_type_has_hierarchy",
-      header: "Has Hierarchy",
+      header: t("segmentConfiguration.hierarchy"),
       render: (_, row) => {
         const segment = row as unknown as SegmentType;
         return (
@@ -340,7 +340,7 @@ export default function SegmentConfiguration() {
     },
     {
       id: "segment_type_display_order",
-      header: "Display Order",
+      header: t("tableColumns.displayOrder"),
       render: (_, row) => {
         const segment = row as unknown as SegmentType;
         return (
@@ -352,7 +352,7 @@ export default function SegmentConfiguration() {
     },
     {
       id: "segment_type_status",
-      header: "Status",
+      header: t("tableColumns.status"),
       render: (_, row) => {
         const segment = row as unknown as SegmentType;
         const isActive = segment.segment_type_status === "Active";
@@ -385,13 +385,15 @@ export default function SegmentConfiguration() {
     <div className="p-2 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl text-gray-900">Segment Configuration</h1>
+        <h1 className="text-2xl text-gray-900">
+          {t("segmentConfiguration.title")}
+        </h1>
         <button
           onClick={handleAddSegment}
           className="inline-flex items-center gap-2 px-4 py-2 bg-[#4E8476] hover:bg-[#3d6b5f] text-white rounded-lg transition-colors font-medium"
         >
           <Plus className="h-5 w-5" />
-          Add Segment
+          {t("segmentConfiguration.addSegment")}
         </button>
       </div>
 
@@ -399,7 +401,9 @@ export default function SegmentConfiguration() {
       <div className="bg-white rounded-xl shadow-xl p-6">
         {/* Card Header with View Toggle */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl text-gray-900">Segment Configuration</h2>
+          <h2 className="text-xl text-gray-900">
+            {t("segmentConfiguration.title")}
+          </h2>
 
           {/* View Mode Toggle */}
           <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
@@ -410,7 +414,7 @@ export default function SegmentConfiguration() {
                   ? "bg-white text-[#4E8476] shadow"
                   : "text-gray-600 hover:text-gray-900"
               }`}
-              title="List View"
+              title={t("segmentConfiguration.listView")}
             >
               <svg
                 width="20"
@@ -470,7 +474,7 @@ export default function SegmentConfiguration() {
                   ? "bg-white text-[#4E8476] shadow"
                   : "text-gray-600 hover:text-gray-900"
               }`}
-              title="Card View"
+              title={t("segmentConfiguration.cardView")}
             >
               <svg
                 width="20"
@@ -530,7 +534,7 @@ export default function SegmentConfiguration() {
                       type="button"
                       onClick={() => handleEditSegment(segment)}
                       className="rounded-full hover:bg-[#4E8476]/10 transition-colors p-1"
-                      title="Edit"
+                      title={t("common.edit")}
                     >
                       <svg
                         width="32"
@@ -563,7 +567,7 @@ export default function SegmentConfiguration() {
                       type="button"
                       onClick={() => handleDeleteSegmentClick(segment)}
                       className="rounded-full hover:bg-red-50 transition-colors p-1"
-                      title="Delete"
+                      title={t("common.delete")}
                     >
                       <svg
                         width="24"
@@ -633,7 +637,7 @@ export default function SegmentConfiguration() {
                         </svg>
                       )}
                     </span>
-                    Required
+                    {t("segmentConfiguration.required")}
                   </button>
 
                   <button
@@ -666,12 +670,12 @@ export default function SegmentConfiguration() {
                         </svg>
                       )}
                     </span>
-                    Has Hierarchy
+                    {t("segmentConfiguration.hierarchy")}
                   </button>
                 </div>
 
                 <p className="mt-3 text-[15px] leading-relaxed text-gray-600">
-                  {segment.description || "No description provided"}
+                  {segment.description || t("common.noDescription")}
                 </p>
 
                 <div className="mt-3 flex items-center justify-between border-gray-100 pt-4">
@@ -685,8 +689,13 @@ export default function SegmentConfiguration() {
                     {segment.segment_type_status}
                   </span>
                   <div className="text-xs text-gray-500">
-                    <div>Total Segments: {segment.total_segments}</div>
-                    <div>Order: {segment.segment_type_display_order}</div>
+                    <div>
+                      {t("segmentConfiguration.totalSegments")}:{" "}
+                      {segment.total_segments}
+                    </div>
+                    <div>
+                      {t("common.order")}: {segment.segment_type_display_order}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -722,12 +731,12 @@ export default function SegmentConfiguration() {
           {isLoadingSegments ? (
             <>
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              Loading...
+              {t("common.loading")}
             </>
           ) : (
             <>
               <Download className="h-5 w-5" />
-              Load Segments Values
+              {t("segmentConfiguration.loadValues")}
             </>
           )}
         </button>
@@ -740,12 +749,12 @@ export default function SegmentConfiguration() {
           {isLoadingFunds ? (
             <>
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              Loading...
+              {t("common.loading")}
             </>
           ) : (
             <>
               <Download className="h-5 w-5" />
-              Load Segments Funds
+              {t("segmentConfiguration.loadFunds")}
             </>
           )}
         </button>
@@ -755,14 +764,18 @@ export default function SegmentConfiguration() {
       <SharedModal
         isOpen={isAddModalOpen || isEditModalOpen}
         onClose={handleCloseModal}
-        title={editingSegment ? "Edit Segment" : "Add New Segment"}
+        title={
+          editingSegment
+            ? t("segmentConfiguration.editSegment")
+            : t("segmentConfiguration.addSegment")
+        }
         size="lg"
       >
         <form onSubmit={handleSubmitSegment} className="p-6 space-y-6">
           {/* Segment Name */}
           <Input
-            label="Segment Name"
-            placeholder="Enter segment name (e.g., مستقبلي 1)"
+            label={t("segmentConfiguration.segmentName")}
+            placeholder={t("segmentConfiguration.enterSegmentName")}
             value={formData.segment_name}
             onChange={(e) =>
               setFormData({ ...formData, segment_name: e.target.value })
@@ -772,9 +785,9 @@ export default function SegmentConfiguration() {
 
           {/* Oracle Segment Number */}
           <Input
-            label="Oracle Segment Number"
+            label={t("segmentConfiguration.oracleNumber")}
             type="number"
-            placeholder="Enter oracle segment number"
+            placeholder={t("common.enterValue")}
             value={formData.oracle_segment_number || ""}
             onChange={(e) =>
               setFormData({
@@ -788,9 +801,9 @@ export default function SegmentConfiguration() {
 
           {/* Display Order */}
           <Input
-            label="Display Order"
+            label={t("tableColumns.displayOrder")}
             type="number"
-            placeholder="Enter display order"
+            placeholder={t("common.enterValue")}
             value={formData.display_order || ""}
             onChange={(e) =>
               setFormData({
@@ -805,14 +818,14 @@ export default function SegmentConfiguration() {
           {/* Description */}
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-[#282828]">
-              Description
+              {t("segmentConfiguration.description")}
             </label>
             <RichTextEditor
               value={formData.description}
               onChange={(value) =>
                 setFormData({ ...formData, description: value })
               }
-              placeholder="Enter segment description..."
+              placeholder={t("common.enterDescription")}
               height={150}
             />
           </div>
@@ -820,7 +833,7 @@ export default function SegmentConfiguration() {
           {/* Checkboxes */}
           <div className="grid grid-cols-2 gap-4">
             <Checkbox
-              label="Is Required"
+              label={t("segmentConfiguration.required")}
               checked={formData.is_required === "True"}
               onChange={(e) =>
                 setFormData({
@@ -831,7 +844,7 @@ export default function SegmentConfiguration() {
             />
 
             <Checkbox
-              label="Has Hierarchy"
+              label={t("segmentConfiguration.hierarchy")}
               checked={formData.has_hierarchy === "True"}
               onChange={(e) =>
                 setFormData({
@@ -850,7 +863,7 @@ export default function SegmentConfiguration() {
               onClick={handleCloseModal}
               disabled={isCreating || isUpdating}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"
@@ -860,11 +873,11 @@ export default function SegmentConfiguration() {
             >
               {isCreating || isUpdating
                 ? editingSegment
-                  ? "Updating..."
-                  : "Creating..."
+                  ? t("common.updating")
+                  : t("common.creating")
                 : editingSegment
-                ? "Update Segment"
-                : "Create Segment"}
+                ? t("common.update")
+                : t("common.create")}
             </Button>
           </div>
         </form>
@@ -874,7 +887,7 @@ export default function SegmentConfiguration() {
       <SharedModal
         isOpen={isDeleteModalOpen}
         onClose={handleCancelDelete}
-        title="Delete Segment"
+        title={t("segmentConfiguration.deleteSegment")}
         size="md"
       >
         <div className="p-6 space-y-6">
@@ -898,21 +911,21 @@ export default function SegmentConfiguration() {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Are you sure you want to delete this segment?
+                {t("segmentConfiguration.deleteConfirm")}
               </h3>
               {deletingSegment && (
                 <p className="text-sm text-gray-600 mb-4">
-                  You are about to delete{" "}
+                  {t("common.aboutToDelete")}{" "}
                   <span className="font-semibold text-gray-900">
                     "{deletingSegment.segment_name}"
                   </span>
-                  . This action cannot be undone.
+                  . {t("common.cannotUndo")}
                 </p>
               )}
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                 <p className="text-sm text-yellow-800">
-                  <strong>Warning:</strong> Deleting this segment may affect
-                  related data and configurations.
+                  <strong>{t("common.warning")}:</strong>{" "}
+                  {t("common.deleteWarning")}
                 </p>
               </div>
             </div>
@@ -925,14 +938,14 @@ export default function SegmentConfiguration() {
               variant="secondary"
               onClick={handleCancelDelete}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               type="button"
               onClick={handleConfirmDelete}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              Delete Segment
+              {t("common.delete")}
             </Button>
           </div>
         </div>
@@ -942,7 +955,7 @@ export default function SegmentConfiguration() {
       <SharedModal
         isOpen={isLoadResultModalOpen}
         onClose={handleCloseLoadResultModal}
-        title="Load Segments Results"
+        title={t("segmentConfiguration.loadResultsTitle")}
         size="lg"
       >
         <div className="p-6 space-y-6">
@@ -981,7 +994,7 @@ export default function SegmentConfiguration() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-blue-600 mb-1">
-                        Total Records
+                        {t("segmentConfiguration.totalRecords")}
                       </p>
                       <p className="text-3xl font-bold text-blue-900">
                         {loadResult.total_records.toLocaleString()}
@@ -1010,7 +1023,7 @@ export default function SegmentConfiguration() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-green-600 mb-1">
-                        Created
+                        {t("common.created")}
                       </p>
                       <p className="text-3xl font-bold text-green-900">
                         {loadResult.created_count.toLocaleString()}
@@ -1039,7 +1052,7 @@ export default function SegmentConfiguration() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-yellow-600 mb-1">
-                        Skipped
+                        {t("common.skipped")}
                       </p>
                       <p className="text-3xl font-bold text-yellow-900">
                         {loadResult.skipped_count.toLocaleString()}
@@ -1080,7 +1093,7 @@ export default function SegmentConfiguration() {
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  Summary
+                  {t("common.summary")}
                 </h4>
                 <div className="space-y-2 text-sm text-gray-700">
                   <p>
@@ -1118,7 +1131,7 @@ export default function SegmentConfiguration() {
               variant="primary"
               onClick={handleCloseLoadResultModal}
             >
-              Close
+              {t("common.close")}
             </Button>
           </div>
         </div>
@@ -1128,24 +1141,23 @@ export default function SegmentConfiguration() {
       <SharedModal
         isOpen={isPeriodModalOpen}
         onClose={() => setIsPeriodModalOpen(false)}
-        title="Load Segments Funds"
+        title={t("segmentConfiguration.loadFunds")}
         size="md"
       >
         <div className="p-6 space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Period Name
+              {t("segmentConfiguration.period")}
             </label>
             <Input
               type="text"
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
-              placeholder="e.g., 1-25"
+              placeholder={t("segmentConfiguration.selectPeriod")}
               className="w-full"
             />
             <p className="mt-2 text-sm text-gray-500">
-              Enter the period in format: month-year (e.g., 1-25 for January
-              2025)
+              {t("common.periodFormat")}
             </p>
           </div>
 
@@ -1155,14 +1167,14 @@ export default function SegmentConfiguration() {
               variant="secondary"
               onClick={() => setIsPeriodModalOpen(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               type="button"
               onClick={handleLoadFunds}
               loading={isLoadingFunds}
             >
-              Load Funds
+              {t("segmentConfiguration.loadFunds")}
             </Button>
           </div>
         </div>
@@ -1172,7 +1184,7 @@ export default function SegmentConfiguration() {
       <SharedModal
         isOpen={isLoadFundsModalOpen}
         onClose={() => setIsLoadFundsModalOpen(false)}
-        title="Load Funds Results"
+        title={t("segmentConfiguration.loadFundsTitle")}
         size="lg"
       >
         <div className="p-6 space-y-6">
@@ -1216,7 +1228,7 @@ export default function SegmentConfiguration() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-green-600 mb-1">
-                        Successful
+                        {t("common.successful")}
                       </p>
                       <p className="text-3xl font-bold text-green-900">
                         {loadFundsResult.total_success}
@@ -1245,7 +1257,7 @@ export default function SegmentConfiguration() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-red-600 mb-1">
-                        Failed
+                        {t("common.failed")}
                       </p>
                       <p className="text-3xl font-bold text-red-900">
                         {loadFundsResult.total_failed}
@@ -1276,13 +1288,13 @@ export default function SegmentConfiguration() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Control Budget
+                        {t("common.controlBudget")}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
+                        {t("tableColumns.status")}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Message
+                        {t("common.message")}
                       </th>
                     </tr>
                   </thead>
@@ -1308,7 +1320,7 @@ export default function SegmentConfiguration() {
                                   clipRule="evenodd"
                                 />
                               </svg>
-                              Success
+                              {t("common.success")}
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -1323,7 +1335,7 @@ export default function SegmentConfiguration() {
                                   clipRule="evenodd"
                                 />
                               </svg>
-                              Failed
+                              {t("common.failed")}
                             </span>
                           )}
                         </td>
@@ -1354,7 +1366,7 @@ export default function SegmentConfiguration() {
                       d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                     />
                   </svg>
-                  Summary
+                  {t("common.summary")}
                 </h4>
                 <div className="space-y-2 text-sm text-gray-700">
                   <p>
@@ -1385,7 +1397,7 @@ export default function SegmentConfiguration() {
               variant="primary"
               onClick={() => setIsLoadFundsModalOpen(false)}
             >
-              Close
+              {t("common.close")}
             </Button>
           </div>
         </div>

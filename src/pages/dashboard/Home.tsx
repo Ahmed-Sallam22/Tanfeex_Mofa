@@ -36,6 +36,7 @@ import {
 import SharedSelect from "@/shared/SharedSelect";
 import ModeSelect from "@/components/ui/ModeSelect";
 import { useUserLevel } from "@/features/auth/hooks";
+import { cn } from "@/utils/cn";
 interface EnvelopeTableRow {
   id: string;
   project_code: string;
@@ -52,14 +53,16 @@ function LoadingSkeleton({ className = "" }: { className?: string }) {
 function formatPctFromFraction(p: number) {
   return `${(p * 1000000).toFixed(2)}%`;
 }
-function ChartLoadingSkeleton() {
+function ChartLoadingSkeleton({ t }: { t: (key: string) => string }) {
   return (
     <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
       <LoadingSkeleton className="h-6 w-32 mb-4" />
       <div className="h-[280px] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <span className="text-gray-500 text-sm">Loading chart...</span>
+          <span className="text-gray-500 text-sm">
+            {t("home.loadingChart")}
+          </span>
         </div>
       </div>
     </div>
@@ -82,7 +85,13 @@ function StatCardSkeleton() {
   );
 }
 
-function ErrorState({ message = "Failed to load data" }: { message?: string }) {
+function ErrorState({
+  message = "Failed to load data",
+  t,
+}: {
+  message?: string;
+  t: (key: string) => string;
+}) {
   return (
     <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/5">
       <div className="flex flex-col items-center justify-center text-center">
@@ -102,14 +111,14 @@ function ErrorState({ message = "Failed to load data" }: { message?: string }) {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">
-          Error Loading Dashboard
+          {t("home.errorLoadingDashboard")}
         </h3>
         <p className="text-gray-500 mb-4">{message}</p>
         <button
           onClick={() => window.location.reload()}
           className="px-4 py-2 bg-[#4E8476] text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Retry
+          {t("common.retry")}
         </button>
       </div>
     </div>
@@ -145,23 +154,30 @@ function StatCard({
     <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
       <div className="flex justify-between items-center">
         <div className="text-sm text-gray-500">{title}</div>
-        {arrow && <div className={`text-xs font-medium ${deltaColor}`}>{arrow}</div>}
+        {arrow && (
+          <div className={`text-xs font-medium ${deltaColor}`}>{arrow}</div>
+        )}
       </div>
 
-      <div className="mt-2 text-2xl font-meduim text-gray-900">{formattedValue}</div>
+      <div className="mt-2 text-2xl font-meduim text-gray-900">
+        {formattedValue}
+      </div>
 
       <div className="flex justify-between items-center">
-        {subtitle ? <div className="mt-1 text-xs text-[#282828]">{subtitle}</div> : <span />}
-  {hasDelta ? (
-  <span className={`text-xs font-medium ${deltaColor}`}>
-    {formatPctFromFraction(deltaPct)}
-  </span>
-) : null}
+        {subtitle ? (
+          <div className="mt-1 text-xs text-[#282828]">{subtitle}</div>
+        ) : (
+          <span />
+        )}
+        {hasDelta ? (
+          <span className={`text-xs font-medium ${deltaColor}`}>
+            {formatPctFromFraction(deltaPct)}
+          </span>
+        ) : null}
       </div>
     </div>
   );
 }
-
 
 // Move this outside the component to avoid re-creation on every render
 const LABEL_TO_GROUP: Record<string, "MenPower" | "NonMenPower" | "Copex"> = {
@@ -176,7 +192,8 @@ const LABEL_TO_GROUP: Record<string, "MenPower" | "NonMenPower" | "Copex"> = {
 
 // ===== Page =====
 export default function Home() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
   const navigate = useNavigate();
   // Mode & Date Range
   const [mode, setMode] = useState<"all" | "Envelope" | "Budget">("all");
@@ -211,7 +228,7 @@ export default function Home() {
 
     return [
       {
-        name: "Manpower",
+        name: t("home.manpower"),
         value:
           year === "2025"
             ? accountWiseData.data.MenPower.summary.total_fy25_budget
@@ -219,7 +236,7 @@ export default function Home() {
         color: "#007E77",
       },
       {
-        name: "Non-Manpower",
+        name: t("home.nonManpower"),
         value:
           year === "2025"
             ? accountWiseData.data.NonMenPower.summary.total_fy25_budget
@@ -227,7 +244,7 @@ export default function Home() {
         color: "#6BE6E4",
       },
       {
-        name: "Capex",
+        name: t("home.capex"),
         value:
           year === "2025"
             ? accountWiseData.data.Copex.summary.total_fy25_budget
@@ -235,7 +252,7 @@ export default function Home() {
         color: "#4E8476",
       },
     ];
-  }, [accountWiseData, year]);
+  }, [accountWiseData, year, t]);
   const [selectedEntity, setSelectedEntity] = useState<string>("10001"); // default
   const { data: entitiesData } = useGetEntitiesMappingQuery();
   // Process request dates for timeline table (only for normal data)
@@ -249,7 +266,7 @@ export default function Home() {
   const timelineColumns: TableColumn[] = [
     {
       id: "project_code",
-      header: "Project Code",
+      header: t("home.projectCode"),
       accessor: "project_code",
       render: (value) => (
         <span className="text-sm text-gray-900">{String(value)}</span>
@@ -257,7 +274,7 @@ export default function Home() {
     },
     {
       id: "project_name",
-      header: "Project Name",
+      header: t("home.projectName"),
       accessor: "project_name",
       render: (value) => (
         <span className="text-sm font-medium">{String(value)}</span>
@@ -265,7 +282,7 @@ export default function Home() {
     },
     {
       id: "FY24_budget",
-      header: "FY24 Budget",
+      header: t("home.fy24Budget"),
       accessor: "FY24_budget",
       render: (value) => (
         <span className="text-sm font-medium">{String(value)}</span>
@@ -273,7 +290,7 @@ export default function Home() {
     },
     {
       id: "FY25_budget_current",
-      header: "FY25 Budget Current",
+      header: t("home.fy25BudgetCurrent"),
       accessor: "FY25_budget_current",
       render: (value) => (
         <span className="text-sm font-medium">{String(value)}</span>
@@ -281,7 +298,7 @@ export default function Home() {
     },
     {
       id: "variances",
-      header: "Variances",
+      header: t("home.variances"),
       accessor: "variances",
       render: (value) => (
         <span className="text-sm font-medium">{String(value)}</span>
@@ -295,30 +312,30 @@ export default function Home() {
     const normalData = dashboardData?.normal;
     if (!normalData) {
       return [
-        { name: "Approved", value: 0, color: "#007E77" },
-        { name: "Pending", value: 0, color: "#6BE6E4" },
-        { name: "Rejected", value: 0, color: "#4E8476" },
+        { name: t("home.approved"), value: 0, color: "#007E77" },
+        { name: t("home.pending"), value: 0, color: "#6BE6E4" },
+        { name: t("home.rejected"), value: 0, color: "#4E8476" },
       ];
     }
 
     return [
       {
-        name: "Approved",
+        name: t("home.approved"),
         value: normalData.approved_transfers,
         color: "#007E77",
       },
       {
-        name: "Pending",
+        name: t("home.pending"),
         value: normalData.pending_transfers,
         color: "#6BE6E4",
       },
       {
-        name: "Rejected",
+        name: t("home.rejected"),
         value: normalData.rejected_transfers,
         color: "#4E8476",
       },
     ];
-  }, [dashboardData?.normal]);
+  }, [dashboardData?.normal, t]);
 
   // Fetch projects list
   const { data: projectsData } = useGetProjectsQuery();
@@ -328,59 +345,75 @@ export default function Home() {
     isLoading: isLoadingEnvelope,
     error: envelopeError,
   } = useGetActiveProjectsWithEnvelopeQuery();
-const userLevel = useUserLevel(); // number (e.g., 4)
+  const userLevel = useUserLevel(); // number (e.g., 4)
 
-const stats = useMemo(() => {
-  const base: Array<{
-    title: string;
-    value: number | string;
-    subtitle?: string;
-    deltaPct?: number; // decimal (e.g., 0.0123)
-  }> = envelopeData
-    ? [
-        {
-          title: "Initial Envelope",
-          value: envelopeData.initial_envelope,
-          subtitle: "Year Start Envelope",
-          // no deltaPct for initial -> hidden automatically
-        },
-        {
-          title: "Projected Envelope",
-          value: envelopeData.estimated_envelope ?? "-",
-          subtitle: "After Approval Pending Transaction",
-          deltaPct: envelopeData.estimated_envelope_change_percentage, // may be +/-
-        },
-        {
-          title: "Final",
-          value: envelopeData.current_envelope,
-          subtitle: "Approved Transactions",
-          deltaPct: envelopeData.current_envelope_change_percentage, // may be +/-
-        },
-      ]
-    : [
-        { title: "Initial Envelope", value: "-", subtitle: "Year Start Envelope" },
-        { title: "Projected Envelope", value: "-", subtitle: "After Approval Pending Transaction" },
-        { title: "Final", value: "-", subtitle: "Approved Transactions" },
-      ];
+  const stats = useMemo(() => {
+    const base: Array<{
+      title: string;
+      value: number | string;
+      subtitle?: string;
+      deltaPct?: number; // decimal (e.g., 0.0123)
+    }> = envelopeData
+      ? [
+          {
+            title: t("home.initialEnvelope"),
+            value: envelopeData.initial_envelope,
+            subtitle: t("home.yearStartEnvelope"),
+            // no deltaPct for initial -> hidden automatically
+          },
+          {
+            title: t("home.projectedEnvelope"),
+            value: envelopeData.estimated_envelope ?? "-",
+            subtitle: t("home.afterApprovalPending"),
+            deltaPct: envelopeData.estimated_envelope_change_percentage, // may be +/-
+          },
+          {
+            title: t("home.final"),
+            value: envelopeData.current_envelope,
+            subtitle: t("home.approvedTransactions"),
+            deltaPct: envelopeData.current_envelope_change_percentage, // may be +/-
+          },
+        ]
+      : [
+          {
+            title: t("home.initialEnvelope"),
+            value: "-",
+            subtitle: t("home.yearStartEnvelope"),
+          },
+          {
+            title: t("home.projectedEnvelope"),
+            value: "-",
+            subtitle: t("home.afterApprovalPending"),
+          },
+          {
+            title: t("home.final"),
+            value: "-",
+            subtitle: t("home.approvedTransactions"),
+          },
+        ];
 
-  if (userLevel === 4) {
-    base.push({
-      title: "Contingency",
-      value: 564_318_837,
-      subtitle: "Contingency",
-      // no deltaPct -> hidden
-    });
-  }
+    if (userLevel === 4) {
+      base.push({
+        title: t("home.contingency"),
+        value: 564_318_837,
+        subtitle: t("home.contingency"),
+        // no deltaPct -> hidden
+      });
+    }
 
-  return base;
-}, [envelopeData, userLevel]);
+    return base;
+  }, [envelopeData, userLevel, t]);
 
   const accountColumns: TableColumn[] = [
-    { id: "account", header: "Account Code", accessor: "account" },
-    { id: "account_name", header: "Account Name", accessor: "account_name" },
+    { id: "account", header: t("home.accountCode"), accessor: "account" },
+    {
+      id: "account_name",
+      header: t("home.accountName"),
+      accessor: "account_name",
+    },
     {
       id: "approved_total",
-      header: "Approved Total",
+      header: t("home.approvedTotal"),
       accessor: "approved_total",
       render: (v: any) => (
         <span
@@ -390,16 +423,20 @@ const stats = useMemo(() => {
         </span>
       ),
     },
-    { id: "FY24_budget", header: "FY24 Budget", accessor: "FY24_budget" },
+    {
+      id: "FY24_budget",
+      header: t("home.fy24Budget"),
+      accessor: "FY24_budget",
+    },
     { id: "FY25_budget", header: "FY25 Budget", accessor: "FY25_budget" },
   ];
   const accountGroupedData = useMemo(() => {
     if (!accountWiseData?.data) return [];
 
     const sections = [
-      { key: "MenPower", title: "Manpower" },
-      { key: "NonMenPower", title: "Non-Manpower" },
-      { key: "Copex", title: "Capex" },
+      { key: "MenPower", title: t("home.manpower") },
+      { key: "NonMenPower", title: t("home.nonManpower") },
+      { key: "Copex", title: t("home.capex") },
     ] as const;
 
     return sections.map(({ key, title }) => {
@@ -420,7 +457,7 @@ const stats = useMemo(() => {
         rows, // the original accounts array
       };
     });
-  }, [accountWiseData]);
+  }, [accountWiseData, t]);
 
   useEffect(() => {
     // when project changes: clear account filter & refetch project-related endpoints
@@ -457,7 +494,7 @@ const stats = useMemo(() => {
   const columns: TableColumn[] = [
     {
       id: "project_code",
-      header: "Project Code",
+      header: t("home.projectCode"),
       render: (_, row) => {
         const envelopeRow = row as unknown as EnvelopeTableRow;
         return (
@@ -469,7 +506,7 @@ const stats = useMemo(() => {
     },
     {
       id: "submitted_total",
-      header: "Submitted Total",
+      header: t("home.submittedTotal"),
       showSum: true,
       render: (_, row) => {
         const envelopeRow = row as unknown as EnvelopeTableRow;
@@ -516,7 +553,7 @@ const stats = useMemo(() => {
     },
     {
       id: "approved_total",
-      header: "Approved Total",
+      header: t("home.approvedTotal"),
       showSum: true,
       render: (_, row) => {
         const envelopeRow = row as unknown as EnvelopeTableRow;
@@ -562,59 +599,78 @@ const stats = useMemo(() => {
       },
     },
   ];
-   const isLevel4 = userLevel === 4;
+  const isLevel4 = userLevel === 4;
 
+  // formatter used by both label and tooltip
+  const fmtAmount = (n: number) => {
+    const v = Number(n);
+    if (!Number.isFinite(v)) return "";
+    if (Math.abs(v) >= 1_000_000_000)
+      return (v / 1_000_000_000).toFixed(1) + "B";
+    if (Math.abs(v) >= 1_000_000) return (v / 1_000_000).toFixed(1) + "M";
+    if (Math.abs(v) >= 1_000) return (v / 1_000).toFixed(1) + "K";
+    return v.toLocaleString();
+  };
 
+  const renderCustomizedLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    value,
+  }: any) => {
+    const v = Number(value);
+    if (!Number.isFinite(v) || v === 0) return null; // 🔒 hide for 0
 
-// formatter used by both label and tooltip
-const fmtAmount = (n: number) => {
-  const v = Number(n);
-  if (!Number.isFinite(v)) return "";
-  if (Math.abs(v) >= 1_000_000_000) return (v / 1_000_000_000).toFixed(1) + "B";
-  if (Math.abs(v) >= 1_000_000)     return (v / 1_000_000).toFixed(1) + "M";
-  if (Math.abs(v) >= 1_000)         return (v / 1_000).toFixed(1) + "K";
-  return v.toLocaleString();
-};
+    const RADIAN = Math.PI / 180;
+    const r = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + r * Math.cos(-(midAngle ?? 0) * RADIAN);
+    const y = cy + r * Math.sin(-(midAngle ?? 0) * RADIAN);
 
-const renderCustomizedLabel = ({
-  cx, cy, midAngle, innerRadius, outerRadius, value,
-}: any) => {
-  const v = Number(value);
-  if (!Number.isFinite(v) || v === 0) return null; // 🔒 hide for 0
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="#fff"
+        fontSize={14}
+        fontWeight={600}
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+      >
+        {fmtAmount(v)}
+      </text>
+    );
+  };
 
-  const RADIAN = Math.PI / 180;
-  const r = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + r * Math.cos(-(midAngle ?? 0) * RADIAN);
-  const y = cy + r * Math.sin(-(midAngle ?? 0) * RADIAN);
-
-  return (
-    <text x={x} y={y} fill="#fff" fontSize={14} fontWeight={600}
-          textAnchor={x > cx ? "start" : "end"} dominantBaseline="central">
-      {fmtAmount(v)}
-    </text>
-  );
-};
-
-
-
-  
   return (
     <div className="space-y-6">
       {/* Error State */}
       {error && (
-        <ErrorState message="Failed to load dashboard data. Please try again." />
+        <ErrorState message={t("home.failedToLoadDashboardData")} t={t} />
       )}
 
       {/* Header */}
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
+      <div
+        className={cn(
+          "flex items-center justify-between gap-4",
+        )}
+      >
         {/* Left side */}
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1
+          className={cn(
+            "text-2xl font-bold text-gray-900",
+            isRTL ? "text-right" : "text-left"
+          )}
+        >
           {t("dashboard") || "Dashboard"}
         </h1>
 
         {/* Right side */}
-        <div className="flex items-center gap-3">
+        <div
+          className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}
+        >
           {/* Project Selection */}
 
           <ModeSelect
@@ -624,13 +680,17 @@ const renderCustomizedLabel = ({
         </div>
       </div>
       {(mode === "Budget" || mode === "all") && (
-        <div className="flex items-center gap-4 mb-4">
+        <div
+          className={cn(
+            "flex items-center gap-4 mb-4",
+          )}
+        >
           <SharedSelect
             className="w-full"
             required={false}
             value={selectedProject}
             onChange={(option) => setSelectedProject(option)}
-            placeholder="Select a project"
+            placeholder={t("home.selectProject")}
             options={[
               ...(projectsData?.data?.map((project) => ({
                 value: project.id.toString(),
@@ -643,7 +703,7 @@ const renderCustomizedLabel = ({
             required={false}
             value={selectedEntity}
             onChange={(value) => setSelectedEntity(String(value))}
-            placeholder="Select Entity"
+            placeholder={t("home.selectEntity")}
             options={[
               ...(entitiesData?.data?.data?.map((entity: any) => ({
                 value: entity.entity_code,
@@ -655,57 +715,67 @@ const renderCustomizedLabel = ({
       )}
       {/* Stats */}
       {(mode === "Envelope" || mode === "all") && (
-      <div
-  className={`grid grid-cols-1 gap-4 md:grid-cols-2 ${
-    isLevel4 ? "xl:grid-cols-4" : "xl:grid-cols-3"
-  }`}
->
-  {isLoading
-    ? Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
-    : stats.map((s, index) => (
         <div
-          key={s.title}
-          className="animate-fadeIn"
-          style={{
-            animationDelay: `${index * 0.1}s`,
-            opacity: 0,
-            animation: `fadeIn 0.6s ease-out ${index * 0.1}s forwards`,
-          }}
+          className={`grid grid-cols-1 gap-4 md:grid-cols-2 ${
+            isLevel4 ? "xl:grid-cols-4" : "xl:grid-cols-3"
+          }`}
         >
-          <StatCard
-            title={s.title}
-            value={typeof s.value === "number" ? s.value.toLocaleString() : s.value}
-            subtitle={s.subtitle}
-       deltaPct={s.deltaPct}
-          />
+          {isLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <StatCardSkeleton key={i} />
+              ))
+            : stats.map((s, index) => (
+                <div
+                  key={s.title}
+                  className="animate-fadeIn"
+                  style={{
+                    animationDelay: `${index * 0.1}s`,
+                    opacity: 0,
+                    animation: `fadeIn 0.6s ease-out ${index * 0.1}s forwards`,
+                  }}
+                >
+                  <StatCard
+                    title={s.title}
+                    value={
+                      typeof s.value === "number"
+                        ? s.value.toLocaleString()
+                        : s.value
+                    }
+                    subtitle={s.subtitle}
+                    deltaPct={s.deltaPct}
+                  />
+                </div>
+              ))}
         </div>
-      ))}
-</div>
       )}
       {mode === "Envelope" && (
         <div className="bg-white rounded-2xl shadow-sm">
           {isLoadingEnvelope ? (
-            <div className="flex justify-center items-center h-64">
+            <div
+              className={cn(
+                "flex justify-center items-center h-64",
+                // isRTL && "flex-row-reverse"
+              )}
+            >
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600">
-                Loading envelope data...
+              <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
+                {t("home.loadingEnvelopeData")}
               </span>
             </div>
           ) : envelopeError ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <div className="text-red-600 text-lg font-medium">
-                  Error loading data
+                  {t("home.errorLoadingData")}
                 </div>
                 <div className="text-gray-500 text-sm mt-1">
-                  Please try selecting a different project or check your
-                  connection.
+                  {t("home.checkConnection")}
                 </div>
               </div>
             </div>
           ) : tableRows.length > 0 ? (
             <SharedTable
-              title="Active Projects with Envelope"
+              title={t("home.activeProjectsWithEnvelope")}
               columns={columns}
               data={tableRows as unknown as SharedTableRow[]}
               showFooter={true}
@@ -716,9 +786,11 @@ const renderCustomizedLabel = ({
           ) : (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
-                <div className="text-gray-500 text-lg">No data available</div>
+                <div className="text-gray-500 text-lg">
+                  {t("home.noDataAvailable")}
+                </div>
                 <div className="text-gray-400 text-sm mt-1">
-                  Try adjusting your filters or select a different project.
+                  {t("home.tryAdjustingFilters")}
                 </div>
               </div>
             </div>
@@ -730,17 +802,22 @@ const renderCustomizedLabel = ({
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-1">
           {isLoading ? (
             <>
-              <ChartLoadingSkeleton />
-              <ChartLoadingSkeleton />
+              <ChartLoadingSkeleton t={t} />
+              <ChartLoadingSkeleton t={t} />
             </>
           ) : (
             <>
               {/* Breakdown of Budget (Donut) */}
               <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                 <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-                  <div className="flex items-center justify-between mb-4">
+                  <div
+                    className={cn(
+                      "flex items-center justify-between mb-4",
+                      // isRTL && "flex-row-reverse"
+                    )}
+                  >
                     <div className="font-semibold text-gray-900">
-                      Breakdown of Budget
+                      {t("home.breakdownOfBudget")}
                     </div>
                     <div>
                       <select
@@ -764,15 +841,12 @@ const renderCustomizedLabel = ({
                             data={accountSummaryData}
                             dataKey="value"
                             nameKey="name"
-                     
                             paddingAngle={1}
-                         
-          cx="50%"
-          cy="50%"
-          labelLine={false}
-          label={renderCustomizedLabel}
-          outerRadius={100}
-         
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={renderCustomizedLabel}
+                            outerRadius={100}
                             onClick={(data) => {
                               // Navigate to dashboard details page for the selected type
                               const typeMap: Record<string, string> = {
@@ -785,8 +859,6 @@ const renderCustomizedLabel = ({
                                 `/app/dashboard-details/${type}?project=${selectedProject}`
                               );
                             }}
-                          
-                         
                           >
                             {accountSummaryData.map((entry, i) => (
                               <Cell
@@ -867,16 +939,19 @@ const renderCustomizedLabel = ({
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
-                  
                   </div>
                 </div>
 
-
                 {/* Transfer Status Chart */}
                 <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-                  <div className="flex items-center justify-between mb-4">
+                  <div
+                    className={cn(
+                      "flex items-center justify-between mb-4",
+                      // isRTL && "flex-row-reverse"
+                    )}
+                  >
                     <div className="font-semibold text-gray-900">
-                      Transfer Status
+                      {t("home.transferStatus")}
                     </div>
                     <div>
                       <select
@@ -892,44 +967,51 @@ const renderCustomizedLabel = ({
 
                   <div className="flex items-center justify-center">
                     {/* Chart */}
-             <div className="h-[280px] w-full">
-  <ResponsiveContainer width="100%" height="100%">
-  
-                          <BarChart data={statusData} barSize={40}>
-      
-<CartesianGrid vertical={false} stroke={'#E5E7EB'} />      <XAxis
-        dataKey="name"
-        tickFormatter={(v) => String(v).replace("_", " ")}
-        axisLine={false}
-        tickLine={false}
-     
-      />
-      <YAxis
-        axisLine={false}
-        tickLine={false}
-        // tick={false} // uncomment to hide labels
-      />
-    <RTooltip
-        wrapperStyle={{ background: "transparent", border: "none", boxShadow: "none" }}
-        contentStyle={{ background: "#E5E7EB", color: "#fff", border: "none" }} // keep tooltip pill
-        formatter={(value: number, name: string) => [
-          Number(value).toLocaleString(),
-          String(name).replace("_", " "),
-        ]}
-        labelFormatter={() => ""}
-      />
-
-      <Bar dataKey="value" name="Transfers" radius={[8, 8, 0, 0]}>
-        {statusData.map((entry, i) => (
-          <Cell key={i} fill={entry.color} />
-        ))}
-      </Bar>
-    </BarChart>
-  </ResponsiveContainer>
-</div>
-
+                    <div className="h-[280px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={statusData} barSize={40}>
+                          <CartesianGrid vertical={false} stroke={"#E5E7EB"} />{" "}
+                          <XAxis
+                            dataKey="name"
+                            tickFormatter={(v) => String(v).replace("_", " ")}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            axisLine={false}
+                            tickLine={false}
+                            // tick={false} // uncomment to hide labels
+                          />
+                          <RTooltip
+                            wrapperStyle={{
+                              background: "transparent",
+                              border: "none",
+                              boxShadow: "none",
+                            }}
+                            contentStyle={{
+                              background: "#E5E7EB",
+                              color: "#fff",
+                              border: "none",
+                            }} // keep tooltip pill
+                            formatter={(value: number, name: string) => [
+                              Number(value).toLocaleString(),
+                              String(name).replace("_", " "),
+                            ]}
+                            labelFormatter={() => ""}
+                          />
+                          <Bar
+                            dataKey="value"
+                            name="Transfers"
+                            radius={[8, 8, 0, 0]}
+                          >
+                            {statusData.map((entry, i) => (
+                              <Cell key={i} fill={entry.color} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
-           
                 </div>
               </div>
             </>
@@ -940,20 +1022,30 @@ const renderCustomizedLabel = ({
       {/* Request Timeline Pipeline Table - Only for Normal mode */}
       {(mode === "Budget" || mode === "all") && (
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-          <div className="mb-4 font-semibold text-gray-900">
-            Project-wise breakdown
+          <div
+            className={cn(
+              "mb-4 font-semibold text-gray-900",
+              isRTL ? "text-right" : "text-left"
+            )}
+          >
+            {t("home.projectWiseBreakdown")}
           </div>
 
           {isLoadingProjectWise ? (
-            <div className="flex justify-center items-center h-32">
+            <div
+              className={cn(
+                "flex justify-center items-center h-32",
+                // isRTL && "flex-row-reverse"
+              )}
+            >
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600">
-                Loading project wise data...
+              <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
+                {t("home.loadingProjectWiseData")}
               </span>
             </div>
           ) : projectWiseError ? (
             <div className="flex justify-center items-center h-32 text-red-600">
-              Failed to load project wise data
+              {t("home.failedToLoadProjectWiseData")}
             </div>
           ) : (
             <SharedTable
@@ -971,18 +1063,28 @@ const renderCustomizedLabel = ({
       {/* Request Timeline Pipeline Table - Only for Normal mode */}
       {(mode === "Budget" || mode === "all") && (
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-          <div className="mb-4 font-semibold text-gray-900">
-            Account-wise breakdown
+          <div
+            className={cn(
+              "mb-4 font-semibold text-gray-900",
+              isRTL ? "text-right" : "text-left"
+            )}
+          >
+            {t("home.accountWiseBreakdown")}
           </div>
           {isLoadingAccountWise ? (
-            <div className="flex justify-center items-center h-32">
+            <div
+              className={cn(
+                "flex justify-center items-center h-32",
+                isRTL && "flex-row-reverse"
+              )}
+            >
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600">
-                Loading account wise data...
+              <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
+                {t("home.loadingAccountWiseData")}
               </span>
             </div>
           ) : accountWiseError ? (
-            <ErrorState message="Failed to load account wise data." />
+            <ErrorState message={t("home.failedToLoadAccountWiseData")} t={t} />
           ) : (
             <SharedTable2
               columns={accountColumns}

@@ -8,6 +8,7 @@ import { RichTextEditor } from "@/components/ui";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import {
   useGetTransferListQuery,
   useCreateTransferMutation,
@@ -24,6 +25,7 @@ import {
 import type { Attachment } from "@/api/attachments.api";
 
 export default function Transfer() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   // State management
@@ -121,13 +123,13 @@ export default function Transfer() {
       id: item.transaction_id,
       code: safeValue(item.code),
       requested_by: safeValue(item.requested_by),
-      description: safeValue(item.notes, "No description"),
+      description: safeValue(item.notes, t("common.noData")),
       request_date: item.request_date
         ? new Date(item.request_date).toLocaleDateString()
         : "-",
-      transaction_date: safeValue(item.transaction_date, "No Transaction Date"),
+      transaction_date: safeValue(item.transaction_date, t("common.noData")),
       track: item.transaction_id,
-      status: safeValue(item.status, "pending"),
+      status: safeValue(item.status, t("common.pending")),
       attachment: item.attachment,
       amount: item.amount || 0,
       // Include original item for detail view
@@ -138,7 +140,7 @@ export default function Transfer() {
   const transferColumns: TableColumn[] = [
     {
       id: "code",
-      header: "Code",
+      header: t("tableColumns.code"),
       accessor: "code",
       render: (value, row) => (
         <span
@@ -151,7 +153,7 @@ export default function Transfer() {
     },
     {
       id: "requested_by",
-      header: "Requested By",
+      header: t("tableColumns.requestedBy"),
       accessor: "requested_by",
       render: (value) => (
         <span className="font-medium text-[#282828]">{safeValue(value)}</span>
@@ -159,13 +161,13 @@ export default function Transfer() {
     },
     {
       id: "description",
-      header: "Description",
+      header: t("tableColumns.description"),
       accessor: "description",
       render: (value) => (
         <div
           className="text-[#282828] max-w-xs prose prose-sm prose-p:my-1 prose-p:leading-5"
           dangerouslySetInnerHTML={{
-            __html: safeValue(value, "No description"),
+            __html: safeValue(value, t("common.noData")),
           }}
           style={{
             wordBreak: "break-word",
@@ -177,7 +179,7 @@ export default function Transfer() {
     },
     {
       id: "request_date",
-      header: "Request Date",
+      header: t("tableColumns.requestDate"),
       accessor: "request_date",
       render: (value) => (
         <span className="text-[#282828]">{safeValue(value)}</span>
@@ -185,28 +187,30 @@ export default function Transfer() {
     },
     {
       id: "transaction_date",
-      header: "Transaction Date",
+      header: t("tableColumns.transactionDate"),
       accessor: "transaction_date",
       render: (value) => (
-        <span className="text-[#282828]">{safeValue(value, "Not set")}</span>
+        <span className="text-[#282828]">
+          {safeValue(value, t("common.noData"))}
+        </span>
       ),
     },
     {
       id: "track",
-      header: "Track",
+      header: t("tableColumns.actions"),
       accessor: "track",
       render: (_value, row) => (
         <span
           className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
           onClick={() => handleTrackClick(row)}
         >
-          Track
+          {t("common.view")}
         </span>
       ),
     },
     {
       id: "status",
-      header: "Status",
+      header: t("tableColumns.status"),
       accessor: "status",
       render: (value, row) => (
         <span
@@ -229,14 +233,14 @@ export default function Transfer() {
     },
     {
       id: "attachment",
-      header: "Attachments",
+      header: t("common.attachments"),
       accessor: "attachment",
       render: (_value, row) => (
         <span
           className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
           onClick={() => handleAttachmentsClick(row)}
         >
-          Attachments
+          {t("common.attachments")}
         </span>
       ),
     },
@@ -273,7 +277,7 @@ export default function Transfer() {
   // File upload handlers
   const handleFileSelect = async (file: File) => {
     if (!selectedTransactionId) {
-      toast.error("No transaction selected");
+      toast.error(t("messages.noTransactionSelected"));
       return;
     }
 
@@ -283,7 +287,7 @@ export default function Transfer() {
         file: file,
       }).unwrap();
 
-      toast.success("File uploaded successfully!");
+      toast.success(t("messages.uploadSuccess"));
       // Refresh the attachments list
       refetchAttachments();
     } catch (error: unknown) {
@@ -313,10 +317,10 @@ export default function Transfer() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast.success("File downloaded successfully!");
+      toast.success(t("messages.downloadSuccess"));
     } catch (error) {
       console.error("Error downloading file:", error);
-      toast.error("Failed to download file");
+      toast.error(t("messages.downloadError"));
     }
   };
 
@@ -352,7 +356,7 @@ export default function Transfer() {
     if (validFile) {
       handleFileSelect(validFile);
     } else {
-      alert("Please upload a valid file (.xlsx, .pdf, .doc, .docx)");
+      toast.error(t("validation.invalidFile"));
     }
   };
 
@@ -503,15 +507,13 @@ export default function Transfer() {
 
     // Check if transfer can be deleted
     if (transferStatus !== "pending") {
-      toast.error(
-        `Cannot delete transfer with status "${transferStatus}". Only pending transfers can be deleted.`
-      );
+      toast.error(t("transfer.cannotDelete"));
       return;
     }
 
     try {
       await deleteTransfer(Number(row.id)).unwrap();
-      toast.success("Transfer deleted successfully!");
+      toast.success(t("transfer.deleteSuccess"));
     } catch (error: unknown) {
       let errorMessage = "Failed to delete transfer";
       if (
@@ -569,15 +571,15 @@ export default function Transfer() {
     } = {};
 
     if (!time_period.trim()) {
-      errors.time_period = "Please select a transaction date";
+      errors.time_period = t("validation.selectTransactionDate");
     }
 
     if (!reason.trim()) {
-      errors.reason = "Please enter notes for the transfer";
+      errors.reason = t("validation.enterNotes");
     }
 
     if (!budget_control.trim()) {
-      errors.budget_control = "Please select a budget control";
+      errors.budget_control = t("validation.selectBudgetControl");
     }
 
     if (Object.keys(errors).length > 0) {
@@ -601,13 +603,13 @@ export default function Transfer() {
           body: transferData,
         }).unwrap();
 
-        toast.success("Transfer updated successfully!");
+        toast.success(t("transfer.updateSuccess"));
         console.log("Transfer updated successfully");
       } else {
         // Create new transfer
         await createTransfer(transferData).unwrap();
 
-        toast.success("Transfer created successfully!");
+        toast.success(t("transfer.createSuccess"));
         console.log("Transfer created successfully");
       }
 
@@ -617,20 +619,20 @@ export default function Transfer() {
     }
   };
 
- const accountOptions: SelectOption[] = [
-   // Previous Year (2024)
-   { value: "1-24", label: "1-24" },
-   // Current Year (2025)
-   { value: "1-25", label: "1-25" },
-   // Next Year (2026)
-   { value: "1-26", label: "1-26" },
- ];
+  const accountOptions: SelectOption[] = [
+    // Previous Year (2024)
+    { value: "1-24", label: "1-24" },
+    // Current Year (2025)
+    { value: "1-25", label: "1-25" },
+    // Next Year (2026)
+    { value: "1-26", label: "1-26" },
+  ];
 
- // Select options for budget control
- const budgetControlOptions: SelectOption[] = [
-   { value: "سيولة", label: "سيولة" },
-   { value: "تكاليف", label: "تكاليف" },
- ];
+  // Select options for budget control
+  const budgetControlOptions: SelectOption[] = [
+    { value: "سيولة", label: "سيولة" },
+    { value: "تكاليف", label: "تكاليف" },
+  ];
 
   const handleChat = (row: TableRow) => {
     // Navigate to chat page with transaction/request ID
@@ -641,23 +643,24 @@ export default function Transfer() {
     <div>
       {/* Header with Create Button */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold tracking-wide">Transfer</h1>
+        <h1 className="text-2xl font-bold tracking-wide">
+          {t("transfer.title")}
+        </h1>
         <button
           onClick={handleCreateRequest}
           className="px-4 py-2 bg-[#4E8476] hover:bg-[#3d6b5f] text-white rounded-md transition-colors font-medium"
         >
-          Create Request
+          {t("transfer.createTransfer")}
         </button>
       </div>
 
       {/* Search Bar */}
       <div className="p-4 bg-white rounded-2xl mb-6">
         <SearchBar
-          placeholder="Search transfers..."
+          placeholder={t("common.searchPlaceholder")}
           value={searchQuery}
           onChange={handleSearchChange}
           onSubmit={handleSearchSubmit}
-          dir="ltr"
           debounce={250}
         />
       </div>
@@ -666,18 +669,22 @@ export default function Transfer() {
       {isLoading ? (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4E8476]"></div>
-          <span className="ml-2 text-gray-600">Loading transfers...</span>
+          <span className="ml-2 text-gray-600">
+            {t("messages.loadingTransfers")}
+          </span>
         </div>
       ) : error ? (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
           <div className="text-center">
             <div className="text-red-500 text-lg mb-2">⚠️</div>
-            <p className="text-gray-600">Failed to load transfers</p>
+            <p className="text-gray-600">
+              {t("messages.errorLoadingTransfers")}
+            </p>
             <button
               className="mt-2 px-4 py-2 bg-[#4E8476] text-white rounded hover:bg-[#4E8476]"
               onClick={() => window.location.reload()}
             >
-              Retry
+              {t("common.retry")}
             </button>
           </div>
         </div>
@@ -685,12 +692,12 @@ export default function Transfer() {
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
           <div className="text-center">
             <div className="text-gray-400 text-2xl mb-2">📄</div>
-            <p className="text-gray-600">No transfer requests found</p>
+            <p className="text-gray-600">{t("messages.noTransfers")}</p>
           </div>
         </div>
       ) : (
         <SharedTable
-          title="Transfer Requests"
+          title={t("transfer.title")}
           columns={transferColumns}
           data={transformedData}
           maxHeight="600px"
@@ -709,7 +716,7 @@ export default function Transfer() {
           onChat={handleChat}
           onDelete={handleDelete}
           onFilter={handleFilter}
-          filterLabel="Filter Transfers"
+          filterLabel={t("common.filterLabel")}
         />
       )}
 
@@ -717,7 +724,9 @@ export default function Transfer() {
       <SharedModal
         isOpen={isCreateModalOpen}
         onClose={handleCloseModal}
-        title={isEditMode ? "Edit Transfer Request" : "Create Transfer Request"}
+        title={
+          isEditMode ? t("transfer.editTransfer") : t("transfer.createTransfer")
+        }
         size="md"
       >
         <div className="p-4 space-y-4">
@@ -726,11 +735,11 @@ export default function Transfer() {
               key={`budget-control-${
                 isEditMode ? selectedTransfer?.transaction_id : "create"
               }`}
-              title="Budget Control"
+              title={t("tableColumns.budgetControl")}
               options={budgetControlOptions}
               value={budget_control}
               onChange={(value) => setBudgetControl(String(value))}
-              placeholder="Select budget control"
+              placeholder={t("transfer.selectBudgetControl")}
               required
             />
             {validationErrors.budget_control && (
@@ -745,11 +754,11 @@ export default function Transfer() {
               key={`transaction-date-${
                 isEditMode ? selectedTransfer?.transaction_id : "create"
               }`}
-              title="Transaction Date"
+              title={t("tableColumns.transactionDate")}
               options={accountOptions}
               value={time_period}
               onChange={(value) => settime_period(String(value))}
-              placeholder="Select transaction date"
+              placeholder={t("transfer.selectTimePeriod")}
               required
             />
             {validationErrors.time_period && (
@@ -761,12 +770,12 @@ export default function Transfer() {
 
           <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
-              Notes *
+              {t("common.notes")} *
             </label>
             <RichTextEditor
               value={reason}
               onChange={(value) => setreason(value)}
-              placeholder="Enter notes for transfer"
+              placeholder={t("transfer.enterReason")}
               height={200}
               className={validationErrors.reason ? "border-red-500" : ""}
             />
@@ -783,7 +792,7 @@ export default function Transfer() {
               disabled={isCreating || isUpdating}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               onClick={handleSave}
@@ -799,7 +808,7 @@ export default function Transfer() {
               {(isCreating || isUpdating) && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               )}
-              {isEditMode ? "Update" : "Create"} Transfer
+              {isEditMode ? t("common.update") : t("common.create")}
             </button>
           </div>
         </div>
@@ -809,7 +818,7 @@ export default function Transfer() {
       <SharedModal
         isOpen={isAttachmentsModalOpen}
         onClose={() => setIsAttachmentsModalOpen(false)}
-        title="Manage Attachments"
+        title={t("common.manageAttachments")}
         size="lg"
       >
         <div className="p-4">
@@ -849,7 +858,7 @@ export default function Transfer() {
             </div>
             <div className="text-center">
               <div className="font-semibold text-base mb-1">
-                Drag & drop file or{" "}
+                {t("common.dragDrop")}{" "}
                 <button
                   onClick={() =>
                     document.getElementById("file-upload")?.click()
@@ -857,11 +866,11 @@ export default function Transfer() {
                   className="text-[#4E8476] underline hover:text-blue-700 transition-colors"
                   disabled={isUploading}
                 >
-                  browse
+                  {t("common.browse")}
                 </button>
               </div>
               <div className="text-xs text-[#757575] mb-2">
-                Supported formats: .xlsx, .pdf, .doc, .docx
+                {t("validation.supportedFormats")}
               </div>
               <input
                 id="file-upload"
@@ -881,7 +890,7 @@ export default function Transfer() {
             {isUploading && (
               <div className="flex items-center gap-2 text-blue-600">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="text-sm">Uploading...</span>
+                <span className="text-sm">{t("messages.uploading")}</span>
               </div>
             )}
           </div>
@@ -889,14 +898,14 @@ export default function Transfer() {
           {/* Attachments list */}
           <div className="space-y-3">
             <h4 className="font-semibold text-gray-800">
-              Existing Attachments
+              {t("common.existingAttachments")}
             </h4>
 
             {isLoadingAttachments ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                 <span className="ml-2 text-gray-600">
-                  Loading attachments...
+                  {t("messages.loadingAttachments")}
                 </span>
               </div>
             ) : attachmentsData &&
@@ -962,7 +971,7 @@ export default function Transfer() {
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <div className="text-gray-400 text-2xl mb-2">📎</div>
-                <p>No attachments found</p>
+                <p>{t("messages.noAttachments")}</p>
               </div>
             )}
           </div>
@@ -973,7 +982,7 @@ export default function Transfer() {
               onClick={() => setIsAttachmentsModalOpen(false)}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Close
+              {t("common.close")}
             </button>
           </div>
         </div>
@@ -986,7 +995,7 @@ export default function Transfer() {
           setTrackTransactionId(null);
           setActiveOracleTab("submit"); // Reset to default tab
         }}
-        title="Oracle ERP Status"
+        title={t("transfer.oracleStatus")}
         size="lg"
       >
         <div className="flex flex-col" style={{ maxHeight: "80vh" }}>
@@ -1014,7 +1023,7 @@ export default function Transfer() {
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                Submit Steps
+                {t("oracle.submitSteps")}
               </div>
             </button>
             <button
@@ -1039,7 +1048,7 @@ export default function Transfer() {
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                Reject & Approve Steps
+                {t("oracle.approveRejectSteps")}
               </div>
             </button>
           </div>
@@ -1069,11 +1078,10 @@ export default function Transfer() {
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="text-red-500 text-4xl mb-4">⚠️</div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Failed to Load Oracle Status
+                  {t("oracle.loadError")}
                 </h3>
                 <p className="text-sm text-gray-600 text-center max-w-md">
-                  Unable to retrieve status from Oracle ERP System. Please try
-                  again later.
+                  {t("oracle.loadErrorMessage")}
                 </p>
               </div>
             ) : oracleStatusData ? (
@@ -1090,7 +1098,7 @@ export default function Transfer() {
                         <div className="flex flex-col items-center justify-center py-12">
                           <div className="text-gray-400 text-4xl mb-4">📋</div>
                           <p className="text-sm text-gray-600">
-                            No submit steps available
+                            {t("oracle.noSubmitSteps")}
                           </p>
                         </div>
                       );
@@ -1185,7 +1193,7 @@ export default function Transfer() {
                                     {step.request_id && (
                                       <span>
                                         <span className="font-medium">
-                                          Request ID:
+                                          {t("oracle.requestId")}:
                                         </span>{" "}
                                         {step.request_id}
                                       </span>
@@ -1193,7 +1201,7 @@ export default function Transfer() {
                                     {step.document_id && (
                                       <span>
                                         <span className="font-medium">
-                                          Document ID:
+                                          {t("oracle.documentId")}:
                                         </span>{" "}
                                         {step.document_id}
                                       </span>
@@ -1201,7 +1209,7 @@ export default function Transfer() {
                                     {step.group_id && (
                                       <span>
                                         <span className="font-medium">
-                                          Group ID:
+                                          {t("oracle.groupId")}:
                                         </span>{" "}
                                         {step.group_id}
                                       </span>
@@ -1228,7 +1236,7 @@ export default function Transfer() {
                         <div className="flex flex-col items-center justify-center py-12">
                           <div className="text-gray-400 text-4xl mb-4">📋</div>
                           <p className="text-sm text-gray-600">
-                            No journal steps available
+                            {t("oracle.noJournalSteps")}
                           </p>
                         </div>
                       );
@@ -1335,7 +1343,7 @@ export default function Transfer() {
                                           {step.request_id && (
                                             <span>
                                               <span className="font-medium">
-                                                Request ID:
+                                                {t("oracle.requestId")}:
                                               </span>{" "}
                                               {step.request_id}
                                             </span>
@@ -1343,7 +1351,7 @@ export default function Transfer() {
                                           {step.document_id && (
                                             <span>
                                               <span className="font-medium">
-                                                Document ID:
+                                                {t("oracle.documentId")}:
                                               </span>{" "}
                                               {step.document_id}
                                             </span>
@@ -1351,7 +1359,7 @@ export default function Transfer() {
                                           {step.group_id && (
                                             <span>
                                               <span className="font-medium">
-                                                Group ID:
+                                                {t("oracle.groupId")}:
                                               </span>{" "}
                                               {step.group_id}
                                             </span>
@@ -1372,9 +1380,7 @@ export default function Transfer() {
             ) : (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="text-gray-400 text-4xl mb-4">📋</div>
-                <p className="text-sm text-gray-600">
-                  No status data available
-                </p>
+                <p className="text-sm text-gray-600">{t("oracle.noData")}</p>
               </div>
             )}
           </div>
@@ -1385,7 +1391,7 @@ export default function Transfer() {
               onClick={() => {
                 if (refetchOracleStatus) {
                   refetchOracleStatus();
-                  toast.success("Refreshing Oracle status...");
+                  toast.success(t("oracle.refreshing"));
                 }
               }}
               disabled={isLoadingOracleStatus}
@@ -1394,7 +1400,7 @@ export default function Transfer() {
               {isLoadingOracleStatus ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#4E8476]"></div>
-                  <span>Refreshing...</span>
+                  <span>{t("oracle.refreshing")}</span>
                 </>
               ) : (
                 <>
@@ -1411,7 +1417,7 @@ export default function Transfer() {
                       d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                     />
                   </svg>
-                  <span>Refresh</span>
+                  <span>{t("common.refresh")}</span>
                 </>
               )}
             </button>
@@ -1423,7 +1429,7 @@ export default function Transfer() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Close
+              {t("common.close")}
             </button>
           </div>
         </div>
@@ -1436,20 +1442,24 @@ export default function Transfer() {
           setIsStatusModalOpen(false);
           setStatusTransactionId(null); // Clear the transaction ID when closing
         }}
-        title="Transfer Status Pipeline"
+        title={t("transfer.statusPipeline")}
         size="lg"
       >
         <div className="p-6">
           {isLoadingStatus ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600">Loading status...</span>
+              <span className="ml-2 text-gray-600">
+                {t("messages.loadingStatus")}
+              </span>
             </div>
           ) : statusError ? (
             <div className="flex justify-center items-center py-12">
               <div className="text-center">
                 <div className="text-red-500 text-lg mb-2">⚠️</div>
-                <p className="text-gray-600">Failed to load status</p>
+                <p className="text-gray-600">
+                  {t("messages.errorLoadingStatus")}
+                </p>
               </div>
             </div>
           ) : statusData ? (
@@ -1457,7 +1467,7 @@ export default function Transfer() {
               {/* Approval Stages Pipeline */}
               <div className="space-y-4">
                 <h4 className="text-md font-semibold text-gray-800 mb-4">
-                  Approval Stages
+                  {t("status.approvalStages")}
                 </h4>
 
                 <div className="relative">
@@ -1555,14 +1565,14 @@ export default function Transfer() {
                               {stage.name}
                             </h5>
                             <span className="text-xs text-gray-500">
-                              Stage {stage.order_index}
+                              {t("status.stage")} {stage.order_index}
                             </span>
                           </div>
 
                           <div className="flex items-center justify-between text-sm text-gray-600">
                             <span>
                               <span className="font-medium">
-                                Decision Policy:
+                                {t("status.decisionPolicy")}:
                               </span>{" "}
                               {stage.decision_policy}
                             </span>
@@ -1584,7 +1594,9 @@ export default function Transfer() {
                                     clipRule="evenodd"
                                   />
                                 </svg>
-                                <span className="font-medium">Approved</span>
+                                <span className="font-medium">
+                                  {t("common.approved")}
+                                </span>
                               </div>
                             ) : stage.status === "pending" ? (
                               <div className="flex items-center text-yellow-600">
@@ -1600,7 +1612,7 @@ export default function Transfer() {
                                   />
                                 </svg>
                                 <span className="font-medium">
-                                  Awaiting Approval
+                                  {t("status.awaitingApproval")}
                                 </span>
                               </div>
                             ) : stage.status === "rejected" ? (
@@ -1616,12 +1628,16 @@ export default function Transfer() {
                                     clipRule="evenodd"
                                   />
                                 </svg>
-                                <span className="font-medium">Rejected</span>
+                                <span className="font-medium">
+                                  {t("common.rejected")}
+                                </span>
                               </div>
                             ) : (
                               <div className="flex items-center text-[#4E8476]">
                                 <div className="w-4 h-4 bg-[#4E8476] rounded-full mr-1"></div>
-                                <span className="font-medium">In Progress</span>
+                                <span className="font-medium">
+                                  {t("status.inProgress")}
+                                </span>
                               </div>
                             )}
                           </div>
@@ -1635,7 +1651,7 @@ export default function Transfer() {
           ) : (
             <div className="text-center py-12 text-gray-500">
               <div className="text-gray-400 text-2xl mb-2">📋</div>
-              <p>No status information available</p>
+              <p>{t("status.noData")}</p>
             </div>
           )}
 
@@ -1648,7 +1664,7 @@ export default function Transfer() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Close
+              {t("common.close")}
             </button>
           </div>
         </div>

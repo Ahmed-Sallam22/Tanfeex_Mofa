@@ -1,6 +1,6 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { toast } from 'react-hot-toast';
+// import { toast } from 'react-hot-toast';
 import type { RootState } from '../app/store';
 import { showSessionExpired, setCredentials } from '../features/auth/authSlice';
 
@@ -66,11 +66,11 @@ export const customBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBase
     }
   }
   
-  if (result.error && result.error.status !== 401) {
-    // Show error toast for other errors
-    const message = (result.error.data as { message?: string })?.message || 'An error occurred';
-    toast.error(message);
-  }
+  // if (result.error && result.error.status !== 401) {
+  //   // Show error toast for other errors
+  //   // const message = (result.error.data as { message?: string })?.message || 'An error occurred';
+  //   // toast.error(message);
+  // }
   
   return result;
 };

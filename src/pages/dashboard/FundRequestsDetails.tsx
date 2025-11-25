@@ -23,6 +23,7 @@ import { toast } from "react-hot-toast";
 import { store } from "@/app/store";
 import Select from "react-select";
 import { formatNumber } from "@/utils/formatNumber";
+import { useTranslation } from "react-i18next";
 
 interface TransferTableRow {
   id: string;
@@ -66,6 +67,7 @@ interface TransferDetailRow {
 }
 
 export default function TransferDetails() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -477,18 +479,15 @@ export default function TransferDetails() {
       if (response?.transfers) {
         if (hasErrors) {
           // Show warning toast about validation errors
-          toast.error(
-            "Some transfers have validation errors. Please check the error messages."
-          );
+          toast.error(t("pendingTransferDetails.validationErrorsMessage"));
         } else if (response.summary?.balanced) {
-          toast.success("Transfers saved successfully and balanced!");
+          toast.success(t("pendingTransferDetails.saveSuccessBalanced"));
         } else {
-          toast.success("Transfers saved successfully!");
+          toast.success(t("pendingTransferDetails.saveSuccess"));
         }
       } else {
-        toast.success("Transfers saved successfully!");
+        toast.success(t("pendingTransferDetails.saveSuccess"));
       }
-
       if (!hasErrors && nonEmptyLocalRows.length > 0) {
         setPendingSavedLocalIds(nonEmptyLocalRows.map((r) => r.id));
         setAwaitingSync(true);
@@ -512,7 +511,7 @@ export default function TransferDetails() {
       );
     } catch (err) {
       console.error("Error saving transfers:", err);
-      toast.error("Error saving transfers. Please try again.");
+      toast.error(t("pendingTransferDetails.saveError"));
       // (no local deletion on error)
     } finally {
       setIsSaving(false);
@@ -586,7 +585,7 @@ export default function TransferDetails() {
         }).unwrap();
 
         // Show success toast
-        toast.success("Transfer submitted successfully!");
+        toast.success(t("pendingTransferDetails.submitSuccess"));
 
         // Set submitted state
         setIsSubmitted(true);
@@ -597,7 +596,7 @@ export default function TransferDetails() {
         );
       } catch (error) {
         console.error("Error submitting transfer:", error);
-        toast.error("Error submitting transfer. Please try again.");
+        toast.error(t("pendingTransferDetails.submitError"));
       } finally {
         setIsSubmitting(false);
       }
@@ -958,7 +957,7 @@ export default function TransferDetails() {
   const columns: TableColumn[] = [
     {
       id: "itemId",
-      header: "Item ID",
+      header: t("pendingTransferDetails.itemId"),
       render: (_, row) => {
         const detailRow = row as unknown as TransferDetailRow;
         return (
@@ -968,7 +967,7 @@ export default function TransferDetails() {
     },
     {
       id: "itemName",
-      header: "Item Name",
+      header: t("pendingTransferDetails.itemName"),
       render: (_, row) => {
         const detailRow = row as unknown as TransferDetailRow;
         return (
@@ -978,7 +977,7 @@ export default function TransferDetails() {
     },
     {
       id: "accountId",
-      header: "Account ID",
+      header: t("pendingTransferDetails.accountId"),
       render: (_, row) => {
         const detailRow = row as unknown as TransferDetailRow;
         return (
@@ -988,7 +987,7 @@ export default function TransferDetails() {
     },
     {
       id: "accountName",
-      header: "Account Name",
+      header: t("pendingTransferDetails.accountName"),
       render: (_, row) => {
         const detailRow = row as unknown as TransferDetailRow;
         return (
@@ -998,7 +997,7 @@ export default function TransferDetails() {
     },
     {
       id: "from",
-      header: "From",
+      header: t("pendingTransferDetails.from"),
       showSum: true,
       render: (_, row) => {
         const detailRow = row as unknown as TransferDetailRow;
@@ -1011,7 +1010,7 @@ export default function TransferDetails() {
     },
     {
       id: "to",
-      header: "To",
+      header: t("pendingTransferDetails.to"),
       showSum: true,
       render: (_, row) => {
         const detailRow = row as unknown as TransferDetailRow;
@@ -1024,7 +1023,7 @@ export default function TransferDetails() {
     },
     {
       id: "approvedBudget",
-      header: "Approved Budget",
+      header: t("pendingTransferDetails.approvedBudget"),
       showSum: true,
       render: (_, row) => {
         const detailRow = row as unknown as TransferDetailRow;
@@ -1037,7 +1036,7 @@ export default function TransferDetails() {
     },
     {
       id: "current",
-      header: "Current",
+      header: t("pendingTransferDetails.current"),
       showSum: true,
       render: (_, row) => {
         const detailRow = row as unknown as TransferDetailRow;
@@ -1050,7 +1049,7 @@ export default function TransferDetails() {
     },
     {
       id: "availableBudget",
-      header: "Available Budget",
+      header: t("pendingTransferDetails.availableBudget"),
       showSum: true,
       render: (_, row) => {
         const detailRow = row as unknown as TransferDetailRow;
@@ -1112,7 +1111,9 @@ export default function TransferDetails() {
                   updateRow(transferRow.id, `${segmentKey}_name`, opt.name);
               }}
               options={segmentOptions}
-              placeholder={`Select ${segment.segment_name}`}
+              placeholder={
+                t("pendingTransferDetails.select") + " " + segment.segment_name
+              }
               isSearchable
               isClearable
               className="w-full"
@@ -1163,7 +1164,7 @@ export default function TransferDetails() {
   const columnsDetails: TableColumn[] = [
     {
       id: "validation",
-      header: "Status",
+      header: t("pendingTransferDetails.status"),
       render: (_, row) => {
         const transferRow = row as unknown as TransferTableRow;
         const hasErrors =
@@ -1177,7 +1178,7 @@ export default function TransferDetails() {
               <button
                 onClick={() => deleteRow(transferRow.id)}
                 className="flex items-center justify-center w-6 h-6 bg-red-100 border border-red-300 rounded-full text-red-600 hover:bg-red-200 transition-colors"
-                title="Delete row"
+                title={t("pendingTransferDetails.deleteRow")}
               >
                 <svg
                   width="12"
@@ -1205,7 +1206,7 @@ export default function TransferDetails() {
                   )
                 }
                 className="flex items-center justify-center w-6 h-6 bg-yellow-100 border border-yellow-300 rounded-full text-yellow-600 hover:bg-yellow-200 transition-colors"
-                title="Click to view validation errors"
+                title={t("pendingTransferDetails.clickToViewErrors")}
               >
                 <svg
                   width="12"
@@ -1258,7 +1259,7 @@ export default function TransferDetails() {
 
     {
       id: "encumbrance",
-      header: "Encumbrance",
+      header: t("pendingTransferDetails.encumbrance"),
       showSum: true,
 
       render: (_, row) => {
@@ -1271,7 +1272,7 @@ export default function TransferDetails() {
     },
     {
       id: "availableBudget",
-      header: "Available Budget",
+      header: t("pendingTransferDetails.availableBudget"),
       showSum: true,
 
       render: (_, row) => {
@@ -1285,7 +1286,7 @@ export default function TransferDetails() {
 
     {
       id: "actual",
-      header: "Actual",
+      header: t("pendingTransferDetails.actual"),
       showSum: true,
 
       render: (_, row) => {
@@ -1298,7 +1299,7 @@ export default function TransferDetails() {
     },
     {
       id: "commitments",
-      header: "Commitments",
+      header: t("pendingTransferDetails.commitments"),
       showSum: true,
 
       render: (_, row) => {
@@ -1311,7 +1312,7 @@ export default function TransferDetails() {
     },
     {
       id: "obligations",
-      header: "Obligations",
+      header: t("pendingTransferDetails.obligations"),
       showSum: true,
 
       render: (_, row) => {
@@ -1324,7 +1325,7 @@ export default function TransferDetails() {
     },
     {
       id: "other_consumption",
-      header: "Other Consumption",
+      header: t("pendingTransferDetails.otherConsumption"),
       showSum: true,
 
       render: (_, row) => {
@@ -1337,7 +1338,7 @@ export default function TransferDetails() {
     },
     {
       id: "approvedBudget",
-      header: "Approved Budget",
+      header: t("pendingTransferDetails.approvedBudget"),
       showSum: true,
 
       render: (_, row) => {
@@ -1350,7 +1351,7 @@ export default function TransferDetails() {
     },
     {
       id: "total_budget",
-      header: "Total Budget",
+      header: t("pendingTransferDetails.totalBudget"),
       showSum: true,
 
       render: (_, row) => {
@@ -1363,7 +1364,7 @@ export default function TransferDetails() {
     },
     {
       id: "initial_budget",
-      header: "Initial Budget",
+      header: t("pendingTransferDetails.initialBudget"),
       showSum: true,
 
       render: (_, row) => {
@@ -1376,7 +1377,7 @@ export default function TransferDetails() {
     },
     {
       id: "budget_adjustments",
-      header: "Budget Adjustments",
+      header: t("pendingTransferDetails.budgetAdjustments"),
       showSum: true,
 
       render: (_, row) => {
@@ -1389,7 +1390,7 @@ export default function TransferDetails() {
     },
     {
       id: "other_ytd",
-      header: "Other YTD",
+      header: t("pendingTransferDetails.otherYTD"),
       showSum: true,
 
       render: (_, row) => {
@@ -1402,7 +1403,7 @@ export default function TransferDetails() {
     },
     {
       id: "period",
-      header: "Period",
+      header: t("pendingTransferDetails.period"),
 
       render: (_, row) => {
         const transferRow = row as unknown as TransferTableRow;
@@ -1413,7 +1414,7 @@ export default function TransferDetails() {
     },
     {
       id: "costValue",
-      header: "50% of Cost Budget",
+      header: t("pendingTransferDetails.costBudget50"),
       showSum: true,
 
       render: (_, row) => {
@@ -1438,7 +1439,7 @@ export default function TransferDetails() {
     },
     {
       id: "from",
-      header: "From",
+      header: t("pendingTransferDetails.from"),
       showSum: true,
 
       render: (_, row) => {
@@ -1456,14 +1457,14 @@ export default function TransferDetails() {
               updateRow(transferRow.id, "from", Number(e.target.value) || 0)
             }
             className={`w-full px-3 py-2 border rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-[#AFAFAF] `}
-            placeholder="From"
+            placeholder={t("pendingTransferDetails.from")}
           />
         );
       },
     },
     {
       id: "to",
-      header: "To",
+      header: t("pendingTransferDetails.to"),
       showSum: true,
 
       render: (_, row) => {
@@ -1481,7 +1482,7 @@ export default function TransferDetails() {
               updateRow(transferRow.id, "to", Number(e.target.value) || 0)
             }
             className={`w-full px-3 py-2 border rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-[#AFAFAF] `}
-            placeholder="To"
+            placeholder={t("pendingTransferDetails.to")}
           />
         );
       },
@@ -1544,7 +1545,7 @@ export default function TransferDetails() {
     if (validFile) {
       handleFileSelect(validFile);
     } else {
-      alert("Please upload a valid file (.xlsx, .pdf, .doc, .docx)");
+      alert(t("pendingTransferDetails.pleaseUploadValidFile"));
     }
   };
 
@@ -1555,7 +1556,7 @@ export default function TransferDetails() {
 
   const handleUploadFile = async () => {
     if (!selectedFile) {
-      toast.error("Please select a file to upload");
+      toast.error(t("pendingTransferDetails.pleaseSelectFile"));
       return;
     }
 
@@ -1566,14 +1567,14 @@ export default function TransferDetails() {
         transaction: parseInt(transactionId),
       }).unwrap();
 
-      toast.success("Excel file uploaded successfully!");
+      toast.success(t("pendingTransferDetails.excelUploadSuccess"));
       setIsAttachmentsModalOpen(false);
       setSelectedFile(null);
 
       console.log("Excel file uploaded successfully");
     } catch (error) {
       console.error("Error uploading Excel file:", error);
-      toast.error("Failed to upload Excel file. Please try again.");
+      toast.error(t("pendingTransferDetails.excelUploadError"));
     } finally {
       setIsUploading(false);
     }
@@ -1589,14 +1590,14 @@ export default function TransferDetails() {
         action: "reopen",
       }).unwrap();
 
-      toast.success("Transfer request reopened successfully!");
+      toast.success(t("pendingTransferDetails.reopenSuccess"));
       console.log("Transfer request reopened successfully");
 
       // Optionally navigate back to transfer list or refresh the page
       // navigate('/app/transfer');
     } catch (error) {
       console.error("Error reopening transfer request:", error);
-      toast.error("Failed to reopen transfer request. Please try again.");
+      toast.error(t("pendingTransferDetails.reopenError"));
 
       // Reset the state if there was an error so user can try again
       setIsReopenClicked(false);
@@ -1625,7 +1626,9 @@ export default function TransferDetails() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#4E8476]"></div>
-          <p className="text-gray-600 text-lg">Loading transfer details...</p>
+          <p className="text-gray-600 text-lg">
+            {t("pendingTransferDetails.loadingTransferDetails")}
+          </p>
         </div>
       </div>
     );
@@ -1640,11 +1643,11 @@ export default function TransferDetails() {
             onClick={handleBack}
             className="flex items-center gap-2  cursor-pointer py-2 text-lg text-[#4E8476] hover:text-[#4E8476] "
           >
-            Fund Requests
+            {t("fundRequests.fundAdjuments")}
           </button>
           <span className="text-[#737373] text-lg">/</span>
           <h1 className="text-lg  text-[#737373] font-light tracking-wide">
-            Code
+            {t("pendingTransferDetails.code")}
           </h1>
         </div>
 
@@ -1653,7 +1656,7 @@ export default function TransferDetails() {
           {isLoadingSegmentTypes && (
             <div className="flex items-center text-sm text-gray-500">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-              Loading segment types...
+              {t("pendingTransferDetails.loadingSegmentTypes")}
             </div>
           )}
         </div>
@@ -1673,7 +1676,7 @@ export default function TransferDetails() {
           itemsPerPage={itemsPerPage}
           showAddRowButton={!isSubmitted}
           onAddNewRow={addNewRow}
-          addRowButtonText="Add New Row"
+          addRowButtonText={t("pendingTransferDetails.addNewRow")}
           showColumnSelector={true}
         />
 
@@ -1682,7 +1685,9 @@ export default function TransferDetails() {
           <div className="flex justify-end mt-4 p-4 bg-white rounded-lg shadow-sm">
             <div className="flex items-center gap-2 text-blue-600">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span className="text-sm">Saving transfers...</span>
+              <span className="text-sm">
+                {t("pendingTransferDetails.savingTransfers")}
+              </span>
             </div>
           </div>
         )}
@@ -1725,7 +1730,7 @@ export default function TransferDetails() {
                     </clipPath>
                   </defs>
                 </svg>
-                UploadTransfer File
+                {t("pendingTransferDetails.uploadTransferFile")}
               </button>
 
               <button
@@ -1746,7 +1751,7 @@ export default function TransferDetails() {
                     fill="#545454"
                   />
                 </svg>
-                Report
+                {t("pendingTransferDetails.report")}
               </button>
             </div>
 
@@ -1760,7 +1765,7 @@ export default function TransferDetails() {
               }`}
               title={
                 isSubmitting
-                  ? "Submitting transfer..."
+                  ? t("pendingTransferDetails.submittingTransfer")
                   : isSubmitDisabled()
                   ? (() => {
                       const totalValidRows =
@@ -1777,21 +1782,23 @@ export default function TransferDetails() {
                         ).length;
 
                       if (totalValidRows < 2) {
-                        return "Cannot submit: At least 2 rows are required";
+                        return t("pendingTransferDetails.cannotSubmitMinRows");
                       } else {
-                        return "Cannot submit: Please fix validation errors";
+                        return t(
+                          "pendingTransferDetails.cannotSubmitFixErrors"
+                        );
                       }
                     })()
-                  : "Submit transfer request"
+                  : t("pendingTransferDetails.submitTransferRequest")
               }
             >
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Submitting...
+                  {t("pendingTransferDetails.submittingTransfer")}
                 </>
               ) : (
-                "Submit"
+                t("pendingTransferDetails.submit")
               )}
             </button>
           </div>
@@ -1836,9 +1843,13 @@ export default function TransferDetails() {
                     ).length;
 
                   if (totalValidRows < 2) {
-                    return "Cannot submit: At least 2 rows are required for transfer.";
+                    return t(
+                      "pendingTransferDetails.cannotSubmitMinRowsMessage"
+                    );
                   } else {
-                    return "Cannot submit: Please fix all validation errors before submitting.";
+                    return t(
+                      "pendingTransferDetails.cannotSubmitFixErrorsMessage"
+                    );
                   }
                 })()}
               </span>
@@ -1880,7 +1891,7 @@ export default function TransferDetails() {
                   strokeDasharray="3 3"
                 />
               </svg>
-              Re-open Request
+              {t("pendingTransferDetails.reopenRequest")}
             </button>
           </div>
         )}
@@ -1892,7 +1903,7 @@ export default function TransferDetails() {
           setIsAttachmentsModalOpen(false);
           setSelectedFile(null);
         }}
-        title="UploadTransfer File"
+        title={t("pendingTransferDetails.uploadTransferFile")}
         size="lg"
       >
         {/* Upload icon */}
@@ -1933,24 +1944,25 @@ export default function TransferDetails() {
             <div className=" text-lg mb-1">
               {selectedFile ? (
                 <span className="text-green-600">
-                  Selected: {selectedFile.name}
+                  {t("pendingTransferDetails.selectedFile")}:{" "}
+                  {selectedFile.name}
                 </span>
               ) : (
                 <>
-                  Drag & drop Excel file or{" "}
+                  {t("pendingTransferDetails.dragDropExcel")}{" "}
                   <button
                     onClick={() =>
                       document.getElementById("file-upload")?.click()
                     }
                     className="text-[#4E8476] underline hover:text-blue-700 transition-colors"
                   >
-                    browse
+                    {t("common.browse")}
                   </button>
                 </>
               )}
             </div>
             <div className="text-xs text-[#757575] mb-2">
-              Supported formats: .xlsx, .pdf, .doc, .docx
+              {t("fundRequests.supportedFormats")}
             </div>
             <input
               id="file-upload"
@@ -1977,7 +1989,7 @@ export default function TransferDetails() {
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             disabled={isUploading}
           >
-            Cancel
+            {t("pendingTransferDetails.cancel")}
           </button>
           <button
             onClick={handleUploadFile}
@@ -1991,10 +2003,10 @@ export default function TransferDetails() {
             {isUploading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Uploading...
+                {t("pendingTransferDetails.uploading")}
               </>
             ) : (
-              "Upload File"
+              t("pendingTransferDetails.uploadFile")
             )}
           </button>
         </div>
@@ -2004,35 +2016,47 @@ export default function TransferDetails() {
       <SharedModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
-        title="Fund Adjustments  Report"
+        title={`${t("fundRequests.fundAdjuments")} ${t(
+          "pendingTransferDetails.report"
+        )}`}
         size="full"
       >
         <div className="p-4 ">
           <div className="bg-[#F6F6F6] rounded-lg p-3">
-            <h2 className="text-md  font-medium mb-4">Summary</h2>
+            <h2 className="text-md  font-medium mb-4">
+              {t("pendingTransferDetails.summary")}
+            </h2>
 
             <div className="grid grid-cols-3 gap-4 justify-between items-center">
               <div>
-                <p className="text-sm text-[#757575]">Transaction ID:</p>
+                <p className="text-sm text-[#757575]">
+                  {t("transfer.transactionId")}:
+                </p>
                 <p className="text-sm  text-[#282828]">
                   {apiData?.summary?.transaction_id || "N/A"}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-[#757575]">Total Transfers: </p>
+                <p className="text-sm text-[#757575]">
+                  {t("common.totalTransfers")}:{" "}
+                </p>
                 <p className="text-sm  text-[#282828]">
                   {apiData?.summary?.total_transfers || 0}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-[#757575]">Total From:</p>
+                <p className="text-sm text-[#757575]">
+                  {t("common.totalFrom")}:
+                </p>
                 <p className="text-sm  text-[#282828]">
                   {apiData?.summary?.total_from?.toLocaleString() || "0.00"}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-[#757575]">Total To: </p>
+                <p className="text-sm text-[#757575]">
+                  {t("common.totalTo")}:{" "}
+                </p>
                 <p className="text-sm  text-[#282828]">
                   {apiData?.summary?.total_to?.toLocaleString() || "0.00"}
                 </p>
@@ -2042,7 +2066,9 @@ export default function TransferDetails() {
 
           {/* Report content goes here */}
           <SharedTable
-            title="Fund Adjustments Details"
+            title={`${t("fundRequests.fundAdjuments")} ${t(
+              "pendingTransferDetails.details"
+            )}`}
             columns={columns}
             titleSize="sm"
             showShadow={false}
@@ -2061,7 +2087,7 @@ export default function TransferDetails() {
       <SharedModal
         isOpen={isValidationErrorModalOpen}
         onClose={() => setIsValidationErrorModalOpen(false)}
-        title="Validation Errors"
+        title={t("pendingTransferDetails.validationErrors")}
         size="md"
       >
         <div className="p-4">
@@ -2096,7 +2122,7 @@ export default function TransferDetails() {
                 </div>
                 <div>
                   <p className="text-sm text-red-800 font-medium">
-                    Error {index + 1}
+                    {t("pendingTransferDetails.error")} {index + 1}
                   </p>
                   <p className="text-sm text-red-700 mt-1">{error}</p>
                 </div>
@@ -2109,7 +2135,7 @@ export default function TransferDetails() {
               onClick={() => setIsValidationErrorModalOpen(false)}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Close
+              {t("pendingTransferDetails.close")}
             </button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import {
   useGetParticipantsByTransactionQuery,
@@ -24,6 +25,7 @@ export default function Chat({
   pageSize = 20,
   currentUserId,
 }: ChatProps) {
+  const { t } = useTranslation();
   const params = useParams();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const composeInputRef = useRef<HTMLInputElement | null>(null); // NEW
@@ -258,12 +260,13 @@ export default function Chat({
     return (
       selectedParticipant?.username ??
       selectedUserFromAll?.username ??
-      (selectedUserId ? `User ${selectedUserId}` : "")
+      (selectedUserId ? `${t("chat.user")} ${selectedUserId}` : "")
     );
   }, [
     selectedParticipant?.username,
     selectedUserFromAll?.username,
     selectedUserId,
+    t,
   ]);
 
   const messagesAsc = useMemo<ThreadMessage[]>(
@@ -296,12 +299,14 @@ export default function Chat({
       {/* Left Sidebar: Participants */}
       <div className="w-1/3 bg-gray-50 border-r border-gray-200">
         <div className="p-5 border-b border-gray-200 bg-white flex items-center justify-between">
-          <h2 className="font-bold text-xl text-gray-800">Conversations</h2>
+          <h2 className="font-bold text-xl text-gray-800">
+            {t("chat.conversations")}
+          </h2>
           {/* + button (NEW) */}
           <button
             onClick={() => setShowNewChat(true)}
             className="w-9 h-9 rounded-full bg-[#4E8476] text-white flex items-center justify-center hover:bg-[#2d5147] active:scale-95 transition"
-            title="Start new chat"
+            title={t("chat.startNewChat")}
           >
             +
           </button>
@@ -313,7 +318,9 @@ export default function Chat({
               <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
                 <span className="text-gray-400 text-xl">💬</span>
               </div>
-              <div className="text-sm text-gray-500">No participants found</div>
+              <div className="text-sm text-gray-500">
+                {t("chat.noParticipantsFound")}
+              </div>
             </div>
           )}
 
@@ -355,7 +362,7 @@ export default function Chat({
                           isActive ? "text-white/80" : "text-gray-600"
                         }`}
                       >
-                        {p.last_message || "No messages yet"}
+                        {p.last_message || t("chat.lastMessage")}
                       </p>
                       {unread > 0 && (
                         <span
@@ -389,7 +396,7 @@ export default function Chat({
                     <h2 className="font-bold text-xl capitalize text-gray-900">
                       {selectedUserId
                         ? selectedUserName
-                        : "Select conversation"}
+                        : t("chat.selectConversation")}
                     </h2>
                   </div>
                 </div>
@@ -397,7 +404,7 @@ export default function Chat({
                 {threadFetching && (
                   <div className="flex items-center gap-2 ">
                     <span className="text-xs text-[#4E8476] font-medium">
-                      Syncing messages…
+                      {t("chat.syncingMessages")}
                     </span>
                   </div>
                 )}
@@ -406,7 +413,7 @@ export default function Chat({
             <div>
               {transactionCode && (
                 <div className="text-md text-gray-500 mt-1">
-                  Transaction: {transactionCode}
+                  {t("chat.transaction")}: {transactionCode}
                 </div>
               )}
             </div>
@@ -426,8 +433,8 @@ export default function Chat({
                   className="px-6 py-2 ..."
                 >
                   {threadFetching
-                    ? "Loading older messages"
-                    : "Load older messages"}
+                    ? t("chat.loadingOlderMessages")
+                    : t("chat.loadOlderMessages")}
                 </button>
               </div>
             )}
@@ -465,13 +472,13 @@ export default function Chat({
                             className="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-[#e8f2ef] hover:text-[#4E8476] transition-colors rounded-t-lg flex items-center gap-2"
                             onClick={() => startEdit(msg)}
                           >
-                            ✏️ Edit
+                            ✏️ {t("chat.edit")}
                           </button>
                           <button
                             className="w-full text-left px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors rounded-b-lg flex items-center gap-2"
                             onClick={() => handleDelete(msg.id)}
                           >
-                            ✕ Delete
+                            ✕ {t("chat.delete")}
                           </button>
                         </div>
                       )}
@@ -491,7 +498,7 @@ export default function Chat({
                               onClick={saveEdit}
                               disabled={updating || !editingText.trim()}
                             >
-                              {updating ? "Saving..." : "Save"}
+                              {updating ? t("chat.saving") : t("chat.save")}
                             </button>
                             <button
                               className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50"
@@ -500,7 +507,7 @@ export default function Chat({
                                 setEditingText("");
                               }}
                             >
-                              Cancel
+                              {t("chat.cancel")}
                             </button>
                           </div>
                         </div>
@@ -512,7 +519,7 @@ export default function Chat({
                                 isOwn ? "text-white/60" : "text-gray-500"
                               }`}
                             >
-                              This message was deleted
+                              {t("chat.thisMessageWasDeleted")}
                             </div>
                           ) : (
                             <div className="text-sm break-words">
@@ -530,8 +537,8 @@ export default function Chat({
                                       e.stopPropagation();
                                       openMenu(msg.id);
                                     }}
-                                    title="More options"
-                                    aria-label="More options"
+                                    title={t("chat.moreOptions")}
+                                    aria-label={t("chat.moreOptions")}
                                   >
                                     ⋮
                                   </button>
@@ -544,7 +551,7 @@ export default function Chat({
                                     isOwn ? "text-white/60" : "text-gray-500"
                                   }`}
                                 >
-                                  (edited)
+                                  {t("chat.edited")}
                                 </span>
                               )}
                             </div>
@@ -571,9 +578,11 @@ export default function Chat({
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">💬</span>
                 </div>
-                <div className="text-gray-500 font-medium">No messages yet</div>
+                <div className="text-gray-500 font-medium">
+                  {t("chat.noMessagesYet")}
+                </div>
                 <div className="text-sm text-gray-400 mt-1">
-                  Start the conversation!
+                  {t("chat.startConversation")}
                 </div>
               </div>
             )}
@@ -589,7 +598,7 @@ export default function Chat({
                   ref={composeInputRef} // NEW
                   type="text"
                   className="w-full px-4 py-3 pr-12 rounded-2xl border-gray-200 bg-gray-50 border-0 focus:ring-2 focus:ring-[#4E8476] focus:border-transparent focus:bg-white placeholder-gray-500 transition-all duration-200"
-                  placeholder="Type your message..."
+                  placeholder={t("chat.typeYourMessage")}
                   value={compose}
                   onChange={(e) => setCompose(e.target.value)}
                   onKeyDown={(e) => {
@@ -604,7 +613,7 @@ export default function Chat({
                     className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#4E8476] text-white hover:bg-[#4E8476] hover:scale-110 transition-all duration-200 shadow-md flex items-center justify-center"
                     onClick={handleSend}
                     disabled={sending || !compose.trim()}
-                    title="Send message"
+                    title={t("chat.sendMessage")}
                   >
                     {sending ? (
                       <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
@@ -621,11 +630,11 @@ export default function Chat({
                   disabled={sending || !compose.trim() || !selectedUserId}
                   title={
                     !selectedUserId
-                      ? "Select a participant first"
-                      : "Send message"
+                      ? t("chat.selectParticipantFirst")
+                      : t("chat.sendMessage")
                   }
                 >
-                  Send
+                  {t("chat.send")}
                 </button>
               )}
             </div>
@@ -644,11 +653,13 @@ export default function Chat({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-lg">Start new chat</h3>
+              <h3 className="font-semibold text-lg">
+                {t("chat.startNewChatTitle")}
+              </h3>
               <button
                 className="w-8 h-8 rounded-full hover:bg-gray-100"
                 onClick={() => setShowNewChat(false)}
-                aria-label="Close"
+                aria-label={t("chat.close")}
               >
                 ✕
               </button>
@@ -658,7 +669,7 @@ export default function Chat({
               <input
                 type="text"
                 className="w-full rounded-lg border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-[#4E8476] focus:border-transparent"
-                placeholder="Search users…"
+                placeholder={t("chat.searchUsers")}
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
                 autoFocus
@@ -667,15 +678,19 @@ export default function Chat({
 
             <div className="px-4 pb-4 max-h-96 overflow-y-auto">
               {usersLoading && (
-                <div className="p-4 text-sm text-gray-500">Loading users…</div>
+                <div className="p-4 text-sm text-gray-500">
+                  {t("chat.loadingUsers")}
+                </div>
               )}
               {usersError && (
                 <div className="p-4 text-sm text-red-600">
-                  Failed to load users
+                  {t("chat.failedToLoadUsers")}
                 </div>
               )}
               {!usersLoading && filteredUsers.length === 0 && (
-                <div className="p-4 text-sm text-gray-500">No users found</div>
+                <div className="p-4 text-sm text-gray-500">
+                  {t("chat.noUsersFound")}
+                </div>
               )}
 
               <ul className="space-y-2">
@@ -688,13 +703,13 @@ export default function Chat({
                         onClick={() => startChatWithUser(u)}
                       >
                         <div className="w-9 h-9 rounded-full bg-[#4E8476] text-white flex items-center justify-center font-semibold text-sm">
-                          {(u.username || `User ${u.id}`)
+                          {(u.username || `${t("chat.user")} ${u.id}`)
                             .charAt(0)
                             .toUpperCase()}
                         </div>
                         <div className="flex-1 text-left">
                           <div className="text-sm font-medium capitalize">
-                            {u.username || `User ${u.id}`} 
+                            {u.username || `${t("chat.user")} ${u.id}`}
                           </div>
                           <div className="text-xs text-gray-500 capitalize">
                             {u.user_level}
@@ -702,7 +717,7 @@ export default function Chat({
                         </div>
                         {alreadyInThisTransaction && (
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 border text-gray-600">
-                            Existing chat
+                            {t("chat.existingChat")}
                           </span>
                         )}
                       </button>
@@ -717,7 +732,7 @@ export default function Chat({
                 className="px-4 py-2 rounded-lg border hover:bg-gray-50"
                 onClick={() => setShowNewChat(false)}
               >
-                Close
+                {t("chat.close")}
               </button>
             </div>
           </div>

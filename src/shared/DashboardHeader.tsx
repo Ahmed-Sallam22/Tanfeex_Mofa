@@ -4,11 +4,13 @@ import Navbar from "./Navbar";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/app/store";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/utils/cn";
 
 export default function DashboardHeader() {
   // Get user data from Redux store
   const user = useSelector((state: RootState) => state.auth.user);
   const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
 
   // Fallback user data from localStorage if Redux state is not available
   const getUserFromStorage = () => {
@@ -45,20 +47,37 @@ export default function DashboardHeader() {
     day: "2-digit",
     month: "long",
     year: "numeric",
-  }); 
+  });
 
   const hours = new Date().getHours();
   const isMorning = hours < 12;
   const greeting = isMorning ? t("greeting.morning") : t("greeting.evening");
 
   return (
-    <header className="flex items-start justify-between gap-4">
+    <header
+      className={cn(
+        "flex items-start justify-between gap-4",
+        
+      )}
+    >
       {/* Left: greeting */}
       <div className="flex flex-col gap-1">
-        <h2 className="text-xl sm:text-3xl font-semibold text-[#4E8476]">
+        <h2
+          className={cn(
+            "text-xl sm:text-3xl font-semibold text-[#4E8476]",
+            isRTL ? "text-right" : "text-left"
+          )}
+        >
           {greeting}, {userName}
         </h2>
-        <p className="text-[#757575] text-sm">{formatted}</p>
+        <p
+          className={cn(
+            "text-[#757575] text-sm",
+            isRTL ? "text-right" : "text-left"
+          )}
+        >
+          {formatted}
+        </p>
       </div>
 
       {/* Right: navbar capsule */}

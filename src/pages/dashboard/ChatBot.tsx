@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   useSendMessageMutation,
   type ChatbotRequest,
@@ -28,7 +29,8 @@ const AVAILABLE_API_KEYS = [
   "AIzaSyCOH5doSg_YSyAr8V5RSHAp0R5YbsNRP6g",
 ] as const;
 const MAX_SEND_ATTEMPTS = AVAILABLE_API_KEYS.length + 1;
-const SMART_CHATBOT_ENDPOINT = "https://lightidea.org:9001/api/transfers/budget-qa/";
+const SMART_CHATBOT_ENDPOINT =
+  "https://lightidea.org:9001/api/transfers/budget-qa/";
 
 type ParsedTable = {
   headers: string[];
@@ -44,7 +46,10 @@ const parseHtmlTable = (html: string): ParsedTable | null => {
 
   let table: HTMLTableElement | null = null;
 
-  if (typeof window !== "undefined" && typeof window.DOMParser !== "undefined") {
+  if (
+    typeof window !== "undefined" &&
+    typeof window.DOMParser !== "undefined"
+  ) {
     try {
       const parser = new window.DOMParser();
       const doc = parser.parseFromString(html, "text/html");
@@ -62,16 +67,19 @@ const parseHtmlTable = (html: string): ParsedTable | null => {
 
   if (!table) return null;
 
-  const caption = compactText(table.querySelector("caption")?.textContent) || null;
+  const caption =
+    compactText(table.querySelector("caption")?.textContent) || null;
 
-  const meaningfulRows = Array.from(table.querySelectorAll("tr")).filter((row) =>
-    Array.from(row.children).some((cell) => compactText(cell.textContent).length > 0)
+  const meaningfulRows = Array.from(table.querySelectorAll("tr")).filter(
+    (row) =>
+      Array.from(row.children).some(
+        (cell) => compactText(cell.textContent).length > 0
+      )
   );
 
   if (!meaningfulRows.length) return null;
 
-  let headerRow: Element | null =
-    table.querySelector("thead tr") || null;
+  let headerRow: Element | null = table.querySelector("thead tr") || null;
 
   if (!headerRow && meaningfulRows.length) {
     const firstRow = meaningfulRows[0];
@@ -103,7 +111,10 @@ const parseHtmlTable = (html: string): ParsedTable | null => {
     );
 
   if (!headers.length && columnCount > 0) {
-    headers = Array.from({ length: columnCount }, (_, idx) => `Column ${idx + 1}`);
+    headers = Array.from(
+      { length: columnCount },
+      (_, idx) => `Column ${idx + 1}`
+    );
   }
 
   const rows = dataRows
@@ -134,6 +145,7 @@ type AdvancedTableProps = {
   isArabic: boolean;
   onClick?: () => void;
   size?: "compact" | "dialog";
+  t: (key: string) => string;
 };
 
 const AdvancedTable: React.FC<AdvancedTableProps> = ({
@@ -142,17 +154,21 @@ const AdvancedTable: React.FC<AdvancedTableProps> = ({
   isArabic,
   onClick,
   size = "compact",
+  t,
 }) => {
   const maxColumns = Math.max(
     table.headers.length,
     ...table.rows.map((row) => row.length)
   );
 
-  const headers = Array.from({ length: maxColumns || table.headers.length || 0 }, (_, idx) => {
-    const value = table.headers[idx] || "";
-    if (value) return value;
-    return isArabic ? `العمود ${idx + 1}` : `Column ${idx + 1}`;
-  });
+  const headers = Array.from(
+    { length: maxColumns || table.headers.length || 0 },
+    (_, idx) => {
+      const value = table.headers[idx] || "";
+      if (value) return value;
+      return `${t("chatbot.column")} ${idx + 1}`;
+    }
+  );
 
   const normalizedRows = table.rows.map((row) =>
     Array.from({ length: headers.length }, (_, idx) => row[idx] ?? "")
@@ -181,8 +197,7 @@ const AdvancedTable: React.FC<AdvancedTableProps> = ({
       : "bg-gradient-to-r from-[#4E8476] to-[#3d6b5f] text-white border-b border-[#3d6b5f]",
   ].join(" ");
 
-  const scrollAreaClasses =
-    size === "compact" ? "max-h-60" : "max-h-[65vh]";
+  const scrollAreaClasses = size === "compact" ? "max-h-60" : "max-h-[65vh]";
 
   return (
     <div
@@ -212,7 +227,9 @@ const AdvancedTable: React.FC<AdvancedTableProps> = ({
           {table.caption}
         </div>
       )}
-      <div className={["overflow-auto rounded-2xl", scrollAreaClasses].join(" ")}>
+      <div
+        className={["overflow-auto rounded-2xl", scrollAreaClasses].join(" ")}
+      >
         <table className="min-w-full border-collapse text-[13px]">
           <thead className={headerClasses}>
             <tr>
@@ -225,7 +242,7 @@ const AdvancedTable: React.FC<AdvancedTableProps> = ({
                     size === "dialog" ? "text-sm" : "",
                   ].join(" ")}
                 >
-                  {cell || (isArabic ? `العمود ${idx + 1}` : `Column ${idx + 1}`)}
+                  {cell || `${t("chatbot.column")} ${idx + 1}`}
                 </th>
               ))}
             </tr>
@@ -285,7 +302,7 @@ const AdvancedTable: React.FC<AdvancedTableProps> = ({
               : "text-[#3d6b5f]/70 group-hover:text-[#3d6b5f]",
           ].join(" ")}
         >
-          {isArabic ? "اضغط للتكبير" : "Tap to expand"}
+          {t("chatbot.tapToExpand")}
         </div>
       )}
     </div>
@@ -322,11 +339,7 @@ const isMeaningfulText = (value: string | undefined) => {
 };
 
 const extractStatusCode = (error: unknown): number | null => {
-  if (
-    error &&
-    typeof error === "object" &&
-    "status" in error
-  ) {
+  if (error && typeof error === "object" && "status" in error) {
     const { status } = error as FetchBaseQueryError;
     return typeof status === "number" ? status : null;
   }
@@ -360,6 +373,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
   showToggle = true,
   iconUrl,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const lastRotatedIndexRef = useRef<number>(-1);
   const rotationPromiseRef = useRef<Promise<boolean> | null>(null);
@@ -446,13 +460,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
   });
 
   // Messages
-  const initialBotMessage = useMemo(
-    () =>
-      isArabic
-        ? "مرحباً! أنا مساعد تنفيذ. كيف يمكنني مساعدتك اليوم؟"
-        : "Hello! I'm Tanfeez Assistant. How can I help you today?",
-    [isArabic]
-  );
+  const initialBotMessage = useMemo(() => t("chatbot.howCanIHelp"), [t]);
 
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, text: initialBotMessage, isUser: false, timestamp: new Date() },
@@ -461,7 +469,8 @@ const ChatBot: React.FC<ChatBotProps> = ({
   // SQL modal
   const [showSqlModal, setShowSqlModal] = useState(false);
   const [currentSqlData, setCurrentSqlData] = useState<string>("");
-  const [currentParsedTable, setCurrentParsedTable] = useState<ParsedTable | null>(null);
+  const [currentParsedTable, setCurrentParsedTable] =
+    useState<ParsedTable | null>(null);
 
   // Input
   const [newMessage, setNewMessage] = useState("");
@@ -513,20 +522,12 @@ const ChatBot: React.FC<ChatBotProps> = ({
   }, []);
 
   const smartModeButtonLabel = isSmartMode
-    ? isArabic
-      ? "وضع ذكي"
-      : "Smart Mode"
-    : isArabic
-    ? "وضع أساسي"
-    : "Agent Mode";
+    ? t("chatbot.smartMode")
+    : t("chatbot.agentMode");
 
   const smartModeButtonHint = isSmartMode
-    ? isArabic
-      ? "التبديل إلى الوضع الأساسي"
-      : "Switch to standard assistant"
-    : isArabic
-    ? "التبديل إلى الوضع الذكي"
-    : "Switch to smart assistant";
+    ? t("chatbot.switchToStandard")
+    : t("chatbot.switchToSmart");
 
   // Drag handlers
   const startDrag = (e: React.MouseEvent | React.TouchEvent) => {
@@ -802,8 +803,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
     setIsTyping(true);
 
     const payload: ChatbotRequest = {
-      user_input:
-        inputText || (isArabic ? "تحليل الملف" : "Analyze this file"),
+      user_input: inputText || t("chatbot.analyzeFile"),
     };
 
     if (fileToSend && !retryMessageId) {
@@ -966,7 +966,11 @@ const ChatBot: React.FC<ChatBotProps> = ({
           for (const value of Object.values(resp)) {
             if (typeof value === "string") {
               trySetBotText(value);
-            } else if (value && typeof value === "object" && !Array.isArray(value)) {
+            } else if (
+              value &&
+              typeof value === "object" &&
+              !Array.isArray(value)
+            ) {
               trySetBotText(extractAgentText(value));
             }
             if (botText && tableHtml) break;
@@ -1002,12 +1006,10 @@ const ChatBot: React.FC<ChatBotProps> = ({
       }
 
       if (!tableHtml) {
-        const maybeTopLevelHtml = (data as unknown as { HTML_TABLE_DATA?: string })
-          ?.HTML_TABLE_DATA;
-        if (
-          typeof maybeTopLevelHtml === "string" &&
-          maybeTopLevelHtml.trim()
-        ) {
+        const maybeTopLevelHtml = (
+          data as unknown as { HTML_TABLE_DATA?: string }
+        )?.HTML_TABLE_DATA;
+        if (typeof maybeTopLevelHtml === "string" && maybeTopLevelHtml.trim()) {
           tableHtml = maybeTopLevelHtml;
         }
       }
@@ -1094,7 +1096,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
             onMouseDown={startDrag}
             onTouchStart={startDrag}
             onClick={handleToggleClick}
-            aria-label={isArabic ? "فتح الدردشة" : "Open Chat"}
+            aria-label={t("chatbot.title")}
             className={[
               "relative w-20 h-20 rounded-full",
               "flex items-center justify-center",
@@ -1159,10 +1161,10 @@ const ChatBot: React.FC<ChatBotProps> = ({
                 </div>
                 <div className="flex flex-col">
                   <h3 className="text-sm font-semibold">
-                    {isArabic ? "مساعد تنفيذ" : "Tanfeez Assistant"}
+                    {t("chatbot.tanfeezAssistant")}
                   </h3>
                   <span className="text-xs opacity-80">
-                    {isArabic ? "متصل" : "Online"}
+                    {t("chatbot.online")}
                   </span>
                 </div>
               </div>
@@ -1174,7 +1176,6 @@ const ChatBot: React.FC<ChatBotProps> = ({
                   aria-pressed={isSmartMode}
                   className={[
                     "px-3 h-8 rounded-full border text-xs font-semibold transition flex items-center gap-2 bg-white/20 text-white border-white/30 hover:bg-white/30",
-                   
                   ].join(" ")}
                 >
                   <span
@@ -1188,7 +1189,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
                 <button
                   type="button"
                   onClick={toggleChat}
-                  aria-label={isArabic ? "إغلاق الدردشة" : "Close Chat"}
+                  aria-label={t("chatbot.closeChat")}
                   className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition"
                 >
                   <svg
@@ -1230,6 +1231,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
                             isArabic={isArabic}
                             onClick={() => openSqlModal(m.sqlData!)}
                             size="compact"
+                            t={t}
                           />
                         ) : (
                           <div
@@ -1306,13 +1308,13 @@ const ChatBot: React.FC<ChatBotProps> = ({
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2Zm1 15h-2v-2h2v2Zm0-4h-2V7h2v6Z" />
                           </svg>
                           <span className="text-xs text-red-300">
-                            {isArabic ? "فشل الإرسال" : "Failed to send"}
+                            {t("chatbot.failedToSend")}
                           </span>
                           <button
                             onClick={() => sendMessage(m.id)}
                             className="text-xs underline hover:no-underline text-white/90"
                           >
-                            {isArabic ? "إعادة المحاولة" : "Retry"}
+                            {t("chatbot.retry")}
                           </button>
                         </div>
                       )}
@@ -1418,7 +1420,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
                   <button
                     onClick={removeFile}
                     className="w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 flex items-center justify-center transition"
-                    aria-label="Remove file"
+                    aria-label={t("chatbot.removeFile")}
                   >
                     <svg
                       width="16"
@@ -1454,7 +1456,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
                       : "bg-slate-100 hover:bg-slate-200 text-slate-600",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
                   ].join(" ")}
-                  title={isArabic ? "إرفاق ملف" : "Attach file"}
+                  title={t("chatbot.attachFile")}
                 >
                   <svg
                     width="18"
@@ -1475,9 +1477,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
                       void sendMessage();
                     }
                   }}
-                  placeholder={
-                    isArabic ? "اكتب رسالتك..." : "Type your message..."
-                  }
+                  placeholder={t("chatbot.typeYourMessage")}
                   disabled={isTyping}
                   className={[
                     "flex-1 px-4 py-2.5 rounded-full text-sm outline-none transition",
@@ -1532,12 +1532,12 @@ const ChatBot: React.FC<ChatBotProps> = ({
           >
             <div className="px-6 py-4 text-white bg-gradient-to-r from-[#4E8476] to-[#3d6b5f] flex items-center justify-between">
               <h2 className="text-sm font-semibold">
-                {isArabic ? "تفاصيل البيانات" : "Data Details"}
+                {t("chatbot.dataDetails")}
               </h2>
               <button
                 onClick={closeSqlModal}
                 className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition"
-                aria-label="Close Modal"
+                aria-label={t("chatbot.closeModal")}
               >
                 <svg
                   width="18"
@@ -1561,6 +1561,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
                   isDarkMode={isDarkMode}
                   isArabic={isArabic}
                   size="dialog"
+                  t={t}
                 />
               ) : (
                 <div
@@ -1584,7 +1585,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
                 onClick={closeSqlModal}
                 className="px-4 py-2 rounded-md text-white bg-gradient-to-r from-slate-500 to-slate-600 hover:shadow transition text-sm"
               >
-                {isArabic ? "إغلاق" : "Close"}
+                {t("chatbot.close")}
               </button>
             </div>
           </div>

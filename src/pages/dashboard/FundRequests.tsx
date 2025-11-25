@@ -23,8 +23,12 @@ import {
   useGetTransferStatusQuery,
   useGetOracleStatusQuery,
 } from "@/api/transfer.api";
+import { useTranslation } from "react-i18next";
+import { cn } from "@/utils/cn";
 
 export default function FundRequests() {
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
   const navigate = useNavigate();
 
   // State management
@@ -137,7 +141,7 @@ export default function FundRequests() {
   const FundAdjumentsColumns: TableColumn[] = [
     {
       id: "code",
-      header: "Code",
+      header: t("fundRequests.code"),
       accessor: "code",
       render: (value, row) => (
         <span
@@ -150,7 +154,7 @@ export default function FundRequests() {
     },
     {
       id: "requested_by",
-      header: "Requested By",
+      header: t("fundRequests.requestedBy"),
       accessor: "requested_by",
       render: (value) => (
         <span className="font-medium text-[#282828]">{safeValue(value)}</span>
@@ -158,13 +162,13 @@ export default function FundRequests() {
     },
     {
       id: "description",
-      header: "Description",
+      header: t("fundRequests.description"),
       accessor: "description",
       render: (value) => (
         <div
           className="text-[#282828] max-w-xs prose prose-sm prose-p:my-1 prose-p:leading-5"
           dangerouslySetInnerHTML={{
-            __html: safeValue(value, "No description"),
+            __html: safeValue(value, t("fundRequests.noDescription")),
           }}
           style={{
             wordBreak: "break-word",
@@ -176,7 +180,7 @@ export default function FundRequests() {
     },
     {
       id: "request_date",
-      header: "Request Date",
+      header: t("fundRequests.requestDate"),
       accessor: "request_date",
       render: (value) => (
         <span className="text-[#282828]">{safeValue(value)}</span>
@@ -184,28 +188,30 @@ export default function FundRequests() {
     },
     {
       id: "transaction_date",
-      header: "Transaction Date",
+      header: t("fundRequests.transactionDate"),
       accessor: "transaction_date",
       render: (value) => (
-        <span className="text-[#282828]">{safeValue(value, "Not set")}</span>
+        <span className="text-[#282828]">
+          {safeValue(value, t("fundRequests.notSet"))}
+        </span>
       ),
     },
     {
       id: "track",
-      header: "Track",
+      header: t("fundRequests.track"),
       accessor: "track",
       render: (_value, row) => (
         <span
           className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
           onClick={() => handleTrackClick(row)}
         >
-          Track
+          {t("fundRequests.track")}
         </span>
       ),
     },
     {
       id: "status",
-      header: "Status",
+      header: t("fundRequests.status"),
       accessor: "status",
       render: (value, row) => (
         <span
@@ -222,20 +228,31 @@ export default function FundRequests() {
           }`}
           onClick={() => handleStatusClick(row)}
         >
-          {safeValue(value).charAt(0).toUpperCase() + safeValue(value).slice(1)}
+          {value === "approved"
+            ? t("fundRequests.approved")
+            : value === "pending"
+            ? t("fundRequests.pending")
+            : value === "rejected"
+            ? t("fundRequests.rejected")
+            : value === "in_progress"
+            ? t("fundRequests.inProgress")
+            : value === "active"
+            ? t("fundRequests.active")
+            : safeValue(value).charAt(0).toUpperCase() +
+              safeValue(value).slice(1)}
         </span>
       ),
     },
     {
       id: "attachment",
-      header: "Attachments",
+      header: t("fundRequests.attachments"),
       accessor: "attachment",
       render: (_value, row) => (
         <span
           className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
           onClick={() => handleAttachmentsClick(row)}
         >
-          Attachments
+          {t("fundRequests.attachments")}
         </span>
       ),
     },
@@ -283,7 +300,7 @@ export default function FundRequests() {
   // File upload handlers
   const handleFileSelect = async (file: File) => {
     if (!selectedTransactionId) {
-      toast.error("No transaction selected");
+      toast.error(t("fundRequests.noTransactionSelected"));
       return;
     }
 
@@ -293,7 +310,7 @@ export default function FundRequests() {
         file: file,
       }).unwrap();
 
-      toast.success("File uploaded successfully!");
+      toast.success(t("fundRequests.fileUploadSuccess"));
       // Refresh the attachments list
       refetchAttachments();
     } catch (error: unknown) {
@@ -325,10 +342,10 @@ export default function FundRequests() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast.success("File downloaded successfully!");
+      toast.success(t("fundRequests.fileDownloadSuccess"));
     } catch (error) {
       console.error("Error downloading file:", error);
-      toast.error("Failed to download file");
+      toast.error(t("fundRequests.fileDownloadError"));
     }
   };
 
@@ -364,7 +381,7 @@ export default function FundRequests() {
     if (validFile) {
       handleFileSelect(validFile);
     } else {
-      alert("Please upload a valid file (.xlsx, .pdf, .doc, .docx)");
+      toast.error(t("fundRequests.pleaseUploadValid"));
     }
   };
 
@@ -481,14 +498,14 @@ export default function FundRequests() {
     // Check if FundAdjuments can be deleted
     if (FundAdjumentsStatus !== "pending") {
       toast.error(
-        `Cannot delete FundAdjuments with status "${FundAdjumentsStatus}". Only pending FundAdjumentss can be deleted.`
+        t("fundRequests.cannotDelete", { status: FundAdjumentsStatus })
       );
       return;
     }
 
     try {
       await deleteFundAdjuments(Number(row.id)).unwrap();
-      toast.success("FundAdjuments deleted successfully!");
+      toast.success(t("fundRequests.deleteSuccess"));
     } catch (error: unknown) {
       let errorMessage = "Failed to delete FundAdjuments";
       if (
@@ -611,13 +628,13 @@ export default function FundRequests() {
           body: FundAdjumentsData,
         }).unwrap();
 
-        toast.success("FundAdjuments updated successfully!");
+        toast.success(t("fundRequests.updateSuccess"));
         console.log("FundAdjuments updated successfully");
       } else {
         // Create new FundAdjuments
         await createFundAdjuments(FundAdjumentsData).unwrap();
 
-        toast.success("FundAdjuments created successfully!");
+        toast.success(t("fundRequests.requestSuccess"));
         console.log("FundAdjuments created successfully");
       }
 
@@ -637,10 +654,10 @@ export default function FundRequests() {
   ];
 
   // Select options for budget control
-const budgetControlOptions: SelectOption[] = [
-  { value: "سيولة", label: "سيولة" },
-  { value: "تكاليف", label: "تكاليف" },
-];
+  const budgetControlOptions: SelectOption[] = [
+    { value: "سيولة", label: "سيولة" },
+    { value: "تكاليف", label: "تكاليف" },
+  ];
   const handleChat = (row: TableRow) => {
     // Navigate to chat page with transaction/request ID
     navigate(`/app/chat/${row.id}`, { state: { txCode: row.code } });
@@ -649,24 +666,30 @@ const budgetControlOptions: SelectOption[] = [
   return (
     <div>
       {/* Header with Create Button */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold tracking-wide">Fund Adjuments</h1>
+      <div
+        className={cn(
+          "flex justify-between items-center mb-6",
+          isRTL ? "text-right" : "text-left"
+        )}
+      >
+        <h1 className="text-2xl font-bold tracking-wide">
+          {t("fundRequests.fundAdjuments")}
+        </h1>
         <button
           onClick={handleCreateRequest}
           className="px-4 py-2 bg-[#4E8476] text-white rounded-md hover:bg-[#4E8476] transition-colors font-medium"
         >
-          Create Request
+          {t("fundRequests.createRequest")}
         </button>
       </div>
 
       {/* Search Bar */}
       <div className="p-4 bg-white rounded-2xl mb-6">
         <SearchBar
-          placeholder="Search Fund Adjuments..."
+          placeholder={t("fundRequests.searchPlaceholder")}
           value={searchQuery}
           onChange={handleSearchChange}
           onSubmit={handleSearchSubmit}
-          dir="ltr"
           debounce={250}
         />
       </div>
@@ -674,14 +697,16 @@ const budgetControlOptions: SelectOption[] = [
       {/* FundAdjuments Table */}
       {isLoading ? (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-‪+20 102 530 5705‬"></div>
-          <span className="ml-2 text-gray-600">Loading Fund Adjuments...</span>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
+            {t("fundRequests.loadingFundAdjuments")}
+          </span>
         </div>
       ) : error ? (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
           <div className="text-center">
             <div className="text-red-500 text-lg mb-2">⚠️</div>
-            <p className="text-gray-600">Failed to load Fund Adjuments</p>
+            <p className="text-gray-600">{t("fundRequests.failedToLoad")}</p>
             <button
               className="mt-2 px-4 py-2 bg-[#4E8476] text-white rounded hover:bg-[#4E8476]"
               onClick={() => window.location.reload()}
@@ -694,12 +719,12 @@ const budgetControlOptions: SelectOption[] = [
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
           <div className="text-center">
             <div className="text-gray-400 text-2xl mb-2">📄</div>
-            <p className="text-gray-600">No FundAdjuments requests found</p>
+            <p className="text-gray-600">{t("fundRequests.noRequestsFound")}</p>
           </div>
         </div>
       ) : (
         <SharedTable
-          title="Fund Adjuments Requests"
+          title={t("fundRequests.fundAdjumentsRequests")}
           columns={FundAdjumentsColumns}
           data={transformedData}
           maxHeight="600px"
@@ -718,7 +743,7 @@ const budgetControlOptions: SelectOption[] = [
           onChat={handleChat}
           onDelete={handleDelete}
           onFilter={handleFilter}
-          filterLabel="Filter Fund Adjuments"
+          filterLabel={t("fundRequests.filterFundAdjuments")}
         />
       )}
 
@@ -728,8 +753,8 @@ const budgetControlOptions: SelectOption[] = [
         onClose={handleCloseModal}
         title={
           isEditMode
-            ? "Edit FundAdjuments Request"
-            : "Create FundAdjuments Request"
+            ? t("fundRequests.editRequest")
+            : t("fundRequests.createFundRequest")
         }
         size="md"
       >
@@ -739,11 +764,11 @@ const budgetControlOptions: SelectOption[] = [
               key={`budget-control-${
                 isEditMode ? selectedFundAdjuments?.transaction_id : "create"
               }`}
-              title="Budget Control"
+              title={t("fundRequests.budgetControl")}
               options={budgetControlOptions}
               value={budget_control}
               onChange={(value) => setBudgetControl(String(value))}
-              placeholder="Select budget control"
+              placeholder={t("fundRequests.selectBudgetControl")}
               required
             />
             {validationErrors.budget_control && (
@@ -758,11 +783,11 @@ const budgetControlOptions: SelectOption[] = [
               key={`transaction-date-${
                 isEditMode ? selectedFundAdjuments?.transaction_id : "create"
               }`}
-              title="Transaction Date"
+              title={t("fundRequests.transactionDate")}
               options={accountOptions}
               value={time_period}
               onChange={(value) => settime_period(String(value))}
-              placeholder="Select transaction date"
+              placeholder={t("fundRequests.selectTransactionDate")}
               required
             />
             {validationErrors.time_period && (
@@ -774,7 +799,7 @@ const budgetControlOptions: SelectOption[] = [
 
           <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
-              Notes *
+              {t("fundRequests.notes")} *
             </label>
             <textarea
               value={reason}
@@ -782,7 +807,7 @@ const budgetControlOptions: SelectOption[] = [
               className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4E8476] focus:border-transparent ${
                 validationErrors.reason ? "border-red-500" : "border-[#E2E2E2]"
               }`}
-              placeholder="Enter notes for FundAdjuments"
+              placeholder={t("fundRequests.enterNotes")}
               rows={4}
               required
             />
@@ -799,7 +824,7 @@ const budgetControlOptions: SelectOption[] = [
               disabled={isCreating || isUpdating}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Cancel
+              {t("fundRequests.cancel")}
             </button>
             <button
               onClick={handleSave}
@@ -815,7 +840,8 @@ const budgetControlOptions: SelectOption[] = [
               {(isCreating || isUpdating) && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               )}
-              {isEditMode ? "Update" : "Create"} FundAdjuments
+              {isEditMode ? t("fundRequests.update") : t("fundRequests.create")}{" "}
+              {t("fundRequests.fundAdjuments")}
             </button>
           </div>
         </div>
@@ -826,7 +852,7 @@ const budgetControlOptions: SelectOption[] = [
       <SharedModal
         isOpen={isAttachmentsModalOpen}
         onClose={() => setIsAttachmentsModalOpen(false)}
-        title="Manage Attachments"
+        title={t("fundRequests.manageAttachments")}
         size="lg"
       >
         <div className="p-4">
@@ -866,7 +892,7 @@ const budgetControlOptions: SelectOption[] = [
             </div>
             <div className="text-center">
               <div className="font-semibold text-base mb-1">
-                Drag & drop file or{" "}
+                {t("fundRequests.dragDropFile")}{" "}
                 <button
                   onClick={() =>
                     document.getElementById("file-upload")?.click()
@@ -874,11 +900,11 @@ const budgetControlOptions: SelectOption[] = [
                   className="text-[#4E8476] underline hover:text-[#4E8476] transition-colors"
                   disabled={isUploading}
                 >
-                  browse
+                  {t("fundRequests.browse")}
                 </button>
               </div>
               <div className="text-xs text-[#757575] mb-2">
-                Supported formats: .xlsx, .pdf, .doc, .docx
+                {t("fundRequests.supportedFormats")}
               </div>
               <input
                 id="file-upload"
@@ -896,9 +922,11 @@ const budgetControlOptions: SelectOption[] = [
               />
             </div>
             {isUploading && (
-              <div className="flex items-center gap-2 text-‪+20 102 530 5705‬">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-‪+20 102 530 5705‬"></div>
-                <span className="text-sm">Uploading...</span>
+              <div className="flex items-center gap-2 text-blue-600">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span className="text-sm">
+                  {t("fundRequests.uploadingFile")}
+                </span>
               </div>
             )}
           </div>
@@ -906,14 +934,14 @@ const budgetControlOptions: SelectOption[] = [
           {/* Attachments list */}
           <div className="space-y-3">
             <h4 className="font-semibold text-gray-800">
-              Existing Attachments
+              {t("fundRequests.existingAttachments")}
             </h4>
 
             {isLoadingAttachments ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-‪+20 102 530 5705‬"></div>
-                <span className="ml-2 text-gray-600">
-                  Loading attachments...
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
+                  {t("fundRequests.loadingAttachments")}
                 </span>
               </div>
             ) : attachmentsData &&
@@ -979,7 +1007,7 @@ const budgetControlOptions: SelectOption[] = [
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <div className="text-gray-400 text-2xl mb-2">📎</div>
-                <p>No attachments found</p>
+                <p>{t("fundRequests.noAttachments")}</p>
               </div>
             )}
           </div>
@@ -990,7 +1018,7 @@ const budgetControlOptions: SelectOption[] = [
               onClick={() => setIsAttachmentsModalOpen(false)}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Close
+              {t("fundRequests.close")}
             </button>
           </div>
         </div>
@@ -1004,7 +1032,7 @@ const budgetControlOptions: SelectOption[] = [
           setTrackTransactionId(null);
           setActiveOracleTab("submit"); // Reset to default tab
         }}
-        title="Oracle ERP Status"
+        title={t("fundRequests.oracleERPStatus")}
         size="lg"
       >
         <div className="flex flex-col" style={{ maxHeight: "80vh" }}>
@@ -1032,7 +1060,7 @@ const budgetControlOptions: SelectOption[] = [
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                Submit Steps
+                {t("fundRequests.submitSteps")}
               </div>
             </button>
             <button
@@ -1057,7 +1085,7 @@ const budgetControlOptions: SelectOption[] = [
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                Reject & Approve Steps
+                {t("fundRequests.rejectApproveSteps")}
               </div>
             </button>
           </div>
@@ -1429,7 +1457,7 @@ const budgetControlOptions: SelectOption[] = [
                       d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                     />
                   </svg>
-                  <span>Refresh</span>
+                  <span>{t("fundRequests.refreshStatus")}</span>
                 </>
               )}
             </button>
@@ -1441,7 +1469,7 @@ const budgetControlOptions: SelectOption[] = [
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Close
+              {t("fundRequests.close")}
             </button>
           </div>
         </div>
@@ -1452,20 +1480,24 @@ const budgetControlOptions: SelectOption[] = [
           setIsStatusModalOpen(false);
           setStatusTransactionId(null); // Clear the transaction ID when closing
         }}
-        title="Transfer Status Pipeline"
+        title={t("fundRequests.transferStatusPipeline")}
         size="lg"
       >
         <div className="p-6">
           {isLoadingStatus ? (
             <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-‪+20 102 530 5705‬"></div>
-              <span className="ml-2 text-gray-600">Loading status...</span>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
+                {t("fundRequests.loadingStatus")}
+              </span>
             </div>
           ) : statusError ? (
             <div className="flex justify-center items-center py-12">
               <div className="text-center">
                 <div className="text-red-500 text-lg mb-2">⚠️</div>
-                <p className="text-gray-600">Failed to load status</p>
+                <p className="text-gray-600">
+                  {t("fundRequests.failedToLoadStatus")}
+                </p>
               </div>
             </div>
           ) : statusData ? (
@@ -1473,7 +1505,7 @@ const budgetControlOptions: SelectOption[] = [
               {/* Approval Stages Pipeline */}
               <div className="space-y-4">
                 <h4 className="text-md font-semibold text-gray-800 mb-4">
-                  Approval Stages
+                  {t("fundRequests.approvalStages")}
                 </h4>
 
                 <div className="relative">
@@ -1651,7 +1683,7 @@ const budgetControlOptions: SelectOption[] = [
           ) : (
             <div className="text-center py-12 text-gray-500">
               <div className="text-gray-400 text-2xl mb-2">📋</div>
-              <p>No status information available</p>
+              <p>{t("fundRequests.noStatusAvailable")}</p>
             </div>
           )}
 
@@ -1664,7 +1696,7 @@ const budgetControlOptions: SelectOption[] = [
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Close
+              {t("fundRequests.close")}
             </button>
           </div>
         </div>

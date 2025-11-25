@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 import { useLoginMutation } from "../../api/auth.api";
 import { useAppDispatch } from "../../features/auth/hooks";
 import { setCredentials } from "../../features/auth/authSlice";
+import { useLocale } from "../../hooks/useLocale";
 import {
   Button,
   Input,
@@ -17,19 +18,26 @@ import {
 // import Animation from "../../assets/Animation.png";
 import bgDesigne from "../../assets/bgDesigne.jpg";
 import Logo from "../../assets/Tanfeezletter.png";
-const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
-  rememberMe: z.boolean().optional(),
-});
 
-type LoginForm = z.infer<typeof loginSchema>;
+type LoginForm = {
+  username: string;
+  password: string;
+  rememberMe?: boolean;
+};
 
 export default function SignIn() {
   const { t } = useTranslation();
+  const { locale, setLocale } = useLocale();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [login, { isLoading }] = useLoginMutation();
+
+  // Create schema with translated error messages
+  const loginSchema = z.object({
+    username: z.string().min(1, t("validation.usernameRequired")),
+    password: z.string().min(1, t("validation.passwordRequired")),
+    rememberMe: z.boolean().optional(),
+  });
 
   const {
     register,
@@ -47,7 +55,7 @@ export default function SignIn() {
       }).unwrap();
 
       dispatch(setCredentials(result));
-      toast.success(result.message || "Sign in successful!");
+      toast.success(result.message || t("signInSuccess"));
 
       // Get redirect locations in order of priority
       const storedRedirect = localStorage.getItem("postLoginRedirect");
@@ -70,6 +78,10 @@ export default function SignIn() {
     }
   };
 
+  const toggleLanguage = () => {
+    setLocale(locale === "EN" ? "AR" : "EN");
+  };
+
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4">
       {/* Background Design Layer */}
@@ -81,6 +93,28 @@ export default function SignIn() {
         />
       </div>
 
+      {/* Language Switcher Button */}
+      <button
+        onClick={toggleLanguage}
+        className="absolute top-4 right-4 z-20 flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-md hover:bg-gray-50 transition-colors"
+        aria-label="Toggle language"
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+          />
+        </svg>
+        <span>{locale === "EN" ? "العربية" : "English"}</span>
+      </button>
+
       <div className="relative z-10 flex flex-col 2xl:h-auto h-[80vh]  w-full max-w-2xl items-center gap-8 py-20 justify-center rounded-3xl bg-white px-4 sm:px-6 lg:px-8">
         <img src={Logo} alt="" className="2xl:h-40 h-25" />
 
@@ -90,8 +124,7 @@ export default function SignIn() {
               {t("signIn")}
             </h2>
             <p className="mt-2  text-sm text-[#757575]">
-              {t("signInSubtitle") ||
-                "Enter your account details or use SSO Login"}
+              {t("signInSubtitle")}
             </p>
           </div>
 
@@ -99,10 +132,10 @@ export default function SignIn() {
             <div className="space-y-4">
               <FormField>
                 <Input
-                  label={t("username") || "Username"}
+                  label={t("username")}
                   type="text"
                   autoComplete="username"
-                  placeholder="Enter your username"
+                  placeholder={t("enterUsername")}
                   error={errors.username?.message}
                   {...register("username")}
                 />
@@ -112,13 +145,13 @@ export default function SignIn() {
                 <PasswordInput
                   label={t("password")}
                   autoComplete="current-password"
-                  placeholder="Enter your password"
+                  placeholder={t("enterPassword")}
                   error={errors.password?.message}
                   {...register("password")}
                 />
               </FormField>
 
-              <div className="flex  items-center flex-wrap gap-5 justify-between">
+              <div className="flex  items-center flex-wrap gap-5 justify-between ">
                 <Checkbox label={t("rememberMe")} {...register("rememberMe")} />
                 {/* <Link
                   to="/auth/reset"

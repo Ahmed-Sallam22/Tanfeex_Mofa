@@ -7,6 +7,7 @@ import SharedModal from "@/shared/SharedModal";
 import { SharedSelect } from "@/shared/SharedSelect";
 import type { SelectOption } from "@/shared/SharedSelect";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 // Sample data for users
 import {
@@ -49,6 +50,7 @@ function UserChip({ name }: { name: string }) {
   );
 }
 export default function Users() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<
     "users" | "userLevels" | "assignment"
   >("users");
@@ -147,12 +149,12 @@ export default function Users() {
   const usersColumns: TableColumn[] = [
     {
       id: "username",
-      header: "Username",
+      header: t("users.username"),
       accessor: "username",
     },
     {
       id: "role",
-      header: "Role",
+      header: t("users.role"),
       accessor: "role",
       render: (value) => (
         <span
@@ -168,12 +170,12 @@ export default function Users() {
     },
     {
       id: "userLevel",
-      header: "User Level",
+      header: t("users.userLevel"),
       accessor: "userLevel",
     },
     {
       id: "isActive",
-      header: "Active",
+      header: t("users.active"),
       accessor: "isActive",
       render: (value) => (
         <span
@@ -181,7 +183,7 @@ export default function Users() {
             value ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
           }`}
         >
-          {value ? "Active" : "Inactive"}
+          {value ? t("users.active") : t("users.inactive")}
         </span>
       ),
     },
@@ -191,17 +193,17 @@ export default function Users() {
   const userLevelsColumns: TableColumn[] = [
     {
       id: "name",
-      header: "Name",
+      header: t("users.name"),
       accessor: "name",
     },
     {
       id: "description",
-      header: "Description",
+      header: t("users.description"),
       accessor: "description",
     },
     {
       id: "order",
-      header: "Order",
+      header: t("users.order"),
       accessor: "order",
     },
   ];
@@ -235,18 +237,18 @@ export default function Users() {
             role: toApiRole(userForm.role), // ensure lowercase for API
           },
         }).unwrap();
-        toast.success("User updated");
+        toast.success(t("users.userUpdated"));
       } else {
         await createUser({
           username: userForm.username,
           password: userForm.password,
           role: toApiRole(userForm.role), // ensure lowercase for API
         }).unwrap();
-        toast.success("User created");
+        toast.success(t("users.userCreated"));
       }
       setIsUserModalOpen(false);
     } catch (e: any) {
-      toast.error(e?.data?.message || "Operation failed");
+      toast.error(e?.data?.message || t("users.operationFailed"));
     }
   };
 
@@ -262,9 +264,9 @@ export default function Users() {
   const handleDelete = async (row: TableRow) => {
     try {
       await deleteUser({ pk: Number(row.id) }).unwrap();
-      toast.success("User deleted");
+      toast.success(t("users.userDeleted"));
     } catch (e: any) {
-      toast.error(e?.data?.message || "Delete failed");
+      toast.error(e?.data?.message || t("users.deleteFailed"));
     }
   };
   // const handleEditUser = (user: TableRow) => {
@@ -323,7 +325,7 @@ export default function Users() {
   };
 
   const getPageTitle = () => {
-    return "User Management";
+    return t("users.title");
   };
 
   const shouldShowAddButton = () => {
@@ -372,7 +374,7 @@ export default function Users() {
                 fill="white"
               />
             </svg>
-            Add User
+            {t("users.addUser")}
           </button>
         )}
       </div>
@@ -389,7 +391,7 @@ export default function Users() {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              Users
+              {t("users.usersTab")}
             </button>
             <button
               onClick={() => handleTabChange("userLevels")}
@@ -399,7 +401,7 @@ export default function Users() {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              User Levels
+              {t("users.userLevelsTab")}
             </button>
             <button
               onClick={() => handleTabChange("assignment")}
@@ -409,7 +411,7 @@ export default function Users() {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              Assignment
+              {t("users.assignmentTab")}
             </button>
           </nav>
         </div>
@@ -423,13 +425,12 @@ export default function Users() {
             <SearchBar
               placeholder={
                 activeTab === "users"
-                  ? "Search users..."
-                  : "Search user levels..."
+                  ? t("users.searchUsers")
+                  : t("users.searchUserLevels")
               }
               value={searchQuery}
               onChange={handleSearchChange}
               onSubmit={handleSearchSubmit}
-              dir="ltr"
               debounce={250}
             />
           </div>
@@ -439,11 +440,17 @@ export default function Users() {
             {isLoading || isDeleting ? (
               <div className="flex justify-center items-center h-64 bg-white rounded-lg">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-gray-600">Loading transfers...</span>
+                <span className="ml-2 text-gray-600">
+                  {t("users.loadingTransfers")}
+                </span>
               </div>
             ) : (
               <SharedTable
-                title={activeTab === "users" ? "Users" : "User Levels"}
+                title={
+                  activeTab === "users"
+                    ? t("users.usersTab")
+                    : t("users.userLevelsTab")
+                }
                 columns={
                   activeTab === "users" ? usersColumns : userLevelsColumns
                 }
@@ -460,7 +467,9 @@ export default function Users() {
                 onDelete={handleDelete}
                 showFooter={false}
                 filterLabel={
-                  activeTab === "userLevels" ? "Add User Level" : undefined
+                  activeTab === "userLevels"
+                    ? t("users.addUserLevel")
+                    : undefined
                 }
               />
             )}
@@ -475,17 +484,17 @@ export default function Users() {
           <div className="w-1/2 p-6 bg-white rounded-2xl shadow-sm">
             <div className="text-center mb-6">
               <h2 className="text-xl font-bold text-gray-900 mb-2">
-                Assign User Level
+                {t("users.assignUserLevel")}
               </h2>
               <p className="text-sm text-gray-600">
-                Assign a new level to a user
+                {t("users.assignNewLevel")}
               </p>
             </div>
 
             <div className="space-y-4">
               <div>
                 <SharedSelect
-                  title="Select User"
+                  title={t("users.selectUser")}
                   options={userOptions}
                   value={assignmentForm.selectedUser}
                   onChange={(value) =>
@@ -494,14 +503,14 @@ export default function Users() {
                       selectedUser: String(value),
                     }))
                   }
-                  placeholder="Choose a user"
+                  placeholder={t("users.chooseUser")}
                   required
                 />
               </div>
 
               <div>
                 <SharedSelect
-                  title="Select Level"
+                  title={t("users.selectLevel")}
                   options={userLevelOptions}
                   value={assignmentForm.selectedLevel}
                   onChange={(value) =>
@@ -510,7 +519,7 @@ export default function Users() {
                       selectedLevel: String(value),
                     }))
                   }
-                  placeholder="Choose a level"
+                  placeholder={t("users.chooseLevel")}
                   required
                 />
               </div>
@@ -522,7 +531,7 @@ export default function Users() {
                 }
                 className="w-full px-4 py-2 bg-[#4E8476] text-white rounded-md hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
-                Assign
+                {t("users.assign")}
               </button>
             </div>
           </div>
@@ -532,10 +541,10 @@ export default function Users() {
           <div className="w-1/2 p-6 bg-white rounded-2xl shadow-sm">
             <div className="text-center mb-6">
               <h2 className="text-xl font-bold text-gray-900 mb-2">
-                Users by Level
+                {t("users.usersByLevel")}
               </h2>
               <p className="text-sm text-gray-600">
-                User distribution across levels
+                {t("users.userDistribution")}
               </p>
             </div>
 
@@ -549,10 +558,10 @@ export default function Users() {
                   <div className="flex justify-between items-center mb-3">
                     <div className=" flex flex-col items-start justify-between">
                       <h3 className="text-[14px] font-bold text-[#276EF1]">
-                        Planning and Budgeting Department{" "}
+                        {t("users.planningAndBudgeting")}{" "}
                       </h3>
                       <span className="text-xs text-gray-500">
-                        Order {group.order}
+                        {t("users.orderLabel")} {group.order}
                       </span>
                     </div>
                     <div className="flex flex-col items-center justify-center h-12 w-12 rounded-xl bg-white shadow ring-1 ring-black/5">
@@ -560,7 +569,7 @@ export default function Users() {
                         {group.count}
                       </span>
                       <span className="text-[8px] tracking-wide text-gray-500">
-                        USERS
+                        {t("users.users")}
                       </span>
                     </div>
                   </div>
@@ -575,7 +584,7 @@ export default function Users() {
                       ))
                     ) : (
                       <span className="text-sm text-gray-500">
-                        No users in this level
+                        {t("users.noUsersInLevel")}
                       </span>
                     )}
                   </div>
@@ -590,13 +599,13 @@ export default function Users() {
       <SharedModal
         isOpen={isUserModalOpen}
         onClose={() => setIsUserModalOpen(false)}
-        title={editingUser ? "Edit User" : "Add User"}
+        title={editingUser ? t("users.editUser") : t("users.addUser")}
         size="md"
       >
         <div className="p-4 space-y-4">
           <div>
             <label className="block text-xs font-semibold text-[#282828] mb-2">
-              Username
+              {t("users.username")}
             </label>
             <input
               type="text"
@@ -605,14 +614,14 @@ export default function Users() {
                 setUserForm((prev) => ({ ...prev, username: e.target.value }))
               }
               className="w-full px-3 py-2 border border-[#E2E2E2] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter username"
+              placeholder={t("users.enterUsername")}
             />
           </div>
 
           {!editingUser && (
             <div>
               <label className="block text-xs  font-semibold  text-[#282828] mb-2">
-                Password
+                {t("users.password")}
               </label>
               <input
                 type="password"
@@ -621,14 +630,14 @@ export default function Users() {
                   setUserForm((prev) => ({ ...prev, password: e.target.value }))
                 }
                 className="w-full px-3 py-2 border border-[#E2E2E2] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter password"
+                placeholder={t("users.enterPassword")}
               />
             </div>
           )}
 
           <div>
             <SharedSelect
-              title="Role"
+              title={t("users.role")}
               options={roleOptions} // has Admin/User labels
               value={fromApiRole(userForm.role)} // show nice label
               onChange={(value) =>
@@ -637,7 +646,7 @@ export default function Users() {
                   role: toApiRole(String(value)),
                 }))
               }
-              placeholder="Select role"
+              placeholder={t("users.selectRole")}
               required
             />
           </div>
@@ -647,7 +656,7 @@ export default function Users() {
               onClick={() => setIsUserModalOpen(false)}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              {t("users.cancel")}
             </button>
             <button
               onClick={handleSaveUser}
@@ -664,7 +673,9 @@ export default function Users() {
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               )}
               {!isCreating && !isUpdating && (
-                <span>{editingUser ? "Update User" : "Add User"}</span>
+                <span>
+                  {editingUser ? t("users.updateUser") : t("users.addUser")}
+                </span>
               )}
             </button>
           </div>
@@ -675,13 +686,15 @@ export default function Users() {
       <SharedModal
         isOpen={isUserLevelModalOpen}
         onClose={() => setIsUserLevelModalOpen(false)}
-        title={editingUserLevel ? "Edit User Level" : "Add User Level"}
+        title={
+          editingUserLevel ? t("users.editUserLevel") : t("users.addUserLevel")
+        }
         size="md"
       >
         <div className="p-4 space-y-4">
           <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
-              Name *
+              {t("users.name")} *
             </label>
             <input
               type="text"
@@ -690,13 +703,13 @@ export default function Users() {
                 setUserLevelForm((prev) => ({ ...prev, name: e.target.value }))
               }
               className="w-full px-3 py-3 border border-[#E2E2E2] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter level name"
+              placeholder={t("users.enterLevelName")}
             />
           </div>
 
           <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
-              Description *
+              {t("users.description")} *
             </label>
             <textarea
               value={userLevelForm.description}
@@ -707,14 +720,14 @@ export default function Users() {
                 }))
               }
               className="w-full px-3 py-3 border border-[#E2E2E2] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter level description"
+              placeholder={t("users.enterLevelDescription")}
               rows={3}
             />
           </div>
 
           <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
-              Order *
+              {t("users.order")} *
             </label>
             <input
               type="number"
@@ -723,7 +736,7 @@ export default function Users() {
                 setUserLevelForm((prev) => ({ ...prev, order: e.target.value }))
               }
               className="w-full px-3 py-3 border border-[#E2E2E2] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter order number"
+              placeholder={t("users.enterOrderNumber")}
             />
           </div>
 
@@ -732,13 +745,13 @@ export default function Users() {
               onClick={() => setIsUserLevelModalOpen(false)}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              {t("users.cancel")}
             </button>
             <button
               onClick={handleSaveUserLevel}
               className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-blue-600 rounded-md hover:bg-blue-700 transition-colors"
             >
-              {editingUserLevel ? "Update Level" : "Add Level"}
+              {editingUserLevel ? t("users.updateLevel") : t("users.addLevel")}
             </button>
           </div>
         </div>

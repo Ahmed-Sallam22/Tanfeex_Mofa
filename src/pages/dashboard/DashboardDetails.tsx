@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ResponsiveContainer,
   PieChart,
@@ -12,6 +13,7 @@ import { useGetAccountWiseDashboardQuery } from "@/api/dashboard.api";
 import { type TableColumn } from "@/shared/SharedTable";
 import { SharedTable2, type TableRow } from "@/shared/SharedTable 2";
 import { ArrowLeft } from "lucide-react";
+import { cn } from "@/utils/cn";
 
 function LoadingSkeleton({ className = "" }: { className?: string }) {
   return (
@@ -35,6 +37,8 @@ export default function DashboardDetails() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [year] = useState<string>("2025");
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
 
   // Get the project parameter from URL
   const currentProject = searchParams.get("project");
@@ -45,32 +49,30 @@ export default function DashboardDetails() {
       project_code: currentProject || "",
     });
 
- 
- 
   // Get the title and data key based on type
   const getTypeConfig = (type: string) => {
     switch (type) {
       case "manpower":
         return {
-          title: "Manpower",
+          title: t("home.manpower"),
           dataKey: "MenPower",
           color: "#007E77",
         };
       case "non-manpower":
         return {
-          title: "Non-Manpower",
+          title: t("home.nonManpower"),
           dataKey: "NonMenPower",
           color: "#6BE6E4",
         };
       case "capex":
         return {
-          title: "Capex",
+          title: t("home.capex"),
           dataKey: "Copex",
           color: "#4E8476",
         };
       default:
         return {
-          title: "Dashboard",
+          title: t("dashboard"),
           dataKey: "MenPower",
           color: "#007E77",
         };
@@ -127,22 +129,22 @@ export default function DashboardDetails() {
 
   // Account columns for the table
   const accountColumns: TableColumn[] = [
-     {
+    {
       id: "account_code",
-      header: "Account Code",
+      header: t("home.accountCode"),
       accessor: "account_code",
       sortable: true,
     },
     {
       id: "account_name",
-      header: "Account Name",
+      header: t("home.accountName"),
       accessor: "account_name",
       sortable: true,
     },
-   
+
     {
       id: "FY24_budget",
-      header: "FY24 Budget",
+      header: t("home.fy24Budget"),
       accessor: "FY24_budget",
       sortable: true,
     },
@@ -155,7 +157,7 @@ export default function DashboardDetails() {
 
     {
       id: "approved_total",
-      header: "Approved Total",
+      header: t("home.approvedTotal"),
       accessor: "approved_total",
       sortable: true,
       render: (v: unknown) => (
@@ -173,21 +175,38 @@ export default function DashboardDetails() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-4">
+      <div
+        className={cn(
+          "flex items-center justify-between",
+          // isRTL && "flex-row-reverse"
+        )}
+      >
+        <div className={cn("flex flex-col gap-2", isRTL && "items-end")}>
+          <div
+            className={cn(
+              "flex items-center gap-4",
+              // isRTL && "flex-row-reverse"
+            )}
+          >
             <button
               onClick={() => navigate("/app")}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className={cn(
+                "flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors",
+                // isRTL && "flex-row-reverse"
+              )}
             >
-              <ArrowLeft className="h-5 w-5" />
-              Back to Dashboard
+              <ArrowLeft className={cn("h-5 w-5",)} />
+              {t("dashboardDetails.backToDashboard")}
             </button>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {typeConfig.title} Details
+            <h1
+              className={cn(
+                "text-2xl font-bold text-gray-900",
+                isRTL ? "text-right" : "text-left"
+              )}
+            >
+              {typeConfig.title} {t("dashboardDetails.details")}
             </h1>
           </div>
-        
         </div>
       </div>
 
@@ -209,9 +228,14 @@ export default function DashboardDetails() {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-1">
         {/* Breakdown of Budget Chart */}
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-          <div className="flex items-center justify-between mb-4">
+          <div
+            className={cn(
+              "flex items-center justify-between mb-4",
+              // isRTL && "flex-row-reverse"
+            )}
+          >
             <div className="font-semibold text-gray-900">
-              {typeConfig.title} Budget Breakdown
+              {typeConfig.title} {t("dashboardDetails.budgetBreakdown")}
             </div>
           </div>
 
@@ -293,20 +317,28 @@ export default function DashboardDetails() {
             </div>
           </div>
         </div>
-
-   
       </div>
 
       {/* Account-wise breakdown table */}
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-        <div className="mb-4 font-semibold text-gray-900">
-          {typeConfig.title} Account-wise breakdown
+        <div
+          className={cn(
+            "mb-4 font-semibold text-gray-900",
+            isRTL ? "text-right" : "text-left"
+          )}
+        >
+          {typeConfig.title} {t("dashboardDetails.accountWiseBreakdown")}
         </div>
         {isLoading ? (
-          <div className="flex justify-center items-center h-32">
+          <div
+            className={cn(
+              "flex justify-center items-center h-32",
+              isRTL && "flex-row-reverse"
+            )}
+          >
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-600">
-              Loading account wise data...
+            <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
+              {t("dashboardDetails.loadingAccountWiseData")}
             </span>
           </div>
         ) : (

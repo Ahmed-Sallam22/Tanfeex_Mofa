@@ -413,7 +413,6 @@ export default function AccountsProjects() {
           value={searchQuery}
           onChange={handleSearchChange}
           onSubmit={handleSearchSubmit}
-          dir="ltr"
           debounce={250}
         />
       </div>

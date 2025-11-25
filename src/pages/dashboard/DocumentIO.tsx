@@ -208,7 +208,6 @@ export default function DocumentIO() {
               value={searchQuery}
               onChange={handleSearch}
               onSubmit={handleSearch}
-              dir="ltr"
               debounce={250}
             />
           </div>

@@ -4,6 +4,7 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import Tanfeez from "../assets/Tanfeezletter.png";
 import { useLogout } from "../hooks/useLogout";
 import { useUserRole, useUserLevel } from "../features/auth/hooks";
+import { useTranslation } from "react-i18next";
 
 // Custom SVG Icons
 const DashboardIcon = ({ className }: { className?: string }) => (
@@ -68,33 +69,33 @@ const ReportsIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const DocumentIOIcon = ({ className }: { className?: string }) => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 20 20"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className={className}
-  >
-    <path
-      d="M12.8268 3.37739L12.4087 3.84195V3.84195L12.8268 3.37739ZM16.1258 6.34647L15.7077 6.81103L16.1258 6.34647ZM18.0443 8.4611L17.4734 8.71537V8.71537L18.0443 8.4611ZM2.64233 17.3564L3.08427 16.9144H3.08427L2.64233 17.3564ZM17.3564 17.3564L16.9144 16.9144L17.3564 17.3564ZM11.666 18.3327V17.7077H8.33268V18.3327V18.9577H11.666V18.3327ZM1.66602 11.666H2.29102V8.33268H1.66602H1.04102V11.666H1.66602ZM18.3327 11.3018H17.7077V11.666H18.3327H18.9577V11.3018H18.3327ZM12.8268 3.37739L12.4087 3.84195L15.7077 6.81103L16.1258 6.34647L16.5439 5.88191L13.2449 2.91283L12.8268 3.37739ZM18.3327 11.3018H18.9577C18.9577 9.8948 18.9703 9.00395 18.6153 8.20682L18.0443 8.4611L17.4734 8.71537C17.6951 9.21306 17.7077 9.78439 17.7077 11.3018H18.3327ZM16.1258 6.34647L15.7077 6.81103C16.8355 7.8261 17.2518 8.21768 17.4734 8.71537L18.0443 8.4611L18.6153 8.20682C18.2603 7.40969 17.5897 6.82312 16.5439 5.88191L16.1258 6.34647ZM8.35751 1.66602V2.29102C9.67567 2.29102 10.1731 2.30066 10.6165 2.47079L10.8404 1.88728L11.0643 1.30377C10.3544 1.03137 9.58101 1.04102 8.35751 1.04102V1.66602ZM12.8268 3.37739L13.2449 2.91283C12.3399 2.09833 11.7741 1.57614 11.0643 1.30377L10.8404 1.88728L10.6165 2.47079C11.0599 2.64096 11.4339 2.96465 12.4087 3.84195L12.8268 3.37739ZM8.33268 18.3327V17.7077C6.74366 17.7077 5.61478 17.7064 4.75839 17.5912C3.91998 17.4785 3.43694 17.2671 3.08427 16.9144L2.64233 17.3564L2.20038 17.7983C2.82402 18.4219 3.61481 18.6987 4.59183 18.8301C5.55087 18.959 6.779 18.9577 8.33268 18.9577V18.3327ZM1.66602 11.666H1.04102C1.04102 13.2197 1.03969 14.4478 1.16863 15.4069C1.29998 16.3839 1.57675 17.1747 2.20038 17.7983L2.64233 17.3564L3.08427 16.9144C2.73159 16.5618 2.5202 16.0787 2.40748 15.2403C2.29234 14.3839 2.29102 13.255 2.29102 11.666H1.66602ZM11.666 18.3327V18.9577C13.2197 18.9577 14.4478 18.959 15.4069 18.8301C16.3839 18.6987 17.1747 18.4219 17.7983 17.7983L17.3564 17.3564L16.9144 16.9144C16.5618 17.2671 16.0787 17.4785 15.2403 17.5912C14.3839 17.7064 13.255 17.7077 11.666 17.7077V18.3327ZM18.3327 11.666H17.7077C17.7077 13.255 17.7064 14.3839 17.5912 15.2403C17.4785 16.0787 17.2671 16.5618 16.9144 16.9144L17.3564 17.3564L17.7983 17.7983C18.4219 17.1747 18.6987 16.3839 18.8301 15.4069C18.959 14.4478 18.9577 13.2197 18.9577 11.666H18.3327ZM1.66602 8.33268H2.29102C2.29102 6.74366 2.29234 5.61478 2.40748 4.75839C2.5202 3.91998 2.73159 3.43694 3.08427 3.08427L2.64233 2.64233L2.20038 2.20038C1.57675 2.82402 1.29998 3.61481 1.16863 4.59183C1.03969 5.55087 1.04102 6.779 1.04102 8.33268H1.66602ZM8.35751 1.66602V1.04102C6.79549 1.04102 5.56136 1.0397 4.59841 1.16858C3.61795 1.2998 2.82451 1.57626 2.20038 2.20038L2.64233 2.64233L3.08427 3.08427C3.43646 2.73208 3.92098 2.52039 4.76422 2.40753C5.62497 2.29233 6.76027 2.29102 8.35751 2.29102V1.66602Z"
-      fill="currentColor"
-    />
-    <path
-      d="M10.834 2.08398V4.16732C10.834 6.1315 10.834 7.1136 11.4442 7.72379C12.0544 8.33398 13.0365 8.33398 15.0007 8.33398H18.334"
-      stroke="currentColor"
-      strokeWidth="1.25"
-    />
-    <path
-      d="M7.08333 15.4167L7.08333 11.25M7.08333 11.25L5.41667 12.8125M7.08333 11.25L8.75 12.8125"
-      stroke="currentColor"
-      strokeWidth="1.25"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+// const DocumentIOIcon = ({ className }: { className?: string }) => (
+//   <svg
+//     width="20"
+//     height="20"
+//     viewBox="0 0 20 20"
+//     fill="none"
+//     xmlns="http://www.w3.org/2000/svg"
+//     className={className}
+//   >
+//     <path
+//       d="M12.8268 3.37739L12.4087 3.84195V3.84195L12.8268 3.37739ZM16.1258 6.34647L15.7077 6.81103L16.1258 6.34647ZM18.0443 8.4611L17.4734 8.71537V8.71537L18.0443 8.4611ZM2.64233 17.3564L3.08427 16.9144H3.08427L2.64233 17.3564ZM17.3564 17.3564L16.9144 16.9144L17.3564 17.3564ZM11.666 18.3327V17.7077H8.33268V18.3327V18.9577H11.666V18.3327ZM1.66602 11.666H2.29102V8.33268H1.66602H1.04102V11.666H1.66602ZM18.3327 11.3018H17.7077V11.666H18.3327H18.9577V11.3018H18.3327ZM12.8268 3.37739L12.4087 3.84195L15.7077 6.81103L16.1258 6.34647L16.5439 5.88191L13.2449 2.91283L12.8268 3.37739ZM18.3327 11.3018H18.9577C18.9577 9.8948 18.9703 9.00395 18.6153 8.20682L18.0443 8.4611L17.4734 8.71537C17.6951 9.21306 17.7077 9.78439 17.7077 11.3018H18.3327ZM16.1258 6.34647L15.7077 6.81103C16.8355 7.8261 17.2518 8.21768 17.4734 8.71537L18.0443 8.4611L18.6153 8.20682C18.2603 7.40969 17.5897 6.82312 16.5439 5.88191L16.1258 6.34647ZM8.35751 1.66602V2.29102C9.67567 2.29102 10.1731 2.30066 10.6165 2.47079L10.8404 1.88728L11.0643 1.30377C10.3544 1.03137 9.58101 1.04102 8.35751 1.04102V1.66602ZM12.8268 3.37739L13.2449 2.91283C12.3399 2.09833 11.7741 1.57614 11.0643 1.30377L10.8404 1.88728L10.6165 2.47079C11.0599 2.64096 11.4339 2.96465 12.4087 3.84195L12.8268 3.37739ZM8.33268 18.3327V17.7077C6.74366 17.7077 5.61478 17.7064 4.75839 17.5912C3.91998 17.4785 3.43694 17.2671 3.08427 16.9144L2.64233 17.3564L2.20038 17.7983C2.82402 18.4219 3.61481 18.6987 4.59183 18.8301C5.55087 18.959 6.779 18.9577 8.33268 18.9577V18.3327ZM1.66602 11.666H1.04102C1.04102 13.2197 1.03969 14.4478 1.16863 15.4069C1.29998 16.3839 1.57675 17.1747 2.20038 17.7983L2.64233 17.3564L3.08427 16.9144C2.73159 16.5618 2.5202 16.0787 2.40748 15.2403C2.29234 14.3839 2.29102 13.255 2.29102 11.666H1.66602ZM11.666 18.3327V18.9577C13.2197 18.9577 14.4478 18.959 15.4069 18.8301C16.3839 18.6987 17.1747 18.4219 17.7983 17.7983L17.3564 17.3564L16.9144 16.9144C16.5618 17.2671 16.0787 17.4785 15.2403 17.5912C14.3839 17.7064 13.255 17.7077 11.666 17.7077V18.3327ZM18.3327 11.666H17.7077C17.7077 13.255 17.7064 14.3839 17.5912 15.2403C17.4785 16.0787 17.2671 16.5618 16.9144 16.9144L17.3564 17.3564L17.7983 17.7983C18.4219 17.1747 18.6987 16.3839 18.8301 15.4069C18.959 14.4478 18.9577 13.2197 18.9577 11.666H18.3327ZM1.66602 8.33268H2.29102C2.29102 6.74366 2.29234 5.61478 2.40748 4.75839C2.5202 3.91998 2.73159 3.43694 3.08427 3.08427L2.64233 2.64233L2.20038 2.20038C1.57675 2.82402 1.29998 3.61481 1.16863 4.59183C1.03969 5.55087 1.04102 6.779 1.04102 8.33268H1.66602ZM8.35751 1.66602V1.04102C6.79549 1.04102 5.56136 1.0397 4.59841 1.16858C3.61795 1.2998 2.82451 1.57626 2.20038 2.20038L2.64233 2.64233L3.08427 3.08427C3.43646 2.73208 3.92098 2.52039 4.76422 2.40753C5.62497 2.29233 6.76027 2.29102 8.35751 2.29102V1.66602Z"
+//       fill="currentColor"
+//     />
+//     <path
+//       d="M10.834 2.08398V4.16732C10.834 6.1315 10.834 7.1136 11.4442 7.72379C12.0544 8.33398 13.0365 8.33398 15.0007 8.33398H18.334"
+//       stroke="currentColor"
+//       strokeWidth="1.25"
+//     />
+//     <path
+//       d="M7.08333 15.4167L7.08333 11.25M7.08333 11.25L5.41667 12.8125M7.08333 11.25L8.75 12.8125"
+//       stroke="currentColor"
+//       strokeWidth="1.25"
+//       strokeLinecap="round"
+//       strokeLinejoin="round"
+//     />
+//   </svg>
+// );
 
 const TransferIcon = ({ className }: { className?: string }) => (
   <svg
@@ -506,32 +507,36 @@ type SidebarProps = {
   desktopHidden?: boolean; // controls arrow direction
 };
 
-const getSections = (userRole: string | null, userLevel: number | null) =>
+const getSections = (
+  userRole: string | null,
+  userLevel: number | null,
+  t: (key: string) => string
+) =>
   [
     {
       title: "",
       items: [
         {
           to: "/app",
-          label: "Dashboard",
+          label: t("dashboard"),
           icon: DashboardIcon,
           allowedRoles: ["superadmin"],
           allowedLevels: [1, 2, 3, 4] as number[],
         },
         {
           to: "/app/reports",
-          label: "Reports",
+          label: t("reports.title"),
           icon: ReportsIcon,
           allowedRoles: ["superadmin"],
           allowedLevels: [] as number[],
         },
-        {
-          to: "/app/Document_I/O",
-          label: "Document I/O",
-          icon: DocumentIOIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [] as number[],
-        },
+        // {
+        //   to: "/app/Document_I/O",
+        //   label: t("documentIO.title"),
+        //   icon: DocumentIOIcon,
+        //   allowedRoles: ["superadmin"],
+        //   allowedLevels: [] as number[],
+        // },
         // {
         //   to: "/app/envelope",
         //   label: "Envelope",
@@ -550,18 +555,18 @@ const getSections = (userRole: string | null, userLevel: number | null) =>
       }),
     },
     {
-      title: "Transfer",
+      title: t("transfer.title"),
       items: [
         {
           to: "/app/transfer",
-          label: "Transfer",
+          label: t("transfer.title"),
           icon: TransferIcon,
           allowedRoles: ["superadmin"],
           allowedLevels: [1] as number[],
         },
         {
           to: "/app/PendingTransfer",
-          label: "Pending Transfer",
+          label: t("pendingTransfers.title"),
           icon: PendingTransferIcon,
           allowedRoles: ["superadmin"],
           allowedLevels: [2, 3, 4] as number[],
@@ -577,18 +582,18 @@ const getSections = (userRole: string | null, userLevel: number | null) =>
       }),
     },
     {
-      title: "Additional Funds",
+      title: t("fundRequests.title"),
       items: [
         {
           to: "/app/fund-requests",
-          label: "Fund Requests",
+          label: t("fundRequests.title"),
           icon: FundRequestsIcon,
           allowedRoles: ["superadmin"],
           allowedLevels: [1] as number[],
         },
         {
           to: "/app/PendingRequests",
-          label: "Pending Requests",
+          label: t("pendingRequests.title"),
           icon: PendingRequestsIcon,
           allowedRoles: ["superadmin"],
           allowedLevels: [2, 3, 4] as number[],
@@ -604,18 +609,18 @@ const getSections = (userRole: string | null, userLevel: number | null) =>
       }),
     },
     {
-      title: "Fund Adjustments",
+      title: t("fundAdjustments.title"),
       items: [
         {
           to: "/app/FundAdjustments",
-          label: "Fund Adjustments",
+          label: t("fundAdjustments.title"),
           icon: FundAdjustmentsIcon,
           allowedRoles: ["superadmin"],
           allowedLevels: [1] as number[],
         },
         {
           to: "/app/PendingAdjustments",
-          label: "Pending Adjustments",
+          label: t("pendingAdjustments.title"),
           icon: PendingAdjustmentsIcon,
           allowedRoles: ["superadmin"],
           allowedLevels: [2, 3, 4] as number[],
@@ -631,11 +636,11 @@ const getSections = (userRole: string | null, userLevel: number | null) =>
       }),
     },
     {
-      title: "Management",
+      title: t("workflow.title"),
       items: [
         {
           to: "/app/users",
-          label: "User Management",
+          label: t("users.title"),
           icon: UserManagementIcon,
           allowedRoles: ["superadmin"],
           allowedLevels: [] as number[],
@@ -656,14 +661,14 @@ const getSections = (userRole: string | null, userLevel: number | null) =>
         // },
         {
           to: "/app/WorkFlow",
-          label: "WorkFlow",
+          label: t("workflow.title"),
           icon: WorkflowIcon,
           allowedRoles: ["superadmin"],
           allowedLevels: [] as number[],
         },
         {
           to: "/app/segment-configuration",
-          label: "Segment Configuration",
+          label: t("segmentConfiguration.title"),
           icon: SegmentConfigIcon,
           allowedRoles: ["superadmin"],
           allowedLevels: [] as number[],
@@ -671,25 +676,11 @@ const getSections = (userRole: string | null, userLevel: number | null) =>
       ].filter(() => userRole === "superadmin"),
     },
     {
-      title: "Preferences",
+      title: t("navbar.notifications"),
       items: [
-        // {
-        //   to: "/app/settings",
-        //   label: "Settings",
-        //   icon: Settings,
-        //   allowedRoles: [] as string[],
-        //   allowedLevels: [] as number[],
-        // },
-        // {
-        //   to: "/app/help",
-        //   label: "Help Center",
-        //   icon: HelpCircle,
-        //   allowedRoles: [] as string[],
-        //   allowedLevels: [] as number[],
-        // },
         {
           to: "/logout",
-          label: "Log out",
+          label: t("signIn"),
           icon: LogoutIcon,
           allowedRoles: [] as string[],
           allowedLevels: [] as number[],
@@ -703,10 +694,11 @@ export default function Sidebar({
   onToggle,
   desktopHidden,
 }: SidebarProps) {
+  const { t } = useTranslation();
   const logout = useLogout();
   const userRole = useUserRole();
   const userLevel = useUserLevel();
-  const sections = getSections(userRole || null, userLevel);
+  const sections = getSections(userRole || null, userLevel, t);
 
   return (
     <aside className="w-full h-full bg-white rounded-2xl overflow-y-auto overflow-x-hidden flex flex-col">

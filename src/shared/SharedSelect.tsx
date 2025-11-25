@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { cn } from "@/utils/cn";
+import { useTranslation } from "react-i18next";
 
 // Chevron down icon
 const ChevronDownIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -90,6 +91,9 @@ export function SharedSelect({
   size = "text-sm",
   clearable = true,
 }: SharedSelectProps) {
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
+
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const selectRef = useRef<HTMLDivElement>(null);
@@ -152,9 +156,18 @@ export function SharedSelect({
     <div className={cn("relative", className)}>
       {/* Label */}
       {title && (
-        <label className={`block ${size} font-bold text-[#282828] mb-3`}>
+        <label
+          className={cn(
+            `block ${size} font-bold text-[#282828] mb-3`,
+            isRTL ? "text-right" : "text-left"
+          )}
+        >
           {title}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && (
+            <span className={cn("text-red-500", isRTL ? "mr-1" : "ml-1")}>
+              *
+            </span>
+          )}
         </label>
       )}
 
@@ -166,11 +179,12 @@ export function SharedSelect({
           onClick={handleToggle}
           disabled={disabled}
           className={cn(
-            "relative w-full px-3 py-4 text-left bg-white border border-[#E2E2E2] rounded-md cursor-pointer",
+            "relative w-full px-3 py-4 bg-white border border-[#E2E2E2] rounded-md cursor-pointer",
             "focus:outline-none focus:ring-2 focus:ring-[#4E8476] focus:border-transparent",
             "disabled:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50",
             error ? "border-red-300" : "border-gray-300",
-            isOpen && !error && "ring-2 ring-[#4E8476] border-transparent"
+            isOpen && !error && "ring-2 ring-[#4E8476] border-transparent",
+            isRTL ? "text-right" : "text-left"
           )}
         >
           <span
@@ -182,7 +196,12 @@ export function SharedSelect({
             {selectedOption ? selectedOption.label : placeholder}
           </span>
 
-          <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+          <span
+            className={cn(
+              "absolute inset-y-0 flex items-center",
+              isRTL ? "left-0 pl-2" : "right-0 pr-2"
+            )}
+          >
             {selectedOption && clearable ? (
               <button
                 type="button"
@@ -215,7 +234,11 @@ export function SharedSelect({
                     value={searchTerm}
                     onChange={handleSearchChange}
                     placeholder={searchPlaceholder}
-                    className="w-full pl-1 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4E8476] focus:border-transparent"
+                    dir={isRTL ? "rtl" : "ltr"}
+                    className={cn(
+                      "w-full py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4E8476] focus:border-transparent",
+                      isRTL ? "pr-1 text-right" : "pl-1 text-left"
+                    )}
                   />
                 </div>
               </div>
@@ -224,7 +247,12 @@ export function SharedSelect({
             {/* Options list */}
             <div className="max-h-60 overflow-auto py-1">
               {filteredOptions.length === 0 ? (
-                <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                <div
+                  className={cn(
+                    "px-3 py-2 text-sm text-gray-500 text-center",
+                    isRTL ? "text-right" : "text-left"
+                  )}
+                >
                   No options found
                 </div>
               ) : (
@@ -235,16 +263,22 @@ export function SharedSelect({
                     onClick={() => handleOptionSelect(option.value)}
                     disabled={option.disabled}
                     className={cn(
-                      "relative w-full capitalize px-3 py-2 text-left text-sm hover:bg-gray-100",
+                      "relative w-full capitalize px-3 py-2 text-sm hover:bg-gray-100",
                       "focus:outline-none focus:bg-gray-100",
                       "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent",
-                      value === option.value && "bg-[#f7f7f7] text-[#4E8476]"
+                      value === option.value && "bg-[#f7f7f7] text-[#4E8476]",
+                      isRTL ? "text-right" : "text-left"
                     )}
                   >
                     <span className="block truncate">{option.label}</span>
 
                     {value === option.value && (
-                      <span className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      <span
+                        className={cn(
+                          "absolute inset-y-0 flex items-center",
+                          isRTL ? "left-0 pl-3" : "right-0 pr-3"
+                        )}
+                      >
                         <CheckIcon className="text-[#4E8476]" />
                       </span>
                     )}

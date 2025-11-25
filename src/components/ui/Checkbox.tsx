@@ -17,7 +17,7 @@ export function Checkbox({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <input
           id={checkboxId}
           type="checkbox"

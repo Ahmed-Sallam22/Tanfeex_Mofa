@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../features/auth/hooks';
 import { clearAuth } from '../features/auth/authSlice';
 import { useLogoutMutation } from '../api/auth.api';
@@ -15,6 +16,7 @@ import { attachmentsApi } from '../api/attachments.api';
 export const useLogout = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const [logoutMutation] = useLogoutMutation();
   const tokens = useAppSelector(state => state.auth.tokens);
 
@@ -44,7 +46,7 @@ export const useLogout = () => {
       localStorage.removeItem('postLoginRedirect');
       localStorage.setItem('postLoginRedirect', '/app');
 
-      toast.success('Logged out successfully');
+      toast.success(t('logoutSuccess'));
       // Navigate without state to prevent preserving the previous location
       navigate('/auth/sign-in', { replace: true, state: null });
     }

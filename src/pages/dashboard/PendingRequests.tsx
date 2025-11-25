@@ -14,10 +14,12 @@ import toast from "react-hot-toast";
 import { useGetTransferStatusQuery } from "@/api/transfer.api";
 import { useGetUsersQuery } from "@/api/user.api";
 import SharedSelect from "@/shared/SharedSelect";
+import { useTranslation } from "react-i18next";
 
 const PendingtransferData: TableRow[] = [];
 
 export default function PendingTransfer() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [q, setQ] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -118,7 +120,6 @@ export default function PendingTransfer() {
 
   // Table columns configuration
 
-
   const handleSearchChange = (text: string) => {
     console.log("Search changed:", text);
     setQ(text);
@@ -205,173 +206,173 @@ export default function PendingTransfer() {
     navigate(`/app/chat/${row.id}`, { state: { txCode: row.code } });
   };
 
-    // Selection state for delegation
-    const [selectedTransfers, setSelectedTransfers] = useState<Set<string>>(
-      new Set()
-    );
-  
-      const [isDelegateMode, setIsDelegateMode] = useState<boolean>(false);
-  
-    const [isDelegateModalOpen, setIsDelegateModalOpen] =
-      useState<boolean>(false);
+  // Selection state for delegation
+  const [selectedTransfers, setSelectedTransfers] = useState<Set<string>>(
+    new Set()
+  );
+
+  const [isDelegateMode, setIsDelegateMode] = useState<boolean>(false);
+
+  const [isDelegateModalOpen, setIsDelegateModalOpen] =
+    useState<boolean>(false);
   const [delegateUser, setDelegateUser] = useState<number | null>(null);
-  
-    const [delegateReason, setDelegateReason] = useState<string>("");
-  
-    // Load ALL users for the modal (NEW)
-    const { data: allUsers } = useGetUsersQuery();
-    const userOptions = (allUsers ?? []).map((u) => ({
-      value: u.id, // or String(u.id) if your SharedSelect needs strings
-      label: `${u.username}`,
-    }));
-    const [searchParams, setSearchParams] = useSearchParams();
-  
-    // read from URL on first render
-    useState(() => {
-      if (searchParams.get("delegate") === "1") setIsDelegateMode(true);
-    });
-  
-    const handleDelegateClick = () => {
-      setIsDelegateMode(true);
-      const next = new URLSearchParams(searchParams);
-      next.set("delegate", "1");
-      setSearchParams(next, { replace: true });
-    };
-  
-    const handleCancelDelegate = () => {
-      setIsDelegateMode(false);
-      setSelectedTransfers(new Set());
-      const next = new URLSearchParams(searchParams);
-      next.delete("delegate");
-      setSearchParams(next, { replace: true });
-    };
-  
-    // Function to generate table columns configuration
-    // ✅ Build columns then conditionally add the selection column
-    const getPendingTransferColumns = (): TableColumn[] => {
-      const cols: TableColumn[] = [
-        {
-          id: "code",
-          header: "Transaction Code",
-          accessor: "code",
-          width: 160,
-          minWidth: 140,
-          sortable: true,
-          render: (value, row) => (
-            <span
-              className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-blue-100 transition"
-              onClick={() => handleTransactionIdClick(row)}
-            >
-              {String(value)}
-            </span>
-          ),
-        },
-        {
-          id: "requested_by",
-          header: "Requested By",
-          accessor: "requested_by",
-          width: 160,
-          minWidth: 140,
-          sortable: true,
-        },
-        {
-          id: "status",
-          header: "Status",
-          accessor: "status",
-          width: 110,
-          minWidth: 90,
-          sortable: true,
-          render: (value, row) => (
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition ${
-                value === "Approved" || value === "approved" || value === "active"
-                  ? "bg-green-100 text-green-800"
-                  : value === "Pending" || value === "pending"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : value === "Rejected" || value === "rejected"
-                  ? "bg-red-100 text-red-800"
-                  : value === "In Progress" || value === "in_progress"
-                  ? "bg-blue-300 text-blue-800"
-                  : "bg-gray-100 text-gray-800"
-              }`}
-              onClick={() => handleStatusClick(row)}
-            >
-              {safeValue(value).charAt(0).toUpperCase() +
-                safeValue(value).slice(1)}
-            </span>
-          ),
-        },
-        {
-          id: "transaction_date",
-          header: "Transaction Date",
-          accessor: "transaction_date",
-          width: 150,
-          minWidth: 120,
-          sortable: true,
-        },
-        {
-          id: "amount",
-          header: "Amount",
-          accessor: "amount",
-          width: 120,
-          minWidth: 100,
-          sortable: true,
-          render: (value) => (
-            <span className="font-medium text-[#282828]">
-              {Number(value).toLocaleString()}
-            </span>
-          ),
-        },
-      ];
-  
-      if (isDelegateMode) {
-        cols.unshift({
-          id: "select",
-          header: "",
-          width: 64,
-          minWidth: 56,
-          render: (_: unknown, row) => (
-            <input
-              type="checkbox"
-              checked={selectedTransfers.has(String(row.id))}
-              onChange={(e) =>
-                handleTransferSelection(String(row.id), e.target.checked)
-              }
-              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-            />
-          ),
-        });
-      }
-  
-      return cols;
-    };
-     // Delegation handlers
-    const handleTransferSelection = (transferId: string, checked: boolean) => {
-      setSelectedTransfers((prev) => {
-        const newSet = new Set(prev);
-        if (checked) {
-          newSet.add(transferId);
-        } else {
-          newSet.delete(transferId);
-        }
-        return newSet;
+
+  const [delegateReason, setDelegateReason] = useState<string>("");
+
+  // Load ALL users for the modal (NEW)
+  const { data: allUsers } = useGetUsersQuery();
+  const userOptions = (allUsers ?? []).map((u) => ({
+    value: u.id, // or String(u.id) if your SharedSelect needs strings
+    label: `${u.username}`,
+  }));
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // read from URL on first render
+  useState(() => {
+    if (searchParams.get("delegate") === "1") setIsDelegateMode(true);
+  });
+
+  const handleDelegateClick = () => {
+    setIsDelegateMode(true);
+    const next = new URLSearchParams(searchParams);
+    next.set("delegate", "1");
+    setSearchParams(next, { replace: true });
+  };
+
+  const handleCancelDelegate = () => {
+    setIsDelegateMode(false);
+    setSelectedTransfers(new Set());
+    const next = new URLSearchParams(searchParams);
+    next.delete("delegate");
+    setSearchParams(next, { replace: true });
+  };
+
+  // Function to generate table columns configuration
+  // ✅ Build columns then conditionally add the selection column
+  const getPendingTransferColumns = (): TableColumn[] => {
+    const cols: TableColumn[] = [
+      {
+        id: "code",
+        header: t("pendingRequests.transactionCode"),
+        accessor: "code",
+        width: 160,
+        minWidth: 140,
+        sortable: true,
+        render: (value, row) => (
+          <span
+            className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-blue-100 transition"
+            onClick={() => handleTransactionIdClick(row)}
+          >
+            {String(value)}
+          </span>
+        ),
+      },
+      {
+        id: "requested_by",
+        header: t("pendingRequests.requestedBy"),
+        accessor: "requested_by",
+        width: 160,
+        minWidth: 140,
+        sortable: true,
+      },
+      {
+        id: "status",
+        header: t("common.status"),
+        accessor: "status",
+        width: 110,
+        minWidth: 90,
+        sortable: true,
+        render: (value, row) => (
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition ${
+              value === "Approved" || value === "approved" || value === "active"
+                ? "bg-green-100 text-green-800"
+                : value === "Pending" || value === "pending"
+                ? "bg-yellow-100 text-yellow-800"
+                : value === "Rejected" || value === "rejected"
+                ? "bg-red-100 text-red-800"
+                : value === "In Progress" || value === "in_progress"
+                ? "bg-blue-300 text-blue-800"
+                : "bg-gray-100 text-gray-800"
+            }`}
+            onClick={() => handleStatusClick(row)}
+          >
+            {safeValue(value).charAt(0).toUpperCase() +
+              safeValue(value).slice(1)}
+          </span>
+        ),
+      },
+      {
+        id: "transaction_date",
+        header: t("pendingRequests.transactionDate"),
+        accessor: "transaction_date",
+        width: 150,
+        minWidth: 120,
+        sortable: true,
+      },
+      {
+        id: "amount",
+        header: t("pendingRequests.amount"),
+        accessor: "amount",
+        width: 120,
+        minWidth: 100,
+        sortable: true,
+        render: (value) => (
+          <span className="font-medium text-[#282828]">
+            {Number(value).toLocaleString()}
+          </span>
+        ),
+      },
+    ];
+
+    if (isDelegateMode) {
+      cols.unshift({
+        id: "select",
+        header: "",
+        width: 64,
+        minWidth: 56,
+        render: (_: unknown, row) => (
+          <input
+            type="checkbox"
+            checked={selectedTransfers.has(String(row.id))}
+            onChange={(e) =>
+              handleTransferSelection(String(row.id), e.target.checked)
+            }
+            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+          />
+        ),
       });
-    };
-  
-    const handleSelectAll = (checked: boolean) => {
+    }
+
+    return cols;
+  };
+  // Delegation handlers
+  const handleTransferSelection = (transferId: string, checked: boolean) => {
+    setSelectedTransfers((prev) => {
+      const newSet = new Set(prev);
       if (checked) {
-        const allIds = new Set(tableData.map((row) => String(row.id)));
-        setSelectedTransfers(allIds);
+        newSet.add(transferId);
       } else {
-        setSelectedTransfers(new Set());
+        newSet.delete(transferId);
       }
-    };
-  
-    const handleOpenDelegateModal = () => {
-      setIsDelegateModalOpen(true);
-    };
-  
-      const handleConfirmDelegate = async () => {
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = new Set(tableData.map((row) => String(row.id)));
+      setSelectedTransfers(allIds);
+    } else {
+      setSelectedTransfers(new Set());
+    }
+  };
+
+  const handleOpenDelegateModal = () => {
+    setIsDelegateModalOpen(true);
+  };
+
+  const handleConfirmDelegate = async () => {
     console.log("Delegating to user ID:", delegateUser);
 
     if (!delegateUser) {
@@ -408,8 +409,10 @@ export default function PendingTransfer() {
 
   return (
     <div>
-     <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold tracking-wide">Pending Requests</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold tracking-wide">
+          {t("pendingRequests.title")}
+        </h1>
 
         {!isDelegateMode ? (
           <button
@@ -430,7 +433,7 @@ export default function PendingTransfer() {
                 strokeLinecap="round"
               />
             </svg>
-            Delegate
+            {t("pendingRequests.delegate")}
           </button>
         ) : (
           <div className="flex items-center gap-2">
@@ -438,58 +441,56 @@ export default function PendingTransfer() {
               onClick={handleCancelDelegate}
               className="flex items-center gap-2 px-3 py-2 bg-transparent border border-[#4E8476] text-[#4E8476] hover:bg-[#4E8476] hover:text-white  rounded-md transition-colors font-medium"
             >
-              Cancel
+              {t("pendingRequests.cancelDelegate")}
             </button>
             <button
               onClick={handleOpenDelegateModal}
               className="flex items-center gap-2 px-3 py-2 bg-[#4E8476] hover:bg-[#3d6b5f] text-white rounded-md transition-colors font-medium"
               disabled={selectedTransfers.size === 0}
             >
-              Proceed to Delegate
+              {t("pendingRequests.proceedToDelegate")}
             </button>
           </div>
         )}
       </div>
 
-      
-         <div className="p-4 bg-white rounded-2xl mt-4">
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <SearchBar
-          placeholder="Search  Pending Requests"
-                    value={q}
-                    onChange={handleSearchChange}
-                    onSubmit={doSearch}
-                    dir="ltr"
-                    debounce={250}
-                  />
-                </div>
-      
-                {isDelegateMode && (
-                  <div className="flex items-center gap-2">
-                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                      <input
-                        type="checkbox"
-                        checked={
-                          selectedTransfers.size > 0 &&
-                          selectedTransfers.size === tableData.length
-                        }
-                        onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      Select All
-                    </label>
-                  </div>
-                )}
-              </div>
+      <div className="p-4 bg-white rounded-2xl mt-4">
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <SearchBar
+              placeholder={t("pendingRequests.searchPlaceholder")}
+              value={q}
+              onChange={handleSearchChange}
+              onSubmit={doSearch}
+              debounce={250}
+            />
+          </div>
+
+          {isDelegateMode && (
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 text-sm text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={
+                    selectedTransfers.size > 0 &&
+                    selectedTransfers.size === tableData.length
+                  }
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                />
+                {t("pendingRequests.selectAll")}
+              </label>
             </div>
+          )}
+        </div>
+      </div>
 
       {/* Transfer Table */}
       <div className="mt-6">
         {isLoading ? (
           <div className="flex justify-center items-center h-64 bg-white rounded-lg">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-600">Loading transfers...</span>
+            <span className="ml-2 text-gray-600">{t("pendingRequests.loadingTransfers")}</span>
           </div>
         ) : error ? (
           <div className="flex justify-center items-center h-64 bg-gradient-to-br from-red-50 to-rose-100 rounded-2xl border border-red-100 shadow-sm">
@@ -513,11 +514,10 @@ export default function PendingTransfer() {
               </div>
               <div className="space-y-3">
                 <h3 className="text-red-800 font-bold text-xl">
-                  Unable to load transfers
+                  {t("pendingRequests.unableToLoadTransfers")}
                 </h3>
                 <p className="text-red-600 text-sm leading-relaxed">
-                  We're having trouble connecting to our servers. This might be
-                  a temporary issue.
+                  {t("pendingRequests.connectionTrouble")}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2 justify-center mt-6">
                   <button
@@ -538,14 +538,14 @@ export default function PendingTransfer() {
                           d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                         />
                       </svg>
-                      Try Again
+                      {t("pendingRequests.tryAgain")}
                     </span>
                   </button>
                   <button
                     className="px-6 py-3 bg-white text-red-600 border-2 border-red-200 rounded-xl font-medium hover:bg-red-50 transform hover:scale-105 transition-all duration-200"
                     onClick={() => setCurrentPage(1)}
                   >
-                    Reset Filters
+                    {t("pendingRequests.resetFilters")}
                   </button>
                 </div>
               </div>
@@ -553,11 +553,11 @@ export default function PendingTransfer() {
           </div>
         ) : (
           <SharedTable
-            title="Recent Pending Requests"
+            title={t("pendingRequests.recentPendingRequests")}
             columns={getPendingTransferColumns()}
             data={tableData}
             onFilter={handleFilter}
-            filterLabel="Filter Pending Requests"
+            filterLabel={t("pendingRequests.filterPendingRequests")}
             maxHeight="600px"
             className="shadow-lg"
             showPagination={true}
@@ -583,29 +583,26 @@ export default function PendingTransfer() {
           setIsApproveModalOpen(false);
           setReason(""); // Clear reason when closing modal
         }}
-        title="Approve Budget Request"
+        title={t("pendingRequests.approveBudgetRequest")}
         size="md"
       >
         <div className="p-4">
           <div className="flex items-center gap-3 mb-4">
             <p className="text-sm text-[#282828]">
-              {" "}
-              You're about to approve this budget request. Once approved, the
-              requester will be notified, and the process will move to the next
-              stage. Are you sure you want to continue?
+              {t("pendingRequests.approveMessage")}
             </p>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
-              Reason (Optional)
+              {t("pendingRequests.reasonOptional")}
             </label>
             <textarea
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
-              placeholder="Add any comments or notes (optional)..."
+              placeholder={t("pendingRequests.addComments")}
             />
           </div>
 
@@ -617,13 +614,13 @@ export default function PendingTransfer() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700  border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              {t("pendingRequests.cancel")}
             </button>
             <button
               onClick={confirmApprove}
               className="px-4 py-2 text-sm font-medium text-white bg-[#00A350]  border border-green-600 rounded-md hover:bg-green-700 transition-colors"
             >
-              Approve
+              {t("pendingRequests.approve")}
             </button>
           </div>
         </div>
@@ -636,30 +633,28 @@ export default function PendingTransfer() {
           setIsRejectModalOpen(false);
           setReason(""); // Clear reason when closing modal
         }}
-        title="Reject Transfer"
+        title={t("pendingRequests.rejectTransfer")}
         size="md"
       >
         <div className="p-4">
           <div className="flex items-center gap-3 mb-4">
             <div>
               <p className="text-sm text-[#282828]">
-                You're about to reject this budget request. This action cannot
-                be undone. Please provide a clear reason for rejection so the
-                requester understands the next steps.
+                {t("pendingRequests.rejectMessage")}
               </p>
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
-              Reason for rejection (Optional)
+              {t("pendingRequests.reasonForRejectionOptional")}
             </label>
             <textarea
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
-              placeholder="Describe the reason for rejection (optional)..."
+              placeholder={t("pendingRequests.describeReason")}
             />
           </div>
 
@@ -677,7 +672,7 @@ export default function PendingTransfer() {
               onClick={confirmReject}
               className="px-4 py-2 text-sm font-medium text-white bg-[#D44333] border border-red-600 rounded-md hover:bg-red-700 transition-colors"
             >
-              Reject Transfer
+              {t("pendingRequests.rejectTransferButton")}
             </button>
           </div>
         </div>
@@ -690,20 +685,20 @@ export default function PendingTransfer() {
           setIsStatusModalOpen(false);
           setStatusTransactionId(null); // Clear the transaction ID when closing
         }}
-        title="Transfer Status Pipeline"
+        title={t("pendingRequests.transferStatusPipeline")}
         size="lg"
       >
         <div className="p-6">
           {isLoadingStatus ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600">Loading status...</span>
+              <span className="ml-2 text-gray-600">{t("pendingRequests.loadingStatus")}</span>
             </div>
           ) : statusError ? (
             <div className="flex justify-center items-center py-12">
               <div className="text-center">
                 <div className="text-red-500 text-lg mb-2">⚠️</div>
-                <p className="text-gray-600">Failed to load status</p>
+                <p className="text-gray-600">{t("pendingRequests.failedToLoadStatus")}</p>
               </div>
             </div>
           ) : statusData ? (
@@ -711,7 +706,7 @@ export default function PendingTransfer() {
               {/* Approval Stages Pipeline */}
               <div className="space-y-4">
                 <h4 className="text-md font-semibold text-gray-800 mb-4">
-                  Approval Stages
+                  {t("pendingRequests.approvalStages")}
                 </h4>
 
                 <div className="relative">
@@ -809,14 +804,14 @@ export default function PendingTransfer() {
                               {stage.name}
                             </h5>
                             <span className="text-xs text-gray-500">
-                              Stage {stage.order_index}
+                              {t("pendingRequests.stage")} {stage.order_index}
                             </span>
                           </div>
 
                           <div className="flex items-center justify-between text-sm text-gray-600">
                             <span>
                               <span className="font-medium">
-                                Decision Policy:
+                                {t("pendingRequests.decisionPolicy")}:
                               </span>{" "}
                               {stage.decision_policy}
                             </span>
@@ -838,7 +833,7 @@ export default function PendingTransfer() {
                                     clipRule="evenodd"
                                   />
                                 </svg>
-                                <span className="font-medium">Approved</span>
+                                <span className="font-medium">{t("pendingRequests.approved")}</span>
                               </div>
                             ) : stage.status === "pending" ? (
                               <div className="flex items-center text-yellow-600">
@@ -854,7 +849,7 @@ export default function PendingTransfer() {
                                   />
                                 </svg>
                                 <span className="font-medium">
-                                  Awaiting Approval
+                                  {t("pendingRequests.awaitingApproval")}
                                 </span>
                               </div>
                             ) : stage.status === "rejected" ? (
@@ -870,12 +865,12 @@ export default function PendingTransfer() {
                                     clipRule="evenodd"
                                   />
                                 </svg>
-                                <span className="font-medium">Rejected</span>
+                                <span className="font-medium">{t("pendingRequests.rejected")}</span>
                               </div>
                             ) : (
                               <div className="flex items-center text-blue-700">
                                 <div className="w-4 h-4 bg-blue-700 rounded-full mr-1"></div>
-                                <span className="font-medium">In Progress</span>
+                                <span className="font-medium">{t("pendingRequests.inProgress")}</span>
                               </div>
                             )}
                           </div>
@@ -889,7 +884,7 @@ export default function PendingTransfer() {
           ) : (
             <div className="text-center py-12 text-gray-500">
               <div className="text-gray-400 text-2xl mb-2">📋</div>
-              <p>No status information available</p>
+              <p>{t("pendingRequests.noStatusAvailable")}</p>
             </div>
           )}
 
@@ -902,12 +897,12 @@ export default function PendingTransfer() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Close
+              {t("pendingRequests.close")}
             </button>
           </div>
         </div>
       </SharedModal>
-        {/* Delegate Modal */}
+      {/* Delegate Modal */}
       <SharedModal
         isOpen={isDelegateModalOpen}
         onClose={() => {
@@ -915,15 +910,13 @@ export default function PendingTransfer() {
           setDelegateUser(null);
           setDelegateReason("");
         }}
-        title="Delegate Transfers"
+        title={t("pendingRequests.delegateTransfers")}
         size="md"
       >
         <div className="p-4">
           <div className="mb-4">
             <p className="text-sm text-[#282828] mb-4">
-              You're about to delegate {selectedTransfers.size} transfer(s) to
-              another user. Please select the user and provide a reason for the
-              delegation.
+              {t("pendingRequests.delegateMessage", { count: selectedTransfers.size })}
             </p>
           </div>
 
@@ -931,14 +924,15 @@ export default function PendingTransfer() {
             {/* User Selection */}
             <div>
               <SharedSelect
-                title="Select User"
+                title={t("pendingRequests.selectUser")}
                 required={true}
                 value={delegateUser !== null ? String(delegateUser) : ""}
                 onChange={(value) => {
-                  const numericValue = typeof value === 'string' ? parseInt(value, 10) : value;
+                  const numericValue =
+                    typeof value === "string" ? parseInt(value, 10) : value;
                   setDelegateUser(numericValue);
                 }}
-                placeholder="Choose a user to delegate to"
+                placeholder={t("pendingRequests.chooseUserToDelegate")}
                 options={userOptions}
               />
             </div>
@@ -946,14 +940,14 @@ export default function PendingTransfer() {
             {/* Reason */}
             <div>
               <label className="block text-sm font-bold text-[#282828] mb-2">
-                Reason for Delegation
+                {t("pendingRequests.reasonForDelegation")}
               </label>
               <textarea
                 rows={5}
                 value={delegateReason}
                 onChange={(e) => setDelegateReason(e.target.value)}
                 className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
-                placeholder="Provide a reason for delegating these transfers..."
+                placeholder={t("pendingRequests.provideDelegateReason")}
               />
             </div>
           </div>
@@ -967,14 +961,14 @@ export default function PendingTransfer() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              {t("pendingRequests.cancel")}
             </button>
             <button
               onClick={handleConfirmDelegate}
               disabled={!delegateUser}
               className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#3d6b5f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Confirm Delegation
+              {t("pendingRequests.confirmDelegation")}
             </button>
           </div>
         </div>

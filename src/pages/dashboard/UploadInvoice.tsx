@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Upload, Download, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { useUploadInvoiceMutation } from "@/api/invoice.api";
 
 // Allowed file extensions from the UI in the screenshot
@@ -27,6 +28,7 @@ function formatDMY(d: Date) {
 }
 
 export default function UploadInvoices() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [files, setFiles] = useState<File[]>([]);
   const [drag, setDrag] = useState(false);
@@ -39,7 +41,7 @@ export default function UploadInvoices() {
 
   const validate = (f: File) => {
     const ok = ACCEPTED.some((ext) => f.name.toLowerCase().endsWith(ext));
-    if (!ok) toast.error(`Unsupported file: ${f.name}`);
+    if (!ok) toast.error(t("invoice.unsupportedFile", { fileName: f.name }));
     return ok;
   };
 
@@ -52,7 +54,12 @@ export default function UploadInvoices() {
       list.forEach((f) => map.set(`${f.name}-${f.size}`, f));
       return Array.from(map.values());
     });
-    toast.success(`${list.length} file${list.length > 1 ? "s" : ""} added`);
+    toast.success(
+      t("invoice.filesAdded", {
+        count: list.length,
+        plural: list.length > 1 ? "s" : "",
+      })
+    );
   };
 
   const onDrop = (e: React.DragEvent) => {
@@ -91,7 +98,7 @@ export default function UploadInvoices() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!files.length) {
-      toast.error("Please add at least one file");
+      toast.error(t("invoice.addAtLeastOneFile"));
       return;
     }
 
@@ -105,7 +112,7 @@ export default function UploadInvoices() {
 
       const response = await uploadInvoice(formData).unwrap();
 
-      toast.success("Invoice uploaded and extracted successfully");
+      toast.success(t("invoice.uploadSuccess"));
 
       // Navigate to invoice details with the invoice number and pass the extracted data
       navigate(`/app/Document_I/O/${response.invoice_number}`, {
@@ -113,7 +120,7 @@ export default function UploadInvoices() {
       });
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Failed to upload invoice. Please try again.");
+      toast.error(t("invoice.uploadFailed"));
     } finally {
       setIsUploading(false);
     }
@@ -128,18 +135,22 @@ export default function UploadInvoices() {
             onClick={() => navigate("/app/Document_I/O")}
             className="flex items-center gap-2 text-[#4E8476] hover:text-[#3d6b5f] transition-colors"
           >
-            All Invoices
+            {t("invoice.allInvoices")}
           </button>
           <span className="text-[#757575]">/</span>
-          <span className="font-medium text-[#282828]">Upload Invoice</span>
+          <span className="font-medium text-[#282828]">
+            {t("invoice.uploadInvoice")}
+          </span>
         </div>
       </div>
 
       {/* Card */}
       <div className="bg-white rounded-2xl shadow-sm ring-1 ring-black/5 p-6">
-        <h2 className="text-lg  text-[#282828]">Upload Invoices</h2>
+        <h2 className="text-lg  text-[#282828]">
+          {t("invoice.uploadInvoices")}
+        </h2>
         <p className="text-[13px] tracking-wider text-[#AFAFAF] mt-1">
-          Drag & drop or select PDF, JPG/PNG, XLSX, or ZIP (bulk).
+          {t("invoice.dragDropInstructions")}
         </p>
 
         {/* Dropzone */}
@@ -188,11 +199,11 @@ export default function UploadInvoices() {
             </div>
             <div>
               <p className="text-lg font-medium text-gray-900">
-                Drag & drop Excel file or{" "}
-                <span className="text-[#4E8476]">browse</span>
+                {t("invoice.dragDropExcel")}{" "}
+                <span className="text-[#4E8476]">{t("invoice.browse")}</span>
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                Supported formats: xlsx, .pdf, .doc, .docx
+                {t("invoice.supportedFormatsLong")}
               </p>
             </div>
           </div>
@@ -239,7 +250,7 @@ export default function UploadInvoices() {
                   type="button"
                   onClick={() => downloadTemp(f)}
                   className="p-2 rounded-lg cursor-pointer bg-[#EEEEEE] hover:bg-gray-100"
-                  title="Download"
+                  title={t("invoice.download")}
                 >
                   <Download className="h-5 w-5 text-gray-700" />
                 </button>
@@ -247,7 +258,7 @@ export default function UploadInvoices() {
                   type="button"
                   onClick={() => removeAt(i)}
                   className="p-2 rounded-lg hover:bg-red-50"
-                  title="Remove"
+                  title={t("invoice.remove")}
                 >
                   <Trash2 className="h-5 w-5 text-red-600" />
                 </button>
@@ -264,7 +275,7 @@ export default function UploadInvoices() {
             className="px-6 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             disabled={isUploading}
           >
-            Cancel
+            {t("invoice.cancel")}
           </button>
           <button
             onClick={onSubmit}
@@ -274,12 +285,12 @@ export default function UploadInvoices() {
             {isUploading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                Uploading...
+                {t("invoice.uploading")}
               </>
             ) : (
               <>
                 <Upload className="h-4 w-4" />
-                Upload & Extract
+                {t("invoice.uploadAndExtract")}
               </>
             )}
           </button>

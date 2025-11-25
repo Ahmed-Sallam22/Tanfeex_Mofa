@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   SharedTable,
   type TableColumn,
@@ -15,6 +16,7 @@ import toast from "react-hot-toast";
 
 export default function WorkFlow() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
@@ -44,11 +46,11 @@ export default function WorkFlow() {
     const workflow = row as unknown as WorkflowTemplate;
     try {
       await deleteWorkflowTemplate(workflow.id).unwrap();
-      toast.success("Workflow template deleted successfully");
+      toast.success(t("workflow.deleteSuccess"));
       // Success feedback could be added here (toast notification, etc.)
     } catch (error) {
       console.error("Failed to delete workflow template:", error);
-      toast.error("Failed to delete workflow template");
+      toast.error(t("workflow.deleteFailed"));
       // Error feedback could be added here
     }
   };
@@ -66,7 +68,7 @@ export default function WorkFlow() {
   const columns: TableColumn[] = [
     {
       id: "code",
-      header: "Code",
+      header: t("workflow.workflowCode"),
       render: (_, row) => {
         const workflow = row as unknown as WorkflowTemplate;
         return (
@@ -78,7 +80,7 @@ export default function WorkFlow() {
     },
     {
       id: "name",
-      header: "Name",
+      header: t("common.name"),
       render: (_, row) => {
         const workflow = row as unknown as WorkflowTemplate;
         return <span className="text-sm text-gray-900">{workflow.name}</span>;
@@ -86,7 +88,7 @@ export default function WorkFlow() {
     },
     {
       id: "transfer_type",
-      header: "Transfer Type",
+      header: t("workflow.transferType"),
       render: (_, row) => {
         const workflow = row as unknown as WorkflowTemplate;
         return (
@@ -98,7 +100,7 @@ export default function WorkFlow() {
     },
     {
       id: "description",
-      header: "Description",
+      header: t("common.description"),
       render: (_, row) => {
         const workflow = row as unknown as WorkflowTemplate;
 
@@ -106,16 +108,16 @@ export default function WorkFlow() {
           <button
             onClick={() => handleDescriptionClick(workflow)}
             className="text-sm text-gray-900 bg-gray-100 p-2 rounded-md truncate max-w-xs hover:bg-gray-200 transition-colors cursor-pointer text-left"
-            title="Click to view full description"
+            title={t("workflow.viewDescription")}
           >
-            Description
+            {t("common.description")}
           </button>
         );
       },
     },
     {
       id: "version",
-      header: "Version",
+      header: t("workflow.workflowVersion"),
       render: (_, row) => {
         const workflow = row as unknown as WorkflowTemplate;
         return (
@@ -125,7 +127,7 @@ export default function WorkFlow() {
     },
     {
       id: "is_active",
-      header: "Status",
+      header: t("tableColumns.status"),
       render: (_, row) => {
         const workflow = row as unknown as WorkflowTemplate;
         return (
@@ -136,7 +138,7 @@ export default function WorkFlow() {
                 : "bg-red-100 text-red-800"
             }`}
           >
-            {workflow.is_active ? "Active" : "Inactive"}
+            {workflow.is_active ? t("workflow.active") : t("workflow.inactive")}
           </span>
         );
       },
@@ -148,7 +150,9 @@ export default function WorkFlow() {
     return (
       <div className="flex justify-center items-center h-64 bg-white rounded-lg">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Loading workflows...</span>
+        <span className="ml-2 text-gray-600">
+          {t("workflow.loadingWorkflows")}
+        </span>
       </div>
     );
   }
@@ -176,7 +180,9 @@ export default function WorkFlow() {
     <div>
       {/* Header with title and Create New Workflow button */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">WorkFlows</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">
+          {t("workflow.workflows")}
+        </h1>
 
         <button
           onClick={handleCreateNewWorkflow}
@@ -197,14 +203,14 @@ export default function WorkFlow() {
               strokeLinejoin="round"
             />
           </svg>
-          Create New Workflow
+          {t("workflow.createNewWorkflow")}
         </button>
       </div>
 
       {/* Workflows List Table */}
       <div className="bg-white rounded-lg shadow-sm">
         <SharedTable
-          title="Workflows List"
+          title={t("workflow.workflowsList")}
           columns={columns}
           data={workflows as unknown as SharedTableRow[]}
           showFooter={false}
@@ -223,7 +229,7 @@ export default function WorkFlow() {
       <SharedModal
         isOpen={isDescriptionModalOpen}
         onClose={() => setIsDescriptionModalOpen(false)}
-        title="Workflow Description"
+        title={t("workflow.workflowDescription")}
         size="md"
       >
         <div className="p-4">
@@ -232,7 +238,8 @@ export default function WorkFlow() {
               <div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-sm text-gray-900 leading-relaxed">
-                    {selectedWorkflow.description || "No description available"}
+                    {selectedWorkflow.description ||
+                      t("workflow.noDescription")}
                   </p>
                 </div>
               </div>
@@ -244,7 +251,7 @@ export default function WorkFlow() {
               onClick={() => setIsDescriptionModalOpen(false)}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Close
+              {t("common.close")}
             </button>
           </div>
         </div>

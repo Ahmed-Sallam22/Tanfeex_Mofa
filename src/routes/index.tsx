@@ -23,7 +23,7 @@ import AddWorkFlow from "@/pages/dashboard/AddWorkFlow";
 import WorkFlow from "@/pages/dashboard/WorkFlow";
 // import Envelope from "@/pages/dashboard/Envelope";
 import Chat from "@/pages/dashboard/Chat";
-import DocumentIO from "@/pages/dashboard/DocumentIO";
+// import DocumentIO from "@/pages/dashboard/DocumentIO";
 import InvoiceDetails from "@/pages/dashboard/InvoiceDetails";
 import UploadInvoice from "@/pages/dashboard/UploadInvoice";
 import SegmentConfiguration from "@/pages/dashboard/SegmentConfiguration";
@@ -242,14 +242,14 @@ export default function AppRoutes() {
               </RoleProtectedRoute>
             }
           />
-          <Route
+          {/* <Route
             path="Document_I/O"
             element={
               <RoleProtectedRoute allowedRoles={["superadmin"]}>
                 <DocumentIO />
               </RoleProtectedRoute>
             }
-          />
+          /> */}
           <Route
             path="Document_I/O/:id"
             element={

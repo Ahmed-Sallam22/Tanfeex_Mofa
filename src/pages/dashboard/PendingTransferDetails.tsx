@@ -12,6 +12,8 @@ import { useBulkApproveRejectTransferMutation } from "@/api/pendingTransfer.api"
 import toast from "react-hot-toast";
 import { formatNumber } from "@/utils/formatNumber";
 import { useGetSegmentTypesQuery } from "@/api/segmentConfiguration.api";
+import { useTranslation } from "react-i18next";
+import { cn } from "@/utils/cn";
 
 interface TransferTableRow {
   id: string;
@@ -42,6 +44,8 @@ interface TransferTableRow {
 }
 
 export default function PendingTransferDetails() {
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
@@ -197,9 +201,9 @@ export default function PendingTransferDetails() {
     segmentName: string
   ): string => {
     const translations: Record<number, string> = {
-      5: "Mofa Geographic",
-      9: "Mofa Cost Center",
-      11: "Mofa Budget",
+      5: t("pendingTransferDetails.mofaGeographic"),
+      9: t("pendingTransferDetails.mofaCostCenter"),
+      11: t("pendingTransferDetails.mofaBudget"),
     };
     return translations[segmentNumber] || segmentName;
   };
@@ -254,7 +258,7 @@ export default function PendingTransferDetails() {
 
     {
       id: "encumbrance",
-      header: "Encumbrance",
+      header: t("pendingTransferDetails.encumbrance"),
       showSum: true,
 
       render: (_, row) => {
@@ -267,7 +271,7 @@ export default function PendingTransferDetails() {
     },
     {
       id: "availableBudget",
-      header: "Available Budget",
+      header: t("pendingTransferDetails.availableBudget"),
       showSum: true,
 
       render: (_, row) => {
@@ -281,7 +285,7 @@ export default function PendingTransferDetails() {
 
     {
       id: "actual",
-      header: "Actual",
+      header: t("pendingTransferDetails.actual"),
       showSum: true,
 
       render: (_, row) => {
@@ -294,7 +298,7 @@ export default function PendingTransferDetails() {
     },
     {
       id: "commitments",
-      header: "Commitments",
+      header: t("pendingTransferDetails.commitments"),
       showSum: true,
 
       render: (_, row) => {
@@ -307,7 +311,7 @@ export default function PendingTransferDetails() {
     },
     {
       id: "obligations",
-      header: "Obligations",
+      header: t("pendingTransferDetails.obligations"),
       showSum: true,
 
       render: (_, row) => {
@@ -320,7 +324,7 @@ export default function PendingTransferDetails() {
     },
     {
       id: "other_consumption",
-      header: "Other Consumption",
+      header: t("pendingTransferDetails.otherConsumption"),
       showSum: true,
 
       render: (_, row) => {
@@ -333,7 +337,7 @@ export default function PendingTransferDetails() {
     },
     {
       id: "approvedBudget",
-      header: "Approved Budget",
+      header: t("pendingTransferDetails.approvedBudget"),
       showSum: true,
 
       render: (_, row) => {
@@ -346,7 +350,7 @@ export default function PendingTransferDetails() {
     },
     {
       id: "total_budget",
-      header: "Total Budget",
+      header: t("pendingTransferDetails.totalBudget"),
       showSum: true,
 
       render: (_, row) => {
@@ -359,7 +363,7 @@ export default function PendingTransferDetails() {
     },
     {
       id: "initial_budget",
-      header: "Initial Budget",
+      header: t("pendingTransferDetails.initialBudget"),
       showSum: true,
 
       render: (_, row) => {
@@ -372,7 +376,7 @@ export default function PendingTransferDetails() {
     },
     {
       id: "budget_adjustments",
-      header: "Budget Adjustments",
+      header: t("pendingTransferDetails.budgetAdjustments"),
       showSum: true,
 
       render: (_, row) => {
@@ -385,7 +389,7 @@ export default function PendingTransferDetails() {
     },
     {
       id: "other_ytd",
-      header: "Other YTD",
+      header: t("pendingTransferDetails.otherYTD"),
       showSum: true,
 
       render: (_, row) => {
@@ -398,7 +402,7 @@ export default function PendingTransferDetails() {
     },
     {
       id: "period",
-      header: "Period",
+      header: t("pendingTransferDetails.period"),
 
       render: (_, row) => {
         const transferRow = row as unknown as TransferTableRow;
@@ -409,7 +413,7 @@ export default function PendingTransferDetails() {
     },
     {
       id: "costValue",
-      header: "50% of Cost Budget",
+      header: t("pendingTransferDetails.costBudget"),
       showSum: true,
 
       render: (_, row) => {
@@ -434,7 +438,7 @@ export default function PendingTransferDetails() {
     },
     {
       id: "from",
-      header: "From",
+      header: t("pendingTransferDetails.from"),
       showSum: true,
 
       render: (_, row) => {
@@ -449,7 +453,7 @@ export default function PendingTransferDetails() {
     },
     {
       id: "to",
-      header: "To",
+      header: t("pendingTransferDetails.to"),
       showSum: true,
 
       render: (_, row) => {
@@ -560,16 +564,21 @@ export default function PendingTransferDetails() {
   return (
     <div>
       {/* Header with back button */}
-      <div className="flex items-center gap-2 mb-6">
+      <div
+        className={cn(
+          "flex items-center gap-2 mb-6",
+          isRTL ? "text-right" : "text-left"
+        )}
+      >
         <button
           onClick={handleBack}
           className="flex items-center gap-2  cursor-pointer py-2 text-lg text-[#4E8476] hover:text-[#4E8476] "
         >
-          Pendeing Transfer
+          {t("pendingTransferDetails.title")}
         </button>
         <span className="text-[#737373] text-lg">/</span>
         <h1 className="text-lg  text-[#737373] font-light tracking-wide">
-          Code
+          {t("pendingTransferDetails.code")}
         </h1>
       </div>
 
@@ -593,7 +602,7 @@ export default function PendingTransferDetails() {
           onClick={() => handleReject(selectedRow!)}
           className="px-4 py-1.5 border border-[#D44333] text-[#D44333] rounded-md hover:bg-red-50 transition"
         >
-          Reject
+          {t("pendingTransferDetails.reject")}
         </button>
 
         {/* مسافة صغيرة */}
@@ -604,7 +613,7 @@ export default function PendingTransferDetails() {
           onClick={() => handleApprove(selectedRow!)}
           className="px-4 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
         >
-          Approve
+          {t("pendingTransferDetails.approve")}
         </button>
       </div>
 
@@ -615,29 +624,27 @@ export default function PendingTransferDetails() {
           setIsApproveModalOpen(false);
           setReason(""); // Clear reason when closing modal
         }}
-        title="Approve Budget Request"
+        title={t("pendingTransfer.approveBudgetRequest")}
         size="md"
       >
         <div className="p-4">
           <div className="flex items-center gap-3 mb-4">
             <p className="text-sm text-[#282828]">
               {" "}
-              You're about to approve this budget request. Once approved, the
-              requester will be notified, and the process will move to the next
-              stage. Are you sure you want to continue?
+              {t("pendingTransfer.approveMessage")}
             </p>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
-              Reason (Optional)
+              {t("pendingTransfer.reasonOptional")}
             </label>
             <textarea
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
-              placeholder="Add any comments or notes (optional)..."
+              placeholder={t("pendingTransfer.addComments")}
             />
           </div>
 
@@ -649,13 +656,13 @@ export default function PendingTransferDetails() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700  border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              {t("pendingTransfer.cancel")}
             </button>
             <button
               onClick={confirmApprove}
               className="px-4 py-2 text-sm font-medium text-white bg-[#00A350]  border border-green-600 rounded-md hover:bg-green-700 transition-colors"
             >
-              Approve
+              {t("pendingTransfer.approve")}
             </button>
           </div>
         </div>
@@ -668,30 +675,28 @@ export default function PendingTransferDetails() {
           setIsRejectModalOpen(false);
           setReason(""); // Clear reason when closing modal
         }}
-        title="Reject Transfer"
+        title={t("pendingTransfer.rejectTransfer")}
         size="md"
       >
         <div className="p-4">
           <div className="flex items-center gap-3 mb-4">
             <div>
               <p className="text-sm text-[#282828]">
-                You're about to reject this budget request. This action cannot
-                be undone. Please provide a clear reason for rejection so the
-                requester understands the next steps.
+                {t("pendingTransfer.rejectMessage")}
               </p>
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
-              Reason for rejection (Optional)
+              {t("pendingTransfer.reasonForRejectionOptional")}
             </label>
             <textarea
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
-              placeholder="Describe the reason for rejection (optional)..."
+              placeholder={t("pendingTransfer.describeReason")}
             />
           </div>
 
@@ -703,13 +708,13 @@ export default function PendingTransferDetails() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700  border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              {t("pendingTransfer.cancel")}
             </button>
             <button
               onClick={confirmReject}
               className="px-4 py-2 text-sm font-medium text-white bg-[#D44333] border border-red-600 rounded-md hover:bg-red-700 transition-colors"
             >
-              Reject Transfer
+              {t("pendingTransfer.rejectTransferButton")}
             </button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/utils/cn";
 import { formatNumber } from "@/utils/formatNumber";
+import { useTranslation } from "react-i18next";
 
 // Arrow icons for pagination
 const ArrowLeftIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -271,6 +272,9 @@ export function SharedTable({
   onColumnFilterChange, // Callback when filters change
   initialColumnFilters, // Initial filter values from parent
 }: SharedTableProps) {
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
+
   const [columnWidths, setColumnWidths] = useState<{ [key: string]: number }>(
     {}
   );
@@ -864,13 +868,14 @@ export function SharedTable({
       >
         {/* Header with title and filter or save button */}
         {(title || onFilter || showSaveButton) && (
-          <div className="flex items-center justify-between mb-4 px-2">
-            <div className="flex items-center gap-3">
+          <div className={cn("flex items-center justify-between mb-4 px-2")}>
+            <div className={cn("flex items-center gap-3")}>
               {title ? (
                 <h2
                   className={cn(
                     "text-gray-900",
-                    titleSize === "lg" ? "text-lg" : "text-sm"
+                    titleSize === "lg" ? "text-lg" : "text-sm",
+                    isRTL ? "text-right" : "text-left"
                   )}
                 >
                   {title}
@@ -880,20 +885,20 @@ export function SharedTable({
                   onClick={onSave}
                   className="px-6 py-1.5 bg-[#4E8476] hover:bg-[#3d6b5f] text-white rounded-sm cursor-pointer  text-sm  transition-colors"
                 >
-                  Save
+                  {t("common.save")}
                 </button>
               ) : (
                 <div />
               )}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className={cn("flex items-center gap-3")}>
               {title && showSaveButton && onSave && (
                 <button
                   onClick={onSave}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Save
+                  {t("common.save")}
                 </button>
               )}
 
@@ -902,17 +907,27 @@ export function SharedTable({
                   <button
                     onClick={() => setShowColumnDropdown(!showColumnDropdown)}
                     className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-sm transition-colors"
-                    title="Manage Columns"
+                    title={t("common.columns")}
                   >
                     <ColumnsIcon className="w-4 h-4" />
-                    Columns
+                    {t("common.columns")}
                   </button>
 
                   {showColumnDropdown && (
-                    <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-48 max-h-64 overflow-y-auto">
+                    <div
+                      className={cn(
+                        "absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-48 max-h-64 overflow-y-auto",
+                        isRTL ? "left-0" : "right-0"
+                      )}
+                    >
                       <div className="p-3 border-b border-gray-100">
-                        <h4 className="text-sm font-medium text-gray-900">
-                          Show/Hide Columns
+                        <h4
+                          className={cn(
+                            "text-sm font-medium text-gray-900",
+                            isRTL ? "text-right" : "text-left"
+                          )}
+                        >
+                          {t("common.showHideColumns")}
                         </h4>
                       </div>
                       <div className="p-2">
@@ -921,7 +936,9 @@ export function SharedTable({
                           .map((column) => (
                             <label
                               key={column.id}
-                              className="flex items-center gap-3 px-2 py-2 hover:bg-gray-50 rounded cursor-pointer"
+                              className={cn(
+                                "flex items-center gap-3 px-2 py-2 hover:bg-gray-50 rounded cursor-pointer"
+                              )}
                             >
                               <input
                                 type="checkbox"
@@ -931,7 +948,12 @@ export function SharedTable({
                                 }
                                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                               />
-                              <span className="text-sm text-gray-700 flex-1">
+                              <span
+                                className={cn(
+                                  "text-sm text-gray-700 flex-1",
+                                  isRTL ? "text-right" : "text-left"
+                                )}
+                              >
                                 {column.header}
                               </span>
                             </label>
@@ -969,9 +991,10 @@ export function SharedTable({
                   <th
                     key={column.id}
                     className={cn(
-                      "text-left px-4 py-3 text-sm font-[300] text-[#595B5E] relative select-none border-r border-r-transparent hover:border-r-blue-200",
+                      "px-4 py-3 text-sm font-[300] text-[#595B5E] relative select-none border-r border-r-transparent hover:border-r-blue-200",
                       column.sortable !== false &&
-                        "cursor-pointer hover:bg-gray-100"
+                        "cursor-pointer hover:bg-gray-100",
+                      isRTL ? "text-right" : "text-left"
                     )}
                     style={{
                       width: columnWidths[column.id] || column.width || 150,
@@ -1049,7 +1072,10 @@ export function SharedTable({
                 {/* Actions column header */}
                 {showActions && (
                   <th
-                    className="text-left px-4 py-3 text-sm font-[300] text-[#595B5E] relative select-none border-r border-r-transparent hover:border-r-blue-200"
+                    className={cn(
+                      "px-4 py-3 text-sm font-[300] text-[#595B5E] relative select-none border-r border-r-transparent hover:border-r-blue-200",
+                      isRTL ? "text-right" : "text-left"
+                    )}
                     style={{
                       width: columnWidths["actions"] || 120,
                       minWidth: 100,
@@ -1113,7 +1139,9 @@ export function SharedTable({
                           filterInputRefs.current[column.id] = el;
                         }}
                         type="text"
-                        placeholder={`Filter ${column.header}...`}
+                        placeholder={`${t("common.filter")} ${
+                          column.header
+                        }...`}
                         value={columnFilters[column.id] || ""}
                         onChange={(e) =>
                           handleColumnFilterChange(column.id, e.target.value)
@@ -1141,7 +1169,11 @@ export function SharedTable({
                             }
                           }, 0);
                         }}
-                        className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-[#4E8476] focus:ring-1 focus:ring-[#4E8476]"
+                        className={cn(
+                          "w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-[#4E8476] focus:ring-1 focus:ring-[#4E8476]",
+                          isRTL ? "text-right" : "text-left"
+                        )}
+                        dir={isRTL ? "rtl" : "ltr"}
                         onClick={(e) => e.stopPropagation()}
                       />
                     </th>
@@ -1169,9 +1201,12 @@ export function SharedTable({
                 <tr>
                   <td
                     colSpan={showActions ? columns.length + 1 : columns.length}
-                    className="px-4 py-8 text-center text-[#282828] text-sm"
+                    className={cn(
+                      "px-4 py-8 text-center text-[#282828] text-sm",
+                      isRTL ? "text-right" : "text-left"
+                    )}
                   >
-                    No data available
+                    {t("common.noData")}
                   </td>
                 </tr>
               ) : (
@@ -1188,7 +1223,10 @@ export function SharedTable({
                       {filteredColumns.map((column) => (
                         <td
                           key={column.id}
-                          className="px-4 py-4 text-sm  text-[#282828] "
+                          className={cn(
+                            "px-4 py-4 text-sm  text-[#282828]",
+                            isRTL ? "text-right" : "text-left"
+                          )}
                           style={{
                             width:
                               columnWidths[column.id] || column.width || 200,
@@ -1204,7 +1242,10 @@ export function SharedTable({
                       {/* Actions cell */}
                       {showActions && (
                         <td
-                          className="px-4 py-3 text-sm text-[#282828]"
+                          className={cn(
+                            "px-4 py-3 text-sm text-[#282828]",
+                            isRTL ? "text-right" : "text-left"
+                          )}
                           style={{
                             width: columnWidths["actions"] || 120,
                             minWidth: 100,
@@ -1212,7 +1253,11 @@ export function SharedTable({
                         >
                           {!pending ? (
                             // Default mode: Edit and Delete buttons
-                            <div className="flex items-center justify-center gap-2">
+                            <div
+                              className={cn(
+                                "flex items-center justify-center gap-2"
+                              )}
+                            >
                               {transactions && (
                                 <button
                                   onClick={() => handleChat(row, globalIndex)}
@@ -1328,7 +1373,11 @@ export function SharedTable({
                             </div>
                           ) : (
                             // Pending mode: Approve, Reject, and Delete buttons
-                            <div className="flex items-center justify-center gap-2">
+                            <div
+                              className={cn(
+                                "flex items-center justify-center gap-2"
+                              )}
+                            >
                               <button
                                 onClick={() => handleView(row, globalIndex)}
                                 className="p-1.5 hover:bg-blue-300 border rounded-full border-[#EEEEEE] cursor-pointer transition-colors"
@@ -1418,7 +1467,10 @@ export function SharedTable({
                   {filteredColumns.map((column) => (
                     <td
                       key={`footer-${column.id}`}
-                      className="px-4 py-3 text-sm text-[#282828] "
+                      className={cn(
+                        "px-4 py-3 text-sm text-[#282828]",
+                        isRTL ? "text-right" : "text-left"
+                      )}
                       style={{
                         width: columnWidths[column.id] || column.width || 150,
                         minWidth: column.minWidth || 100,
@@ -1430,7 +1482,9 @@ export function SharedTable({
                         </div>
                       ) : (
                         <div className="text-gray-500 font-semibold">
-                          {column.id === columns[0].id ? "Total:" : ""}
+                          {column.id === columns[0].id
+                            ? `${t("common.total")}:`
+                            : ""}
                         </div>
                       )}
                     </td>
@@ -1489,25 +1543,35 @@ export function SharedTable({
           >
             {/* Pagination */}
             {showPagination && totalPages > 1 && (
-              <div className="flex items-center justify-center gap-1  px-2">
+              <div
+                className={cn("flex items-center justify-center gap-1  px-2")}
+              >
                 {/* First button */}
                 <button
                   onClick={() => onPageChange?.(1)}
                   disabled={!canGoFirst}
-                  className="flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
+                  className={cn(
+                    "flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
+                  )}
                 >
-                  <ArrowLeftIcon className="w-4 h-4" />
-                  First
+                  <ArrowLeftIcon
+                    className={cn("w-4 h-4", isRTL && "rotate-180")}
+                  />
+                  {t("common.first")}
                 </button>
 
                 {/* Back button */}
                 <button
                   onClick={() => onPageChange?.(currentPage - 1)}
                   disabled={!canGoPrevious}
-                  className="flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
+                  className={cn(
+                    "flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
+                  )}
                 >
-                  <ArrowLeftIcon className="w-4 h-4" />
-                  Back
+                  <ArrowLeftIcon
+                    className={cn("w-4 h-4", isRTL && "rotate-180")}
+                  />
+                  {t("common.back")}
                 </button>
 
                 {/* Page numbers */}
@@ -1537,20 +1601,28 @@ export function SharedTable({
                 <button
                   onClick={() => onPageChange?.(currentPage + 1)}
                   disabled={!canGoNext}
-                  className="flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
+                  className={cn(
+                    "flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
+                  )}
                 >
-                  Next
-                  <ArrowRightIcon className="w-4 h-4" />
+                  {t("common.next")}
+                  <ArrowRightIcon
+                    className={cn("w-4 h-4", isRTL && "rotate-180")}
+                  />
                 </button>
 
                 {/* Last button */}
                 <button
                   onClick={() => onPageChange?.(totalPages)}
                   disabled={!canGoLast}
-                  className="flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
+                  className={cn(
+                    "flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
+                  )}
                 >
-                  Last
-                  <ArrowRightIcon className="w-4 h-4" />
+                  {t("common.last")}
+                  <ArrowRightIcon
+                    className={cn("w-4 h-4", isRTL && "rotate-180")}
+                  />
                 </button>
               </div>
             )}
@@ -1569,8 +1641,19 @@ export function SharedTable({
 
           {/* Modal */}
           <div className="relative bg-white rounded-lg shadow-xl py-4 mx-4 max-w-lg w-full">
-            <div className="flex items-center justify-between gap-3 mb-2 px-4 ">
-              <h3 className="text-lg  text-[#282828]">Confirm Deletion </h3>
+            <div
+              className={cn(
+                "flex items-center justify-between gap-3 mb-2 px-4"
+              )}
+            >
+              <h3
+                className={cn(
+                  "text-lg  text-[#282828]",
+                  isRTL ? "text-right" : "text-left"
+                )}
+              >
+                {t("common.confirmDeletion")}
+              </h3>
               <div
                 className="p-1 rounded-sm border border-[#E2E2E2] cursor-pointer"
                 onClick={handleDeleteCancel}
@@ -1594,24 +1677,28 @@ export function SharedTable({
             </div>
 
             <div className="border-t border-b border-gray-200 px-4 mb-3 ">
-              <p className="text-[#282828] font-medium my-6">
-                You're about to delete this item. This action cannot be undone.
-                Please confirm if you want to proceed.{" "}
+              <p
+                className={cn(
+                  "text-[#282828] font-medium my-6",
+                  isRTL ? "text-right" : "text-left"
+                )}
+              >
+                {t("common.deleteConfirmMessage")}
               </p>
             </div>
 
-            <div className="flex justify-end gap-3 px-5">
+            <div className={cn("flex justify-end gap-3 px-5")}>
               <button
                 onClick={handleDeleteCancel}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-sm hover:bg-gray-200 transition-colors"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={handleDeleteConfirm}
                 className="px-4 py-2 text-sm font-medium text-white bg-[#D44333] border border-[#D44333] rounded-sm hover:bg-red-700 transition-colors"
               >
-                Delete
+                {t("common.delete")}
               </button>
             </div>
           </div>

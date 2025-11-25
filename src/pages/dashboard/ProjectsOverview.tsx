@@ -242,7 +242,6 @@ export default function ProjectsOverview() {
             value={q}
             onChange={handleSearchChange}
             onSubmit={doSearch}
-            dir="ltr"
             debounce={250}
           />
         </div>

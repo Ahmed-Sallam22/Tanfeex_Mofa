@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "../features/auth/hooks";
 import { hideSessionExpired, clearAuth } from "../features/auth/authSlice";
 import SharedModal from "../shared/SharedModal";
@@ -6,6 +7,7 @@ import SharedModal from "../shared/SharedModal";
 export default function SessionExpiredModal() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const showModal = useAppSelector(
     (state) => state.auth.showSessionExpiredModal
   );
@@ -26,7 +28,7 @@ export default function SessionExpiredModal() {
     <SharedModal
       isOpen={showModal}
       onClose={handleClose}
-      title="Session Expired"
+      title={t("sessionExpired.title")}
       size="sm"
       showCloseButton={false}
     >
@@ -48,12 +50,9 @@ export default function SessionExpiredModal() {
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Your session has expired
+            {t("sessionExpired.heading")}
           </h3>
-          <p className="text-gray-600 mb-6">
-            For your security, you've been logged out. Please login again to
-            continue.
-          </p>
+          <p className="text-gray-600 mb-6">{t("sessionExpired.message")}</p>
         </div>
 
         <div className="flex justify-center">
@@ -61,7 +60,7 @@ export default function SessionExpiredModal() {
             onClick={handleLogin}
             className="px-6 py-2 bg-[#4E8476] text-white rounded-md hover:bg-[#4E8476] transition-colors font-medium"
           >
-            Login
+            {t("sessionExpired.loginButton")}
           </button>
         </div>
       </div>
