@@ -77,7 +77,7 @@ export default function FundAdjustments() {
   } = useGetFundAdjustmentListQuery({
     page: currentPage,
     page_size: 10,
-    code: "FAD",
+    code: "DFR",
   });
 
   const {
@@ -588,7 +588,7 @@ export default function FundAdjustments() {
       const fundAdjustmentData = {
         transaction_date: time_period,
         notes: reason, // reason already contains HTML from RichTextEditor
-        type: "FAD", // Static as requested
+        type: "DFR", // Static as requested
         budget_control: budget_control,
       };
 
@@ -659,7 +659,7 @@ export default function FundAdjustments() {
         </h1>
         <button
           onClick={handleCreateRequest}
-          className="px-4 py-2 bg-[#4E8476] text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-[#4E8476] text-white rounded-lg hover:bg-[#35584f] transition-colors"
         >
           {t("fundAdjustmentsPage.createFundAdjustment")}
         </button>
@@ -679,7 +679,7 @@ export default function FundAdjustments() {
       {/* Transfer Table */}
       {isLoading ? (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4E8476]"></div>
           <span className="ml-2 text-gray-600">
             {t("fundAdjustmentsPage.loading")}
           </span>
@@ -692,7 +692,7 @@ export default function FundAdjustments() {
               {t("fundAdjustmentsPage.failedToLoad")}
             </p>
             <button
-              className="mt-2 px-4 py-2 bg-[#4E8476] text-white rounded hover:bg-blue-700"
+              className="mt-2 px-4 py-2 bg-[#4E8476] text-white rounded hover:bg-[#35584f]"
               onClick={() => window.location.reload()}
             >
               {t("fundAdjustmentsPage.retry")}
@@ -819,7 +819,7 @@ export default function FundAdjustments() {
                 !hasData ||
                 Object.keys(validationErrors).length > 0
               }
-              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#35584f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSubmitting && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -1472,7 +1472,7 @@ export default function FundAdjustments() {
         <div className="p-6">
           {isLoadingStatus ? (
             <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4E8476]"></div>
               <span className="ml-2 text-gray-600">Loading status...</span>
             </div>
           ) : statusError ? (

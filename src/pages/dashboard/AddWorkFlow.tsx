@@ -118,7 +118,7 @@ export default function AddWorkFlow() {
   // Select options for transaction dates
   const TranstypeOptions: SelectOption[] = [
     { value: "FAR", label: "FAR" },
-    { value: "FAD", label: "FAD" },
+    { value: "DFR", label: "DFR" },
     { value: "AFR", label: "AFR" },
     { value: "Generic", label: "Generic" },
   ];
