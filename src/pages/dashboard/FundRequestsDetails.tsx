@@ -1843,7 +1843,7 @@ export default function TransferDetails() {
                     ).length;
 
                   if (totalValidRows < 2) {
-                    return t("pendingTransferDetails.submitDisabledMinRows");
+                    return t("fundAdjustmentsDetails.submitWarningMinRows");
                   } else {
                     return t(
                       "pendingTransferDetails.cannotSubmitFixErrorsMessage"
