@@ -1841,7 +1841,7 @@ export default function TransferDetails() {
                         )
                     ).length;
 
-                  if (totalValidRows < 1) {
+                  if (totalValidRows < 2) {
                     return t("fundAdjustmentsDetails.submitWarningMinRows");
                   } else {
                     return t("fundAdjustmentsDetails.submitWarningErrors");

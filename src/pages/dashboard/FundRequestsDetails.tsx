@@ -1842,10 +1842,8 @@ export default function TransferDetails() {
                         )
                     ).length;
 
-                  if (totalValidRows < 1) {
-                    return t(
-                      "pendingTransferDetails.cannotSubmitMinRowsMessage"
-                    );
+                  if (totalValidRows < 2) {
+                    return t("pendingTransferDetails.submitDisabledMinRows");
                   } else {
                     return t(
                       "pendingTransferDetails.cannotSubmitFixErrorsMessage"
