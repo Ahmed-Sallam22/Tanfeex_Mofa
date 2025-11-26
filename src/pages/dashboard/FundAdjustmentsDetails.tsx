@@ -1780,7 +1780,7 @@ export default function TransferDetails() {
                             )
                         ).length;
 
-                      if (totalValidRows < 2) {
+                      if (totalValidRows < 1) {
                         return t(
                           "fundAdjustmentsDetails.submitDisabledMinRows"
                         );
@@ -1841,7 +1841,7 @@ export default function TransferDetails() {
                         )
                     ).length;
 
-                  if (totalValidRows < 2) {
+                  if (totalValidRows < 1) {
                     return t("fundAdjustmentsDetails.submitWarningMinRows");
                   } else {
                     return t("fundAdjustmentsDetails.submitWarningErrors");
