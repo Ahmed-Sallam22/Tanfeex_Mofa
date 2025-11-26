@@ -564,8 +564,8 @@ export default function TransferDetails() {
       localRows.length +
       nonDefaultEditedRows.length;
 
-    // Check if there are fewer than 2 rows
-    const hasInsufficientRows = totalValidRows < 2;
+    // Check if there are fewer than 1 rows
+    const hasInsufficientRows = totalValidRows < 1;
 
     // Check if there are validation errors in any row
     const hasValidationErrors = [...editedRows, ...localRows].some(
