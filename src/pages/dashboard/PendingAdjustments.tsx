@@ -31,7 +31,7 @@ export default function PendingTransfer() {
   } = useGetPendingTransfersQuery({
     page: currentPage,
     page_size: 10,
-    code: "DRF",
+    code: "DFR",
   });
 
   const [bulkApproveRejectTransfer] = useBulkApproveRejectTransferMutation();
