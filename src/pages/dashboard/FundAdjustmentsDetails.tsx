@@ -1461,31 +1461,31 @@ export default function TransferDetails() {
         );
       },
     },
-    {
-      id: "to",
-      header: t("fundAdjustmentsDetails.columns.to"),
-      showSum: true,
+    // {
+    //   id: "to",
+    //   header: t("fundAdjustmentsDetails.columns.to"),
+    //   showSum: true,
 
-      render: (_, row) => {
-        const transferRow = row as unknown as TransferTableRow;
+    //   render: (_, row) => {
+    //     const transferRow = row as unknown as TransferTableRow;
 
-        return isSubmitted ? (
-          <span className={`text-sm text-gray-900 `}>
-            {formatNumber(transferRow.to)}
-          </span>
-        ) : (
-          <input
-            type="number"
-            value={transferRow.to || ""}
-            onChange={(e) =>
-              updateRow(transferRow.id, "to", Number(e.target.value) || 0)
-            }
-            className={`w-full px-3 py-2 border rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-[#AFAFAF] `}
-            placeholder={t("fundAdjustmentsDetails.columns.to")}
-          />
-        );
-      },
-    },
+    //     return isSubmitted ? (
+    //       <span className={`text-sm text-gray-900 `}>
+    //         {formatNumber(transferRow.to)}
+    //       </span>
+    //     ) : (
+    //       <input
+    //         type="number"
+    //         value={transferRow.to || ""}
+    //         onChange={(e) =>
+    //           updateRow(transferRow.id, "to", Number(e.target.value) || 0)
+    //         }
+    //         className={`w-full px-3 py-2 border rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-[#AFAFAF] `}
+    //         placeholder={t("fundAdjustmentsDetails.columns.to")}
+    //       />
+    //     );
+    //   },
+    // },
   ];
 
   // Handler for validation error click

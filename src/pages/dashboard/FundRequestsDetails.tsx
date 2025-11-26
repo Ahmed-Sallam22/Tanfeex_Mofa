@@ -1437,31 +1437,31 @@ export default function TransferDetails() {
         );
       },
     },
-    {
-      id: "from",
-      header: t("pendingTransferDetails.from"),
-      showSum: true,
+    // {
+    //   id: "from",
+    //   header: t("pendingTransferDetails.from"),
+    //   showSum: true,
 
-      render: (_, row) => {
-        const transferRow = row as unknown as TransferTableRow;
+    //   render: (_, row) => {
+    //     const transferRow = row as unknown as TransferTableRow;
 
-        return isSubmitted ? (
-          <span className={`text-sm text-gray-900 `}>
-            {formatNumber(transferRow.from)}
-          </span>
-        ) : (
-          <input
-            type="number"
-            value={transferRow.from || ""}
-            onChange={(e) =>
-              updateRow(transferRow.id, "from", Number(e.target.value) || 0)
-            }
-            className={`w-full px-3 py-2 border rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-[#AFAFAF] `}
-            placeholder={t("pendingTransferDetails.from")}
-          />
-        );
-      },
-    },
+    //     return isSubmitted ? (
+    //       <span className={`text-sm text-gray-900 `}>
+    //         {formatNumber(transferRow.from)}
+    //       </span>
+    //     ) : (
+    //       <input
+    //         type="number"
+    //         value={transferRow.from || ""}
+    //         onChange={(e) =>
+    //           updateRow(transferRow.id, "from", Number(e.target.value) || 0)
+    //         }
+    //         className={`w-full px-3 py-2 border rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-[#AFAFAF] `}
+    //         placeholder={t("pendingTransferDetails.from")}
+    //       />
+    //     );
+    //   },
+    // },
     {
       id: "to",
       header: t("pendingTransferDetails.to"),
