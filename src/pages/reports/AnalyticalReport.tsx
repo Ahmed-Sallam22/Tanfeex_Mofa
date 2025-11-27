@@ -204,12 +204,10 @@ export default function AnalyticalReport() {
             <span
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                 rate >= 75
-                  ? "bg-green-100 text-green-800"
+                  ? "bg-red-100 text-red-800"
                   : rate >= 50
                   ? "bg-yellow-100 text-yellow-800"
-                  : rate >= 25
-                  ? "bg-orange-100 text-orange-800"
-                  : "bg-red-100 text-red-800"
+                  : "bg-green-100 text-green-800"
               }`}
             >
               {rate.toFixed(2)}%
