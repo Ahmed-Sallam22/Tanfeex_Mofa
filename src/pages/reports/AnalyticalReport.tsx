@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useGetAnalyticalReportQuery,
   type SegmentTransferData,
 } from "../../api/analyticalReport.api";
-import DashboardHeader from "../../shared/DashboardHeader";
 import SharedSelect from "../../shared/SharedSelect";
+import { SharedTable, type TableColumn, type TableRow } from "../../shared/SharedTable";
 import { formatNumber } from "../../utils/formatNumber";
 
 interface SelectOption {
@@ -17,10 +17,10 @@ export default function AnalyticalReport() {
   const { t } = useTranslation();
   const [controlBudget, setControlBudget] = useState<string>("MOFA_COST_2");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const pageSize = 20;
+  const pageSize = 10;
 
   // Fetch analytical report data
-  const { data, isLoading, error, refetch } = useGetAnalyticalReportQuery({
+  const { data } = useGetAnalyticalReportQuery({
     segment_type_id: 11,
     control_budget_name: controlBudget,
     transaction_status: "approved",
@@ -44,32 +44,175 @@ export default function AnalyticalReport() {
   };
 
   // Calculate total expenditure for each row
-  const calculateTotalExpenditure = (segment: SegmentTransferData) => {
+  const calculateTotalExpenditure = useCallback((segment: SegmentTransferData) => {
     return (
       segment.actual_sum +
       segment.encumbrance_sum +
       segment.commitment_sum +
       segment.other_sum
     );
-  };
+  }, []);
 
   // Calculate remaining for each row
-  const calculateRemaining = (segment: SegmentTransferData) => {
+  const calculateRemaining = useCallback((segment: SegmentTransferData) => {
     const totalExpenditure = calculateTotalExpenditure(segment);
     return segment.total_budget_sum - totalExpenditure;
-  };
+  }, [calculateTotalExpenditure]);
 
   // Calculate indicator percentage
-  const calculateIndicator = (segment: SegmentTransferData) => {
+  const calculateIndicator = useCallback((segment: SegmentTransferData) => {
     if (segment.total_budget_sum === 0) return 0;
     const remaining = calculateRemaining(segment);
     return (remaining / segment.total_budget_sum) * 100;
-  };
+  }, [calculateRemaining]);
+
+  // Define table columns
+  const columns: TableColumn[] = useMemo(
+    () => [
+      {
+        id: "economicClassificationNumber",
+        header: t("analyticalReport.columns.economicClassificationNumber"),
+        accessor: "mapping_code",
+        render: (_value: unknown, row: TableRow) => {
+          const segment = row as unknown as SegmentTransferData;
+          return segment.mapping_code || segment.segment_code;
+        },
+      },
+      {
+        id: "economicClassificationName",
+        header: t("analyticalReport.columns.economicClassificationName"),
+        accessor: "segment_alias",
+      },
+      {
+        id: "itemProgramProjectNumber",
+        header: t("analyticalReport.columns.itemProgramProjectNumber"),
+        accessor: "segment_code",
+      },
+      {
+        id: "itemProgramProjectName",
+        header: t("analyticalReport.columns.itemProgramProjectName"),
+        accessor: "segment_alias",
+      },
+      {
+        id: "initialBudget",
+        header: t("analyticalReport.columns.initialBudget"),
+        accessor: "initial_budget_sum",
+        render: (value: unknown) => formatNumber(value as number),
+        showSum: true,
+      },
+      {
+        id: "decrease",
+        header: t("analyticalReport.columns.decrease"),
+        accessor: "total_decrease_fund",
+        render: (value: unknown) => formatNumber(value as number),
+        showSum: true,
+      },
+      {
+        id: "transferredFrom",
+        header: t("analyticalReport.columns.transferredFrom"),
+        accessor: "total_from_center",
+        render: (value: unknown) => formatNumber(value as number),
+        showSum: true,
+      },
+      {
+        id: "transferredTo",
+        header: t("analyticalReport.columns.transferredTo"),
+        accessor: "total_to_center",
+        render: (value: unknown) => formatNumber(value as number),
+        showSum: true,
+      },
+      {
+        id: "additionalFund",
+        header: t("analyticalReport.columns.additionalFund"),
+        accessor: "total_additional_fund",
+        render: (value: unknown) => formatNumber(value as number),
+        showSum: true,
+      },
+      {
+        id: "budgetAfterAdjustment",
+        header: t("analyticalReport.columns.budgetAfterAdjustment"),
+        accessor: "total_budget_sum",
+        render: (value: unknown) => formatNumber(value as number),
+        showSum: true,
+      },
+      {
+        id: "encumbranceInProgress",
+        header: t("analyticalReport.columns.encumbranceInProgress"),
+        accessor: "encumbrance_sum",
+        render: (value: unknown) => formatNumber(value as number),
+        showSum: true,
+      },
+      {
+        id: "commitments",
+        header: t("analyticalReport.columns.commitments"),
+        accessor: "commitment_sum",
+        render: (value: unknown) => formatNumber(value as number),
+        showSum: true,
+      },
+      {
+        id: "actualExpenditure",
+        header: t("analyticalReport.columns.actualExpenditure"),
+        accessor: "actual_sum",
+        render: (value: unknown) => formatNumber(value as number),
+        showSum: true,
+      },
+      {
+        id: "totalExpenditure",
+        header: t("analyticalReport.columns.totalExpenditure"),
+        accessor: "totalExpenditure",
+        render: (_value: unknown, row: TableRow) => {
+          const segment = row as unknown as SegmentTransferData;
+          const totalExpenditure = calculateTotalExpenditure(segment);
+          return formatNumber(totalExpenditure);
+        },
+        showSum: true,
+      },
+      {
+        id: "remaining",
+        header: t("analyticalReport.columns.remaining"),
+        accessor: "remaining",
+        render: (_value: unknown, row: TableRow) => {
+          const segment = row as unknown as SegmentTransferData;
+          const remaining = calculateRemaining(segment);
+          return formatNumber(remaining);
+        },
+        showSum: true,
+      },
+      {
+        id: "indicator",
+        header: t("analyticalReport.columns.indicator"),
+        accessor: "indicator",
+        render: (_value: unknown, row: TableRow) => {
+          const segment = row as unknown as SegmentTransferData;
+          const indicator = calculateIndicator(segment);
+          return (
+            <span
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                indicator >= 75
+                  ? "bg-green-100 text-green-800"
+                  : indicator >= 50
+                  ? "bg-yellow-100 text-yellow-800"
+                  : indicator >= 25
+                  ? "bg-orange-100 text-orange-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
+              {indicator.toFixed(2)}%
+            </span>
+          );
+        },
+      },
+    ],
+    [t, calculateTotalExpenditure, calculateRemaining, calculateIndicator]
+  );
+
+  // Convert segments to table rows
+  const tableData: TableRow[] = useMemo(() => {
+    return (data?.segments || []).map((segment) => segment as unknown as TableRow);
+  }, [data?.segments]);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader />
-
       <div className="p-6 space-y-6">
         {/* Page Title */}
         <h1 className="text-2xl font-bold text-gray-900">
@@ -179,269 +322,20 @@ export default function AnalyticalReport() {
         )}
 
         {/* Table Section */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            {isLoading ? (
-              <div className="flex items-center justify-center p-12">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4E8476] mx-auto mb-4"></div>
-                  <p className="text-gray-600">
-                    {t("analyticalReport.loadingData")}
-                  </p>
-                </div>
-              </div>
-            ) : error ? (
-              <div className="flex flex-col items-center justify-center p-12">
-                <div className="text-center">
-                  <svg
-                    className="w-16 h-16 text-red-500 mx-auto mb-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <p className="text-gray-900 font-semibold mb-2">
-                    {t("analyticalReport.errorLoadingData")}
-                  </p>
-                  <button
-                    onClick={() => refetch()}
-                    className="mt-4 px-4 py-2 bg-[#4E8476] text-white rounded-md hover:bg-[#3d6a5e] transition-colors"
-                  >
-                    {t("analyticalReport.refreshData")}
-                  </button>
-                </div>
-              </div>
-            ) : !data?.segments || data.segments.length === 0 ? (
-              <div className="flex items-center justify-center p-12">
-                <p className="text-gray-600">
-                  {t("analyticalReport.noDataAvailable")}
-                </p>
-              </div>
-            ) : (
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t(
-                        "analyticalReport.columns.economicClassificationNumber"
-                      )}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.economicClassificationName")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.itemProgramProjectNumber")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.itemProgramProjectName")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.initialBudget")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.decrease")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.transferredFrom")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.transferredTo")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.additionalFund")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.budgetAfterAdjustment")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.encumbranceInProgress")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.commitments")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.actualExpenditure")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.totalExpenditure")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.remaining")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {t("analyticalReport.columns.indicator")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {data.segments.map(
-                    (segment: SegmentTransferData, index: number) => {
-                      const totalExpenditure =
-                        calculateTotalExpenditure(segment);
-                      const remaining = calculateRemaining(segment);
-                      const indicator = calculateIndicator(segment);
-
-                      return (
-                        <tr
-                          key={segment.segment_code + index}
-                          className="hover:bg-gray-50"
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {segment.mapping_code || segment.segment_code}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {segment.segment_alias}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {segment.segment_code}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {segment.segment_alias}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatNumber(segment.initial_budget_sum)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatNumber(segment.total_decrease_fund)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatNumber(segment.total_from_center)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatNumber(segment.total_to_center)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatNumber(segment.total_additional_fund)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
-                            {formatNumber(segment.total_budget_sum)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatNumber(segment.encumbrance_sum)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatNumber(segment.commitment_sum)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatNumber(segment.actual_sum)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
-                            {formatNumber(totalExpenditure)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
-                            {formatNumber(remaining)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                indicator >= 75
-                                  ? "bg-green-100 text-green-800"
-                                  : indicator >= 50
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : indicator >= 25
-                                  ? "bg-orange-100 text-orange-800"
-                                  : "bg-red-100 text-red-800"
-                              }`}
-                            >
-                              {indicator.toFixed(2)}%
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    }
-                  )}
-                </tbody>
-              </table>
-            )}
-          </div>
-
-          {/* Pagination */}
-          {data?.pagination && data.pagination.total_pages > 1 && (
-            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-              <div className="flex-1 flex justify-between sm:hidden">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={!data.pagination.has_previous}
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {t("common.previous")}
-                </button>
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={!data.pagination.has_next}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {t("common.next")}
-                </button>
-              </div>
-              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-gray-700">
-                    {t("analyticalReport.page")}{" "}
-                    <span className="font-medium">{currentPage}</span>{" "}
-                    {t("analyticalReport.of")}{" "}
-                    <span className="font-medium">
-                      {data.pagination.total_pages}
-                    </span>
-                  </p>
-                </div>
-                <div>
-                  <nav
-                    className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                    aria-label="Pagination"
-                  >
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={!data.pagination.has_previous}
-                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <span className="sr-only">{t("common.previous")}</span>
-                      <svg
-                        className="h-5 w-5"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={!data.pagination.has_next}
-                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <span className="sr-only">{t("common.next")}</span>
-                      <svg
-                        className="h-5 w-5"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                  </nav>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <SharedTable
+          columns={columns}
+          data={tableData}
+          showPagination={true}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          totalCount={data?.pagination?.total_count}
+          hasNext={data?.pagination?.has_next}
+          hasPrevious={data?.pagination?.has_previous}
+          itemsPerPage={pageSize}
+          showFooter={true}
+          showColumnFilters={false}
+          className="bg-white rounded-lg shadow-sm"
+        />
       </div>
     </div>
   );
