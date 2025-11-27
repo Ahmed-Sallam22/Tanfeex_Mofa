@@ -48,7 +48,7 @@ export default function AnalyticalReport() {
   const segmentOptions: SelectOption[] = useMemo(() => {
     if (!segmentsData?.data) return [];
     return segmentsData.data.map((segment) => ({
-      value: String(segment.id),
+      value: String(segment.code),
       label: `${segment.code} - ${segment.alias}`,
     }));
   }, [segmentsData]);
