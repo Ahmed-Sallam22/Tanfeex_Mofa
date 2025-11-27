@@ -39,6 +39,7 @@ export default function Transfer() {
   const [time_period, settime_period] = useState<string>("");
   const [reason, setreason] = useState<string>("");
   const [budget_control, setBudgetControl] = useState<string>("");
+  const [transfer_type, setTransferType] = useState<string>("");
 
   // Attachments state
   const [isAttachmentsModalOpen, setIsAttachmentsModalOpen] = useState(false);
@@ -57,6 +58,7 @@ export default function Transfer() {
     time_period?: string;
     reason?: string;
     budget_control?: string;
+    transfer_type?: string;
   }>({});
 
   // API calls
@@ -541,6 +543,7 @@ export default function Transfer() {
     settime_period("");
     setreason("");
     setBudgetControl("");
+    setTransferType("");
 
     // Open modal after clearing values
     setIsCreateModalOpen(true);
@@ -555,6 +558,7 @@ export default function Transfer() {
     settime_period("");
     setreason("");
     setBudgetControl("");
+    setTransferType("");
     setValidationErrors({});
     setShouldOpenModal(false); // Reset the modal trigger
   };
@@ -568,6 +572,7 @@ export default function Transfer() {
       time_period?: string;
       reason?: string;
       budget_control?: string;
+      transfer_type?: string;
     } = {};
 
     if (!time_period.trim()) {
@@ -582,6 +587,10 @@ export default function Transfer() {
       errors.budget_control = t("validation.selectBudgetControl");
     }
 
+    if (!transfer_type.trim()) {
+      errors.transfer_type = t("validation.selectTransferType");
+    }
+
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       return;
@@ -594,6 +603,7 @@ export default function Transfer() {
         notes: reason, // reason already contains HTML from RichTextEditor
         type: "FAR", // Static as requested
         budget_control: budget_control,
+        transfer_type: transfer_type,
       };
 
       if (isEditMode && selectedTransfer) {
@@ -632,6 +642,12 @@ export default function Transfer() {
   const budgetControlOptions: SelectOption[] = [
     { value: "سيولة", label: "سيولة" },
     { value: "تكاليف", label: "تكاليف" },
+  ];
+
+  // Select options for transfer type
+  const transferTypeOptions: SelectOption[] = [
+    { value: "داخلية", label: "داخلية" },
+    { value: "خارجية", label: "خارجية" },
   ];
 
   const handleChat = (row: TableRow) => {
@@ -751,6 +767,25 @@ export default function Transfer() {
 
           <div>
             <SharedSelect
+              key={`transfer-type-${
+                isEditMode ? selectedTransfer?.transaction_id : "create"
+              }`}
+              title={t("transfer.transferType")}
+              options={transferTypeOptions}
+              value={transfer_type}
+              onChange={(value) => setTransferType(String(value))}
+              placeholder={t("transfer.selectTransferType")}
+              required
+            />
+            {validationErrors.transfer_type && (
+              <p className="mt-1 text-sm text-red-600">
+                {validationErrors.transfer_type}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <SharedSelect
               key={`transaction-date-${
                 isEditMode ? selectedTransfer?.transaction_id : "create"
               }`}
@@ -800,6 +835,7 @@ export default function Transfer() {
                 isCreating ||
                 isUpdating ||
                 !budget_control.trim() ||
+                !transfer_type.trim() ||
                 !time_period.trim() ||
                 !reason.trim()
               }

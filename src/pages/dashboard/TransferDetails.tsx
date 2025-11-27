@@ -1487,6 +1487,25 @@ export default function TransferDetails() {
         );
       },
     },
+    {
+      id: "newExpectedFund",
+      header: t("tableColumns.newExpectedFund"),
+      showSum: true,
+
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const availableBudget = transferRow.availableBudget || 0;
+        const toValue = transferRow.to || 0;
+        const fromValue = transferRow.from || 0;
+        
+        // Calculate: availableBudget + to - from
+        const newExpectedFund = availableBudget + toValue - fromValue;
+        
+        return (
+          <span className="text-sm text-gray-900">{formatNumber(newExpectedFund)}</span>
+        );
+      },
+    },
   ];
 
   // Handler for validation error click
