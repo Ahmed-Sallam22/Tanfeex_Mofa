@@ -122,11 +122,6 @@ export default function AnalyticalReport() {
         accessor: "segment_code",
       },
       {
-        id: "itemProgramProjectName",
-        header: t("analyticalReport.columns.itemProgramProjectName"),
-        accessor: "segment_alias",
-      },
-      {
         id: "initialBudget",
         header: t("analyticalReport.columns.initialBudget"),
         accessor: "initial_budget_sum",
