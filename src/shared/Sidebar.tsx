@@ -530,6 +530,13 @@ const getSections = (
           allowedRoles: ["superadmin"],
           allowedLevels: [] as number[],
         },
+        {
+          to: "/app/analytical-report",
+          label: t("analyticalReport.title"),
+          icon: ReportsIcon,
+          allowedRoles: ["superadmin"],
+          allowedLevels: [] as number[],
+        },
         // {
         //   to: "/app/Document_I/O",
         //   label: t("documentIO.title"),

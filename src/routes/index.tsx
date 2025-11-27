@@ -27,6 +27,7 @@ import Chat from "@/pages/dashboard/Chat";
 import InvoiceDetails from "@/pages/dashboard/InvoiceDetails";
 import UploadInvoice from "@/pages/dashboard/UploadInvoice";
 import SegmentConfiguration from "@/pages/dashboard/SegmentConfiguration";
+import AnalyticalReport from "@/pages/reports/AnalyticalReport";
 
 const SignIn = lazy(() => import("../pages/auth/SignIn"));
 const AppLayout = lazy(() => import("../components/layout/AppLayout"));
@@ -239,6 +240,14 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute allowedRoles={["superadmin"]}>
                 <Reports />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="analytical-report"
+            element={
+              <RoleProtectedRoute allowedRoles={["superadmin"]}>
+                <AnalyticalReport />
               </RoleProtectedRoute>
             }
           />
