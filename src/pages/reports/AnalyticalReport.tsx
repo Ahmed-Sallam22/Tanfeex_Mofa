@@ -1,8 +1,7 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useGetAnalyticalReportQuery,
-  type SegmentTransferData,
 } from "../../api/analyticalReport.api";
 import { useGetSegmentsByTypeQuery } from "../../api/segmentConfiguration.api";
 import SharedSelect from "../../shared/SharedSelect";
@@ -22,6 +21,7 @@ export default function AnalyticalReport() {
   const { t } = useTranslation();
   const [controlBudget, setControlBudget] = useState<string>("MOFA_COST_2");
   const [selectedSegment, setSelectedSegment] = useState<number | null>(null);
+  const [segmentFilter, setSegmentFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 10;
 
@@ -31,8 +31,9 @@ export default function AnalyticalReport() {
   // Fetch analytical report data
   const { data } = useGetAnalyticalReportQuery({
     segment_type_id: 11,
-    segment_code: selectedSegment,
+    segment_Code: selectedSegment,
     control_budget_name: controlBudget,
+    segment_filter: segmentFilter as 'all' | 'with_transfers' | 'with_funds' | 'with_both' | 'with_either',
     transaction_status: "approved",
     page: currentPage,
     page_size: pageSize,
@@ -42,6 +43,15 @@ export default function AnalyticalReport() {
   const budgetOptions: SelectOption[] = [
     { value: "MOFA_CASH", label: t("analyticalReport.liquidity") },
     { value: "MOFA_COST_2", label: t("analyticalReport.costs") },
+  ];
+
+  // Segment filter options
+  const segmentFilterOptions: SelectOption[] = [
+    { value: "all", label: t("analyticalReport.filterOptions.all") },
+    { value: "with_transfers", label: t("analyticalReport.filterOptions.withTransfers") },
+    { value: "with_funds", label: t("analyticalReport.filterOptions.withFunds") },
+    { value: "with_both", label: t("analyticalReport.filterOptions.withBoth") },
+    { value: "with_either", label: t("analyticalReport.filterOptions.withEither") },
   ];
 
   // Segment options from API
@@ -63,41 +73,14 @@ export default function AnalyticalReport() {
     setCurrentPage(1);
   };
 
+  const handleSegmentFilterChange = (value: string | number) => {
+    setSegmentFilter(String(value));
+    setCurrentPage(1);
+  };
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-
-  // Calculate total expenditure for each row
-  const calculateTotalExpenditure = useCallback(
-    (segment: SegmentTransferData) => {
-      return (
-        segment.actual_sum +
-        segment.encumbrance_sum +
-        segment.commitment_sum +
-        segment.other_sum
-      );
-    },
-    []
-  );
-
-  // Calculate remaining for each row
-  const calculateRemaining = useCallback(
-    (segment: SegmentTransferData) => {
-      const totalExpenditure = calculateTotalExpenditure(segment);
-      return segment.total_budget_sum - totalExpenditure;
-    },
-    [calculateTotalExpenditure]
-  );
-
-  // Calculate indicator percentage
-  const calculateIndicator = useCallback(
-    (segment: SegmentTransferData) => {
-      if (segment.total_budget_sum === 0) return 0;
-      const remaining = calculateRemaining(segment);
-      return (remaining / segment.total_budget_sum) * 100;
-    },
-    [calculateRemaining]
-  );
 
   // Define table columns
   const columns: TableColumn[] = useMemo(
@@ -106,15 +89,11 @@ export default function AnalyticalReport() {
         id: "economicClassificationNumber",
         header: t("analyticalReport.columns.economicClassificationNumber"),
         accessor: "mapping_code",
-        render: (_value: unknown, row: TableRow) => {
-          const segment = row as unknown as SegmentTransferData;
-          return segment.mapping_code || segment.segment_code;
-        },
       },
       {
         id: "economicClassificationName",
         header: t("analyticalReport.columns.economicClassificationName"),
-        accessor: "segment_alias",
+        accessor: "mapping_code_alias",
       },
       {
         id: "itemProgramProjectNumber",
@@ -122,9 +101,14 @@ export default function AnalyticalReport() {
         accessor: "segment_code",
       },
       {
+        id: "itemProgramProjectName",
+        header: t("analyticalReport.columns.itemProgramProjectName"),
+        accessor: "segment_alias",
+      },
+      {
         id: "initialBudget",
         header: t("analyticalReport.columns.initialBudget"),
-        accessor: "initial_budget_sum",
+        accessor: "initial_budget",
         render: (value: unknown) => formatNumber(value as number),
         showSum: true,
       },
@@ -138,14 +122,14 @@ export default function AnalyticalReport() {
       {
         id: "transferredFrom",
         header: t("analyticalReport.columns.transferredFrom"),
-        accessor: "total_from_center",
+        accessor: "total_from",
         render: (value: unknown) => formatNumber(value as number),
         showSum: true,
       },
       {
         id: "transferredTo",
         header: t("analyticalReport.columns.transferredTo"),
-        accessor: "total_to_center",
+        accessor: "total_to",
         render: (value: unknown) => formatNumber(value as number),
         showSum: true,
       },
@@ -159,79 +143,70 @@ export default function AnalyticalReport() {
       {
         id: "budgetAfterAdjustment",
         header: t("analyticalReport.columns.budgetAfterAdjustment"),
-        accessor: "total_budget_sum",
+        accessor: "total_budget",
         render: (value: unknown) => formatNumber(value as number),
         showSum: true,
       },
       {
         id: "encumbranceInProgress",
         header: t("analyticalReport.columns.encumbranceInProgress"),
-        accessor: "encumbrance_sum",
+        accessor: "encumbrance",
         render: (value: unknown) => formatNumber(value as number),
         showSum: true,
       },
       {
-        id: "commitments",
-        header: t("analyticalReport.columns.commitments"),
-        accessor: "commitment_sum",
+        id: "futuresColumn",
+        header: t("analyticalReport.columns.futuresColumn"),
+        accessor: "Futures_column",
         render: (value: unknown) => formatNumber(value as number),
         showSum: true,
       },
       {
         id: "actualExpenditure",
         header: t("analyticalReport.columns.actualExpenditure"),
-        accessor: "actual_sum",
+        accessor: "actual",
         render: (value: unknown) => formatNumber(value as number),
         showSum: true,
       },
       {
-        id: "totalExpenditure",
-        header: t("analyticalReport.columns.totalExpenditure"),
-        accessor: "totalExpenditure",
-        render: (_value: unknown, row: TableRow) => {
-          const segment = row as unknown as SegmentTransferData;
-          const totalExpenditure = calculateTotalExpenditure(segment);
-          return formatNumber(totalExpenditure);
-        },
+        id: "totalActual",
+        header: t("analyticalReport.columns.totalActual"),
+        accessor: "total_actual",
+        render: (value: unknown) => formatNumber(value as number),
         showSum: true,
       },
       {
-        id: "remaining",
-        header: t("analyticalReport.columns.remaining"),
-        accessor: "remaining",
-        render: (_value: unknown, row: TableRow) => {
-          const segment = row as unknown as SegmentTransferData;
-          const remaining = calculateRemaining(segment);
-          return formatNumber(remaining);
-        },
+        id: "fundsAvailable",
+        header: t("analyticalReport.columns.fundsAvailable"),
+        accessor: "funds_available",
+        render: (value: unknown) => formatNumber(value as number),
         showSum: true,
       },
       {
-        id: "indicator",
-        header: t("analyticalReport.columns.indicator"),
-        accessor: "indicator",
-        render: (_value: unknown, row: TableRow) => {
-          const segment = row as unknown as SegmentTransferData;
-          const indicator = calculateIndicator(segment);
+        id: "exchangeRate",
+        header: t("analyticalReport.columns.exchangeRate"),
+        accessor: "exchange_rate",
+        render: (value: unknown) => {
+          const rate = value as number;
           return (
             <span
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                indicator >= 75
+                rate >= 75
                   ? "bg-green-100 text-green-800"
-                  : indicator >= 50
+                  : rate >= 50
                   ? "bg-yellow-100 text-yellow-800"
-                  : indicator >= 25
+                  : rate >= 25
                   ? "bg-orange-100 text-orange-800"
                   : "bg-red-100 text-red-800"
               }`}
             >
-              {indicator.toFixed(2)}%
+              {rate.toFixed(2)}%
             </span>
           );
         },
       },
     ],
-    [t, calculateTotalExpenditure, calculateRemaining, calculateIndicator]
+    [t]
   );
 
   // Convert segments to table rows
@@ -255,7 +230,9 @@ export default function AnalyticalReport() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t("analyticalReport.controlBudget")}
+              </label>
               <SharedSelect
                 options={budgetOptions}
                 value={controlBudget}
@@ -264,11 +241,25 @@ export default function AnalyticalReport() {
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t("analyticalReport.segment")}
+              </label>
               <SharedSelect
                 options={segmentOptions}
                 value={selectedSegment ? String(selectedSegment) : ""}
                 onChange={handleSegmentChange}
                 placeholder={t("analyticalReport.selectSegment")}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t("analyticalReport.segmentFilter")}
+              </label>
+              <SharedSelect
+                options={segmentFilterOptions}
+                value={segmentFilter}
+                onChange={handleSegmentFilterChange}
+                placeholder={t("analyticalReport.selectSegmentFilter")}
               />
             </div>
           </div>
@@ -291,42 +282,42 @@ export default function AnalyticalReport() {
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600">
-                  {t("analyticalReport.segmentsWithTransfers")}
+                  {t("analyticalReport.grandInitialBudget")}
                 </p>
-                <p className="text-2xl font-bold text-green-600">
-                  {data.summary.segments_with_transfers}
+                <p className="text-xl font-bold text-green-600">
+                  {formatNumber(data.summary.grand_initial_budget)}
                 </p>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-red-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600">
-                  {t("analyticalReport.segmentsWithoutTransfers")}
+                  {t("analyticalReport.grandTotalDecreaseFund")}
                 </p>
-                <p className="text-2xl font-bold text-gray-600">
-                  {data.summary.segments_without_transfers}
+                <p className="text-xl font-bold text-red-600">
+                  {formatNumber(data.summary.grand_total_decrease_fund)}
                 </p>
               </div>
               <div className="bg-orange-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600">
-                  {t("analyticalReport.grandTotalFromCenter")}
+                  {t("analyticalReport.grandTotalFrom")}
                 </p>
                 <p className="text-xl font-bold text-orange-600">
-                  {formatNumber(data.summary.grand_total_from_center)}
+                  {formatNumber(data.summary.grand_total_from)}
                 </p>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600">
-                  {t("analyticalReport.grandTotalToCenter")}
+                  {t("analyticalReport.grandTotalTo")}
                 </p>
                 <p className="text-xl font-bold text-purple-600">
-                  {formatNumber(data.summary.grand_total_to_center)}
+                  {formatNumber(data.summary.grand_total_to)}
                 </p>
               </div>
               <div className="bg-indigo-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600">
-                  {t("analyticalReport.grandTotalNet")}
+                  {t("analyticalReport.grandTotalAdditionalFund")}
                 </p>
                 <p className="text-xl font-bold text-indigo-600">
-                  {formatNumber(data.summary.grand_total_net)}
+                  {formatNumber(data.summary.grand_total_additional_fund)}
                 </p>
               </div>
               <div className="bg-teal-50 p-4 rounded-lg">
@@ -337,12 +328,20 @@ export default function AnalyticalReport() {
                   {formatNumber(data.summary.grand_total_budget)}
                 </p>
               </div>
-              <div className="bg-cyan-50 p-4 rounded-lg">
+              <div className="bg-yellow-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600">
-                  {t("analyticalReport.grandFundsAvailable")}
+                  {t("analyticalReport.grandEncumbrance")}
                 </p>
-                <p className="text-xl font-bold text-cyan-600">
-                  {formatNumber(data.summary.grand_funds_available)}
+                <p className="text-xl font-bold text-yellow-600">
+                  {formatNumber(data.summary.grand_encumbrance)}
+                </p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  {t("analyticalReport.grandFuturesColumn")}
+                </p>
+                <p className="text-xl font-bold text-gray-600">
+                  {formatNumber(data.summary.grand_Futures_column)}
                 </p>
               </div>
               <div className="bg-pink-50 p-4 rounded-lg">
@@ -351,6 +350,30 @@ export default function AnalyticalReport() {
                 </p>
                 <p className="text-xl font-bold text-pink-600">
                   {formatNumber(data.summary.grand_actual)}
+                </p>
+              </div>
+              <div className="bg-rose-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  {t("analyticalReport.grandTotalActual")}
+                </p>
+                <p className="text-xl font-bold text-rose-600">
+                  {formatNumber(data.summary.grand_total_actual)}
+                </p>
+              </div>
+              <div className="bg-cyan-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  {t("analyticalReport.grandFundsAvailable")}
+                </p>
+                <p className="text-xl font-bold text-cyan-600">
+                  {formatNumber(data.summary.grand_funds_available)}
+                </p>
+              </div>
+              <div className="bg-emerald-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  {t("analyticalReport.grandExchangeRate")}
+                </p>
+                <p className="text-xl font-bold text-emerald-600">
+                  {data.summary.grand_exchange_rate.toFixed(2)}%
                 </p>
               </div>
             </div>
