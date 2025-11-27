@@ -4,6 +4,7 @@ import {
   useGetAnalyticalReportQuery,
   type SegmentTransferData,
 } from "../../api/analyticalReport.api";
+import { useGetSegmentsByTypeQuery } from "../../api/segmentConfiguration.api";
 import SharedSelect from "../../shared/SharedSelect";
 import {
   SharedTable,
@@ -20,12 +21,17 @@ interface SelectOption {
 export default function AnalyticalReport() {
   const { t } = useTranslation();
   const [controlBudget, setControlBudget] = useState<string>("MOFA_COST_2");
+  const [selectedSegment, setSelectedSegment] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 10;
+
+  // Fetch segments for segment_type 11
+  const { data: segmentsData } = useGetSegmentsByTypeQuery(11);
 
   // Fetch analytical report data
   const { data } = useGetAnalyticalReportQuery({
     segment_type_id: 11,
+    segment_Code: selectedSegment,
     control_budget_name: controlBudget,
     transaction_status: "approved",
     page: currentPage,
@@ -38,8 +44,22 @@ export default function AnalyticalReport() {
     { value: "MOFA_COST_2", label: t("analyticalReport.costs") },
   ];
 
+  // Segment options from API
+  const segmentOptions: SelectOption[] = useMemo(() => {
+    if (!segmentsData?.data) return [];
+    return segmentsData.data.map((segment) => ({
+      value: String(segment.id),
+      label: `${segment.code} - ${segment.alias}`,
+    }));
+  }, [segmentsData]);
+
   const handleBudgetChange = (value: string | number) => {
     setControlBudget(String(value));
+    setCurrentPage(1);
+  };
+
+  const handleSegmentChange = (value: string | number) => {
+    setSelectedSegment(value ? Number(value) : null);
     setCurrentPage(1);
   };
 
@@ -240,14 +260,20 @@ export default function AnalyticalReport() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t("analyticalReport.controlBudget")}
-              </label>
+
               <SharedSelect
                 options={budgetOptions}
                 value={controlBudget}
                 onChange={handleBudgetChange}
                 placeholder={t("analyticalReport.selectControlBudget")}
+              />
+            </div>
+            <div>
+              <SharedSelect
+                options={segmentOptions}
+                value={selectedSegment ? String(selectedSegment) : ""}
+                onChange={handleSegmentChange}
+                placeholder={t("analyticalReport.selectSegment")}
               />
             </div>
           </div>

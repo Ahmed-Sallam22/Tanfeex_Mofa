@@ -1336,6 +1336,8 @@
     "filters": "الفلاتر",
     "controlBudget": "رقابة الميزانية",
     "selectControlBudget": "اختر رقابة الميزانية",
+    "segment": "عنصر الميزانية",
+    "selectSegment": "اختر عنصر الميزانية",
     "liquidity": "سيولة",
     "costs": "تكاليف",
     "summary": "الملخص",
