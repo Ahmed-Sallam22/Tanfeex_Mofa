@@ -64,7 +64,7 @@ export interface AnalyticalReportResponse {
 
 export interface AnalyticalReportParams {
   segment_type_id: number;
-  segment_Code?: number | null;
+  segment_code?: number | null;
   control_budget_name: string;
   transaction_status?: string;
   page?: number;
@@ -81,7 +81,7 @@ export const analyticalReportApi = createApi({
         url: '/accounts-entities/segment_transfer_aggregation/',
         params: {
           segment_type_id: params.segment_type_id,
-          ...(params.segment_Code && { segment_Code: params.segment_Code }),
+          ...(params.segment_code && { segment_code: params.segment_code }),
           control_budget_name: params.control_budget_name,
           transaction_status: params.transaction_status || 'approved',
           page: params.page || 1,

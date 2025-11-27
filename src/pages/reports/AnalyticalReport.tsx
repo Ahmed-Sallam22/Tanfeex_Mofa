@@ -31,7 +31,7 @@ export default function AnalyticalReport() {
   // Fetch analytical report data
   const { data } = useGetAnalyticalReportQuery({
     segment_type_id: 11,
-    segment_Code: selectedSegment,
+    segment_code: selectedSegment,
     control_budget_name: controlBudget,
     transaction_status: "approved",
     page: currentPage,
