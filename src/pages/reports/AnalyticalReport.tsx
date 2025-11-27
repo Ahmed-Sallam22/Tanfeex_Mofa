@@ -1,8 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  useGetAnalyticalReportQuery,
-} from "../../api/analyticalReport.api";
+import { useGetAnalyticalReportQuery } from "../../api/analyticalReport.api";
 import { useGetSegmentsByTypeQuery } from "../../api/segmentConfiguration.api";
 import SharedSelect from "../../shared/SharedSelect";
 import {
@@ -33,7 +31,12 @@ export default function AnalyticalReport() {
     segment_type_id: 11,
     segment_Code: selectedSegment,
     control_budget_name: controlBudget,
-    segment_filter: segmentFilter as 'all' | 'with_transfers' | 'with_funds' | 'with_both' | 'with_either',
+    segment_filter: segmentFilter as
+      | "all"
+      | "with_transfers"
+      | "with_funds"
+      | "with_both"
+      | "with_either",
     transaction_status: "approved",
     page: currentPage,
     page_size: pageSize,
@@ -48,10 +51,19 @@ export default function AnalyticalReport() {
   // Segment filter options
   const segmentFilterOptions: SelectOption[] = [
     { value: "all", label: t("analyticalReport.filterOptions.all") },
-    { value: "with_transfers", label: t("analyticalReport.filterOptions.withTransfers") },
-    { value: "with_funds", label: t("analyticalReport.filterOptions.withFunds") },
+    {
+      value: "with_transfers",
+      label: t("analyticalReport.filterOptions.withTransfers"),
+    },
+    {
+      value: "with_funds",
+      label: t("analyticalReport.filterOptions.withFunds"),
+    },
     { value: "with_both", label: t("analyticalReport.filterOptions.withBoth") },
-    { value: "with_either", label: t("analyticalReport.filterOptions.withEither") },
+    {
+      value: "with_either",
+      label: t("analyticalReport.filterOptions.withEither"),
+    },
   ];
 
   // Segment options from API
