@@ -5,7 +5,11 @@ import {
   type SegmentTransferData,
 } from "../../api/analyticalReport.api";
 import SharedSelect from "../../shared/SharedSelect";
-import { SharedTable, type TableColumn, type TableRow } from "../../shared/SharedTable";
+import {
+  SharedTable,
+  type TableColumn,
+  type TableRow,
+} from "../../shared/SharedTable";
 import { formatNumber } from "../../utils/formatNumber";
 
 interface SelectOption {
@@ -44,27 +48,36 @@ export default function AnalyticalReport() {
   };
 
   // Calculate total expenditure for each row
-  const calculateTotalExpenditure = useCallback((segment: SegmentTransferData) => {
-    return (
-      segment.actual_sum +
-      segment.encumbrance_sum +
-      segment.commitment_sum +
-      segment.other_sum
-    );
-  }, []);
+  const calculateTotalExpenditure = useCallback(
+    (segment: SegmentTransferData) => {
+      return (
+        segment.actual_sum +
+        segment.encumbrance_sum +
+        segment.commitment_sum +
+        segment.other_sum
+      );
+    },
+    []
+  );
 
   // Calculate remaining for each row
-  const calculateRemaining = useCallback((segment: SegmentTransferData) => {
-    const totalExpenditure = calculateTotalExpenditure(segment);
-    return segment.total_budget_sum - totalExpenditure;
-  }, [calculateTotalExpenditure]);
+  const calculateRemaining = useCallback(
+    (segment: SegmentTransferData) => {
+      const totalExpenditure = calculateTotalExpenditure(segment);
+      return segment.total_budget_sum - totalExpenditure;
+    },
+    [calculateTotalExpenditure]
+  );
 
   // Calculate indicator percentage
-  const calculateIndicator = useCallback((segment: SegmentTransferData) => {
-    if (segment.total_budget_sum === 0) return 0;
-    const remaining = calculateRemaining(segment);
-    return (remaining / segment.total_budget_sum) * 100;
-  }, [calculateRemaining]);
+  const calculateIndicator = useCallback(
+    (segment: SegmentTransferData) => {
+      if (segment.total_budget_sum === 0) return 0;
+      const remaining = calculateRemaining(segment);
+      return (remaining / segment.total_budget_sum) * 100;
+    },
+    [calculateRemaining]
+  );
 
   // Define table columns
   const columns: TableColumn[] = useMemo(
@@ -208,7 +221,9 @@ export default function AnalyticalReport() {
 
   // Convert segments to table rows
   const tableData: TableRow[] = useMemo(() => {
-    return (data?.segments || []).map((segment) => segment as unknown as TableRow);
+    return (data?.segments || []).map(
+      (segment) => segment as unknown as TableRow
+    );
   }, [data?.segments]);
 
   return (
