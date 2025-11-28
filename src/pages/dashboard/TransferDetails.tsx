@@ -24,6 +24,7 @@ import { store } from "@/app/store";
 import Select from "react-select";
 import { formatNumber } from "@/utils/formatNumber";
 import { useTranslation } from "react-i18next";
+import RichTextEditor from "@/components/ui/RichTextEditor";
 
 interface TransferTableRow {
   id: string;
@@ -1529,9 +1530,31 @@ export default function TransferDetails() {
   const [isUploading, setIsUploading] = useState(false);
   const [isReopenClicked, setIsReopenClicked] = useState(false);
 
+  // Notes modal state
+  const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [notesContent, setNotesContent] = useState<string>("");
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+
   // Handler for attachments click
   const handleAttachmentsClick = () => {
     setIsAttachmentsModalOpen(true);
+  };
+
+  // Handler for notes button click
+  const handleNotesClick = () => {
+    const notes = apiData?.summary?.notes || "";
+    setNotesContent(notes);
+    setIsEditingNotes(false);
+    setIsNotesModalOpen(true);
+  };
+
+  // Handler for save notes
+  const handleSaveNotes = () => {
+    // Here you would typically call an API to update the notes
+    toast.success(t("messages.success"));
+    setIsEditingNotes(false);
+    setIsNotesModalOpen(false);
+    // TODO: Add API call to update notes
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -1680,6 +1703,136 @@ export default function TransferDetails() {
           )}
         </div>
       </div>
+
+      {/* Transfer Information Card */}
+      {apiData?.summary && (
+        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Side - Transfer Details */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Code */}
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    {t("tableColumns.code")}
+                  </p>
+                  <p className="text-lg font-semibold text-[#4E8476]">
+                    {apiData.summary.code || "-"}
+                  </p>
+                </div>
+
+                {/* Request Date */}
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    {t("tableColumns.requestDate")}
+                  </p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {apiData.summary.request_date
+                      ? new Date(apiData.summary.request_date).toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )
+                      : "-"}
+                  </p>
+                </div>
+
+                {/* Transfer Type */}
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    {t("transfer.transferType")}
+                  </p>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M8 5V8L10 10"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    {apiData.summary.transfer_type || "-"}
+                  </div>
+                </div>
+
+                {/* Control Budget */}
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    {t("tableColumns.budgetControl")}
+                  </p>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M2 4L8 2L14 4V8.5C14 11.5 11.5 14 8 14C4.5 14 2 11.5 2 8.5V4Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    {apiData.summary.control_budget || "-"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side - Notes Button */}
+            <div className="flex items-center justify-end">
+              <button
+                onClick={handleNotesClick}
+                className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#4E8476] to-[#3d6b5f] hover:from-[#3d6b5f] hover:to-[#2d5147] text-white rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M15.8333 2.5H4.16667C3.24619 2.5 2.5 3.24619 2.5 4.16667V15.8333C2.5 16.7538 3.24619 17.5 4.16667 17.5H15.8333C16.7538 17.5 17.5 16.7538 17.5 15.8333V4.16667C17.5 3.24619 16.7538 2.5 15.8333 2.5Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M5.83333 7.5H14.1667M5.83333 10.8333H14.1667M5.83333 14.1667H10"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="font-semibold">{t("common.viewNotes")}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div>
         <SharedTable
@@ -2153,6 +2306,112 @@ export default function TransferDetails() {
               {t("common.close")}
             </button>
           </div>
+        </div>
+      </SharedModal>
+
+      {/* Notes Modal */}
+      <SharedModal
+        isOpen={isNotesModalOpen}
+        onClose={() => {
+          setIsNotesModalOpen(false);
+          setIsEditingNotes(false);
+        }}
+        title={t("common.notes")}
+        size="lg"
+      >
+        <div className="p-6">
+          {!isEditingNotes ? (
+            // View Mode
+            <div className="space-y-4">
+              <div className="bg-gray-50 rounded-lg p-4 min-h-[200px] max-h-[400px] overflow-y-auto custom-scrollbar">
+                {notesContent ? (
+                  <div
+                    className="prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: notesContent }}
+                  />
+                ) : (
+                  <p className="text-gray-400 text-center py-12">
+                    {t("common.noNotes")}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setIsNotesModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  {t("common.close")}
+                </button>
+                {!isSubmitted && (
+                  <button
+                    onClick={() => setIsEditingNotes(true)}
+                    className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#3d6b5f] transition-colors flex items-center gap-2"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M11.3333 2.00004C11.5084 1.82494 11.7163 1.68605 11.9451 1.59129C12.1739 1.49653 12.4191 1.44775 12.6667 1.44775C12.9142 1.44775 13.1594 1.49653 13.3882 1.59129C13.617 1.68605 13.8249 1.82494 14 2.00004C14.1751 2.17513 14.314 2.383 14.4088 2.61178C14.5036 2.84055 14.5523 3.08575 14.5523 3.33337C14.5523 3.58099 14.5036 3.82619 14.4088 4.05497C14.314 4.28374 14.1751 4.49161 14 4.66671L5.00001 13.6667L1.33334 14.6667L2.33334 11L11.3333 2.00004Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    {t("common.edit")}
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            // Edit Mode
+            <div className="space-y-4">
+              <RichTextEditor
+                value={notesContent}
+                onChange={setNotesContent}
+                placeholder={t("common.enterNotes")}
+                height={300}
+              />
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setIsEditingNotes(false);
+                    setNotesContent(apiData?.summary?.notes || "");
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  {t("common.cancel")}
+                </button>
+                <button
+                  onClick={handleSaveNotes}
+                  className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#3d6b5f] transition-colors flex items-center gap-2"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M13.3333 4L6 11.3333L2.66667 8"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  {t("common.save")}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </SharedModal>
     </div>

@@ -68,6 +68,11 @@ export interface TransferDetail {
 
 export interface TransferDetailsSummary {
   transaction_id: string;
+  code?: string;
+  request_date?: string;
+  transfer_type?: string;
+  control_budget?: string;
+  notes?: string;
   total_transfers: number;
   total_from: number;
   total_to: number;
