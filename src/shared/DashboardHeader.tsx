@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/app/store";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/utils/cn";
+import moment from "moment-hijri";
 
 export default function DashboardHeader() {
   // Get user data from Redux store
@@ -49,17 +50,19 @@ export default function DashboardHeader() {
     year: "numeric",
   });
 
+  // Hijri date
+  moment.locale(i18n.language === "ar" ? "ar-sa" : "en");
+  const hijriDate = moment();
+  const formattedHijri = hijriDate.format(
+    i18n.language === "ar" ? "iDD iMMMM iYYYY" : "iDD iMMMM iYYYY"
+  );
+
   const hours = new Date().getHours();
   const isMorning = hours < 12;
   const greeting = isMorning ? t("greeting.morning") : t("greeting.evening");
 
   return (
-    <header
-      className={cn(
-        "flex items-start justify-between gap-4",
-        
-      )}
-    >
+    <header className={cn("flex items-start justify-between gap-4")}>
       {/* Left: greeting */}
       <div className="flex flex-col gap-1">
         <h2
@@ -70,14 +73,24 @@ export default function DashboardHeader() {
         >
           {greeting}, {userName}
         </h2>
-        <p
-          className={cn(
-            "text-[#757575] text-sm",
-            isRTL ? "text-right" : "text-left"
-          )}
-        >
-          {formatted}
-        </p>
+        <div className="flex flex-col gap-0.5">
+          <p
+            className={cn(
+              "text-[#757575] text-sm",
+              isRTL ? "text-right" : "text-left"
+            )}
+          >
+            {formatted}
+          </p>
+          <p
+            className={cn(
+              "text-[#757575] text-xs",
+              isRTL ? "text-right" : "text-left"
+            )}
+          >
+            {formattedHijri} {isRTL ? "هـ" : "AH"}
+          </p>
+        </div>
       </div>
 
       {/* Right: navbar capsule */}

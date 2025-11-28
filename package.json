@@ -22,6 +22,7 @@
     "dayjs": "^1.11.18",
     "i18next": "^25.4.2",
     "lucide-react": "^0.542.0",
+    "moment-hijri": "^3.0.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.62.0",

@@ -1497,12 +1497,14 @@ export default function TransferDetails() {
         const availableBudget = transferRow.availableBudget || 0;
         const toValue = transferRow.to || 0;
         const fromValue = transferRow.from || 0;
-        
+
         // Calculate: availableBudget + to - from
         const newExpectedFund = availableBudget + toValue - fromValue;
-        
+
         return (
-          <span className="text-sm text-gray-900">{formatNumber(newExpectedFund)}</span>
+          <span className="text-sm text-gray-900">
+            {formatNumber(newExpectedFund)}
+          </span>
         );
       },
     },

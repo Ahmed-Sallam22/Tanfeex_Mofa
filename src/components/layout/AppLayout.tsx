@@ -1,14 +1,17 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import {
+  Outlet
+  // useLocation
+} from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import { useState } from 'react';
 import Sidebar from '@/shared/Sidebar';
 import DashboardHeader from '@/shared/DashboardHeader';
-import ChatBot from '@/pages/dashboard/ChatBot';
+// import ChatBot from '@/pages/dashboard/ChatBot';
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);      // mobile/tablet overlay
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // desktop: false => 2/10, true => 1/11
-  const location = useLocation();
+  // const location = useLocation();
   return (
     <div className="h-screen overflow-x-hidden">
       {/* Mobile & Tablet Backdrop */}
@@ -82,11 +85,11 @@ export default function AppLayout() {
         </main>
       
       </div>
-      {!location.pathname.includes('/chat') && (
+      {/* {!location.pathname.includes('/chat') && (
         <div className='absolute bottom-6 right-10'>
           <ChatBot></ChatBot>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
