@@ -14,6 +14,7 @@ import {
   useReopenTransferMutation,
   transferDetailsApi,
 } from "@/api/transferDetails.api";
+import { useUpdateTransferMutation } from "@/api/transfer.api";
 import {
   useGetSegmentTypesQuery,
   useGetSegmentsByTypeQuery,
@@ -85,6 +86,8 @@ export default function TransferDetails() {
   const [submitTransfer] = useSubmitTransferMutation();
   const [uploadExcel] = useUploadExcelMutation();
   const [reopenTransfer] = useReopenTransferMutation();
+  const [updateTransfer, { isLoading: isUpdatingTransfer }] =
+    useUpdateTransferMutation();
 
   // Fetch segment types for dynamic columns
   const { data: segmentTypesData, isLoading: isLoadingSegmentTypes } =
@@ -1549,12 +1552,30 @@ export default function TransferDetails() {
   };
 
   // Handler for save notes
-  const handleSaveNotes = () => {
-    // Here you would typically call an API to update the notes
-    toast.success(t("messages.success"));
-    setIsEditingNotes(false);
-    setIsNotesModalOpen(false);
-    // TODO: Add API call to update notes
+  const handleSaveNotes = async () => {
+    try {
+      // Update transfer with new notes (need to send all required fields)
+      await updateTransfer({
+        id: Number(transactionId),
+        body: {
+          notes: notesContent,
+          transaction_date: apiData?.summary?.period || "",
+          type: "FAR", // Static type from the original data
+        },
+      }).unwrap();
+
+      toast.success(t("messages.success"));
+      setIsEditingNotes(false);
+      setIsNotesModalOpen(false);
+
+      // Refetch transfer details to get updated data
+      store.dispatch(
+        transferDetailsApi.util.invalidateTags(["TransferDetails"])
+      );
+    } catch (error) {
+      console.error("Error updating notes:", error);
+      toast.error(t("messages.error"));
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -1728,14 +1749,13 @@ export default function TransferDetails() {
                   </p>
                   <p className="text-sm font-medium text-gray-900">
                     {apiData.summary.request_date
-                      ? new Date(apiData.summary.request_date).toLocaleDateString(
-                          "en-GB",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          }
-                        )
+                      ? new Date(
+                          apiData.summary.request_date
+                        ).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })
                       : "-"}
                   </p>
                 </div>
@@ -2384,30 +2404,41 @@ export default function TransferDetails() {
                     setIsEditingNotes(false);
                     setNotesContent(apiData?.summary?.notes || "");
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+                  disabled={isUpdatingTransfer}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t("common.cancel")}
                 </button>
                 <button
                   onClick={handleSaveNotes}
-                  className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#3d6b5f] transition-colors flex items-center gap-2"
+                  disabled={isUpdatingTransfer}
+                  className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#3d6b5f] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M13.3333 4L6 11.3333L2.66667 8"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  {t("common.save")}
+                  {isUpdatingTransfer ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      {t("common.save")}...
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M13.3333 4L6 11.3333L2.66667 8"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      {t("common.save")}
+                    </>
+                  )}
                 </button>
               </div>
             </div>
