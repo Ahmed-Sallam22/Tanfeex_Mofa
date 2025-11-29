@@ -294,7 +294,7 @@ export default function TransferDetails() {
     }
   );
 
-  // Filtered data for segment1 when applicable
+  // Filtered data for segment1 when applicable (ONLY for segment type 11)
   const { data: filteredSegmentData1 } = useGetSegmentsByTypeAndParentQuery(
     {
       segmentType: segment1?.segment_id || 0,
@@ -304,7 +304,7 @@ export default function TransferDetails() {
       skip:
         !segment1 ||
         !shouldUseFilteredData ||
-        segment1.segment_type_oracle_number === 11,
+        segment1.segment_type_oracle_number !== 11, // Only filter segment 11
     }
   );
 
@@ -315,7 +315,7 @@ export default function TransferDetails() {
     }
   );
 
-  // Filtered data for segment2 when applicable
+  // Filtered data for segment2 when applicable (ONLY for segment type 11)
   const { data: filteredSegmentData2 } = useGetSegmentsByTypeAndParentQuery(
     {
       segmentType: segment2?.segment_id || 0,
@@ -325,7 +325,7 @@ export default function TransferDetails() {
       skip:
         !segment2 ||
         !shouldUseFilteredData ||
-        segment2.segment_type_oracle_number === 11,
+        segment2.segment_type_oracle_number !== 11, // Only filter segment 11
     }
   );
 
@@ -336,7 +336,7 @@ export default function TransferDetails() {
     }
   );
 
-  // Filtered data for segment3 when applicable
+  // Filtered data for segment3 when applicable (ONLY for segment type 11)
   const { data: filteredSegmentData3 } = useGetSegmentsByTypeAndParentQuery(
     {
       segmentType: segment3?.segment_id || 0,
@@ -346,7 +346,7 @@ export default function TransferDetails() {
       skip:
         !segment3 ||
         !shouldUseFilteredData ||
-        segment3.segment_type_oracle_number === 11,
+        segment3.segment_type_oracle_number !== 11, // Only filter segment 11
     }
   );
 
@@ -357,7 +357,7 @@ export default function TransferDetails() {
     }
   );
 
-  // Filtered data for segment4 when applicable
+  // Filtered data for segment4 when applicable (ONLY for segment type 11)
   const { data: filteredSegmentData4 } = useGetSegmentsByTypeAndParentQuery(
     {
       segmentType: segment4?.segment_id || 0,
@@ -367,7 +367,7 @@ export default function TransferDetails() {
       skip:
         !segment4 ||
         !shouldUseFilteredData ||
-        segment4.segment_type_oracle_number === 11,
+        segment4.segment_type_oracle_number !== 11, // Only filter segment 11
     }
   );
 
@@ -378,7 +378,7 @@ export default function TransferDetails() {
     }
   );
 
-  // Filtered data for segment5 when applicable
+  // Filtered data for segment5 when applicable (ONLY for segment type 11)
   const { data: filteredSegmentData5 } = useGetSegmentsByTypeAndParentQuery(
     {
       segmentType: segment5?.segment_id || 0,
@@ -388,7 +388,7 @@ export default function TransferDetails() {
       skip:
         !segment5 ||
         !shouldUseFilteredData ||
-        segment5.segment_type_oracle_number === 11,
+        segment5.segment_type_oracle_number !== 11, // Only filter segment 11
     }
   );
 
@@ -402,15 +402,14 @@ export default function TransferDetails() {
       normalData: typeof segmentData1,
       filteredData: typeof filteredSegmentData1
     ) => {
-      // Always use normal data for segment 11 (Mofa Budget)
+      // ONLY use filtered data for segment 11 (Mofa Budget) in internal transfers
       if (segment?.segment_type_oracle_number === 11) {
-        return normalData?.data;
+        // Use filtered data if available (internal transfer with first row data)
+        if (shouldUseFilteredData && filteredData?.data) {
+          return filteredData.data;
+        }
       }
-      // Use filtered data for internal transfers with first row data
-      if (shouldUseFilteredData && filteredData?.data) {
-        return filteredData.data;
-      }
-      // Default to normal data
+      // All other segments: always use normal data
       return normalData?.data;
     };
 
@@ -487,7 +486,7 @@ export default function TransferDetails() {
   };
 
   // Helper function to get segment options for a specific row
-  // For internal transfers, non-first rows get filtered options (except for segment 11)
+  // For internal transfers, ONLY segment 11 gets filtered in non-first rows
   const getSegmentOptionsForRow = (
     rowId: string,
     segmentOracleNumber: number,
@@ -498,14 +497,14 @@ export default function TransferDetails() {
     const isFirstRow = rowIndex === 0;
 
     // Always use full options for:
-    // 1. First row
-    // 2. Segment 11 (Mofa Budget) - this is the filtering criteria
+    // 1. First row (all segments)
+    // 2. Any segment that is NOT segment 11
     // 3. Non-internal transfers
-    if (isFirstRow || segmentOracleNumber === 11 || !isInternalTransfer) {
+    if (isFirstRow || segmentOracleNumber !== 11 || !isInternalTransfer) {
       return createSegmentOptions(segmentId);
     }
 
-    // For other rows in internal transfers, check if we have filtered data
+    // For segment 11 in non-first rows of internal transfers, use filtered data
     if (shouldUseFilteredData) {
       // The filtered data is already in segmentDataMap, so just use it
       return createSegmentOptions(segmentId);
