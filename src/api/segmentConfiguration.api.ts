@@ -169,6 +169,18 @@ export const segmentConfigurationApi = createApi({
       }),
       providesTags: ['Segments'],
     }),
+
+    // Get segments by segment type filtered by parent code
+    getSegmentsByTypeAndParent: builder.query<
+      SegmentsResponse,
+      { segmentType: number; parentCode: string }
+    >({
+      query: ({ segmentType, parentCode }) => ({
+        url: `/accounts-entities/segments/?segment_type=${segmentType}&same_filter_code=${parentCode}`,
+        method: 'GET',
+      }),
+      providesTags: ['Segments'],
+    }),
   }),
 });
 
@@ -182,4 +194,5 @@ export const {
   useLoadSegmentsValuesMutation,
   useLoadSegmentsFundsMutation,
   useGetSegmentsByTypeQuery,
+  useGetSegmentsByTypeAndParentQuery,
 } = segmentConfigurationApi;
