@@ -18,6 +18,7 @@ import { useUpdateTransferMutation } from "@/api/transfer.api";
 import {
   useGetSegmentTypesQuery,
   useGetSegmentsByTypeQuery,
+  useGetSegmentsByTypeAndParentQuery,
   type Segment,
 } from "@/api/segmentConfiguration.api";
 import { toast } from "react-hot-toast";
@@ -102,6 +103,14 @@ export default function TransferDetails() {
         (a, b) => a.segment_type_oracle_number - b.segment_type_oracle_number
       );
   }, [segmentTypesData]);
+
+  // State to track the first row's segment 11 (Mofa Budget) value for filtering
+  const [firstRowMofaBudget, setFirstRowMofaBudget] = useState<string>("");
+
+  // Check if transfer type is "داخلية" (Internal)
+  const isInternalTransfer = useMemo(() => {
+    return apiData?.summary?.transfer_type === "داخلية";
+  }, [apiData?.summary?.transfer_type]);
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -251,6 +260,18 @@ export default function TransferDetails() {
     };
   }, [localRows, transactionId]);
 
+  // Track the first row's segment 11 (Mofa Budget) value for filtering
+  useEffect(() => {
+    const allRows = [...editedRows, ...localRows];
+    if (allRows.length > 0 && isInternalTransfer) {
+      const firstRow = allRows[0];
+      const segment11Value = (firstRow.segment11 as string) || "";
+      setFirstRowMofaBudget(segment11Value);
+    } else {
+      setFirstRowMofaBudget("");
+    }
+  }, [editedRows, localRows, isInternalTransfer]);
+
   type Option = { value: string; label: string; name: string };
 
   // Pre-call hooks for all required segments (must be called unconditionally)
@@ -261,6 +282,10 @@ export default function TransferDetails() {
   const segment4 = requiredSegments[3];
   const segment5 = requiredSegments[4];
 
+  // Determine if we need filtered data (for internal transfers with first row data)
+  const shouldUseFilteredData =
+    isInternalTransfer && firstRowMofaBudget.length > 0;
+
   // Call hooks unconditionally (they will skip if segment is undefined)
   const { data: segmentData1 } = useGetSegmentsByTypeQuery(
     segment1?.segment_id || 0,
@@ -268,24 +293,84 @@ export default function TransferDetails() {
       skip: !segment1,
     }
   );
+
+  // Filtered data for segment1 when applicable
+  const { data: filteredSegmentData1 } = useGetSegmentsByTypeAndParentQuery(
+    {
+      segmentType: segment1?.segment_id || 0,
+      parentCode: firstRowMofaBudget,
+    },
+    {
+      skip:
+        !segment1 ||
+        !shouldUseFilteredData ||
+        segment1.segment_type_oracle_number === 11,
+    }
+  );
+
   const { data: segmentData2 } = useGetSegmentsByTypeQuery(
     segment2?.segment_id || 0,
     {
       skip: !segment2,
     }
   );
+
+  // Filtered data for segment2 when applicable
+  const { data: filteredSegmentData2 } = useGetSegmentsByTypeAndParentQuery(
+    {
+      segmentType: segment2?.segment_id || 0,
+      parentCode: firstRowMofaBudget,
+    },
+    {
+      skip:
+        !segment2 ||
+        !shouldUseFilteredData ||
+        segment2.segment_type_oracle_number === 11,
+    }
+  );
+
   const { data: segmentData3 } = useGetSegmentsByTypeQuery(
     segment3?.segment_id || 0,
     {
       skip: !segment3,
     }
   );
+
+  // Filtered data for segment3 when applicable
+  const { data: filteredSegmentData3 } = useGetSegmentsByTypeAndParentQuery(
+    {
+      segmentType: segment3?.segment_id || 0,
+      parentCode: firstRowMofaBudget,
+    },
+    {
+      skip:
+        !segment3 ||
+        !shouldUseFilteredData ||
+        segment3.segment_type_oracle_number === 11,
+    }
+  );
+
   const { data: segmentData4 } = useGetSegmentsByTypeQuery(
     segment4?.segment_id || 0,
     {
       skip: !segment4,
     }
   );
+
+  // Filtered data for segment4 when applicable
+  const { data: filteredSegmentData4 } = useGetSegmentsByTypeAndParentQuery(
+    {
+      segmentType: segment4?.segment_id || 0,
+      parentCode: firstRowMofaBudget,
+    },
+    {
+      skip:
+        !segment4 ||
+        !shouldUseFilteredData ||
+        segment4.segment_type_oracle_number === 11,
+    }
+  );
+
   const { data: segmentData5 } = useGetSegmentsByTypeQuery(
     segment5?.segment_id || 0,
     {
@@ -293,19 +378,82 @@ export default function TransferDetails() {
     }
   );
 
+  // Filtered data for segment5 when applicable
+  const { data: filteredSegmentData5 } = useGetSegmentsByTypeAndParentQuery(
+    {
+      segmentType: segment5?.segment_id || 0,
+      parentCode: firstRowMofaBudget,
+    },
+    {
+      skip:
+        !segment5 ||
+        !shouldUseFilteredData ||
+        segment5.segment_type_oracle_number === 11,
+    }
+  );
+
   // Build segment data map
   const segmentDataMap = useMemo(() => {
     const map: Record<number, Segment[]> = {};
-    if (segment1 && segmentData1?.data)
-      map[segment1.segment_id] = segmentData1.data;
-    if (segment2 && segmentData2?.data)
-      map[segment2.segment_id] = segmentData2.data;
-    if (segment3 && segmentData3?.data)
-      map[segment3.segment_id] = segmentData3.data;
-    if (segment4 && segmentData4?.data)
-      map[segment4.segment_id] = segmentData4.data;
-    if (segment5 && segmentData5?.data)
-      map[segment5.segment_id] = segmentData5.data;
+
+    // Helper function to select the appropriate data source
+    const selectSegmentData = (
+      segment: typeof segment1,
+      normalData: typeof segmentData1,
+      filteredData: typeof filteredSegmentData1
+    ) => {
+      // Always use normal data for segment 11 (Mofa Budget)
+      if (segment?.segment_type_oracle_number === 11) {
+        return normalData?.data;
+      }
+      // Use filtered data for internal transfers with first row data
+      if (shouldUseFilteredData && filteredData?.data) {
+        return filteredData.data;
+      }
+      // Default to normal data
+      return normalData?.data;
+    };
+
+    if (segment1) {
+      const data = selectSegmentData(
+        segment1,
+        segmentData1,
+        filteredSegmentData1
+      );
+      if (data) map[segment1.segment_id] = data;
+    }
+    if (segment2) {
+      const data = selectSegmentData(
+        segment2,
+        segmentData2,
+        filteredSegmentData2
+      );
+      if (data) map[segment2.segment_id] = data;
+    }
+    if (segment3) {
+      const data = selectSegmentData(
+        segment3,
+        segmentData3,
+        filteredSegmentData3
+      );
+      if (data) map[segment3.segment_id] = data;
+    }
+    if (segment4) {
+      const data = selectSegmentData(
+        segment4,
+        segmentData4,
+        filteredSegmentData4
+      );
+      if (data) map[segment4.segment_id] = data;
+    }
+    if (segment5) {
+      const data = selectSegmentData(
+        segment5,
+        segmentData5,
+        filteredSegmentData5
+      );
+      if (data) map[segment5.segment_id] = data;
+    }
     return map;
   }, [
     segment1,
@@ -318,6 +466,12 @@ export default function TransferDetails() {
     segmentData3,
     segmentData4,
     segmentData5,
+    filteredSegmentData1,
+    filteredSegmentData2,
+    filteredSegmentData3,
+    filteredSegmentData4,
+    filteredSegmentData5,
+    shouldUseFilteredData,
   ]);
 
   // Helper function to create options from segments
@@ -330,6 +484,35 @@ export default function TransferDetails() {
         label: `${seg.code} - ${seg.alias}`,
         name: seg.alias,
       }));
+  };
+
+  // Helper function to get segment options for a specific row
+  // For internal transfers, non-first rows get filtered options (except for segment 11)
+  const getSegmentOptionsForRow = (
+    rowId: string,
+    segmentOracleNumber: number,
+    segmentId: number
+  ): Option[] => {
+    const allRows = [...editedRows, ...localRows];
+    const rowIndex = allRows.findIndex((r) => r.id === rowId);
+    const isFirstRow = rowIndex === 0;
+
+    // Always use full options for:
+    // 1. First row
+    // 2. Segment 11 (Mofa Budget) - this is the filtering criteria
+    // 3. Non-internal transfers
+    if (isFirstRow || segmentOracleNumber === 11 || !isInternalTransfer) {
+      return createSegmentOptions(segmentId);
+    }
+
+    // For other rows in internal transfers, check if we have filtered data
+    if (shouldUseFilteredData) {
+      // The filtered data is already in segmentDataMap, so just use it
+      return createSegmentOptions(segmentId);
+    }
+
+    // Fallback to normal options
+    return createSegmentOptions(segmentId);
   };
 
   // Create a default row for when there's no data
@@ -1087,7 +1270,6 @@ export default function TransferDetails() {
 
     requiredSegments.forEach((segment) => {
       const segmentKey = `segment${segment.segment_type_oracle_number}`;
-      const segmentOptions = createSegmentOptions(segment.segment_id);
       const translatedHeader = getSegmentHeader(
         segment.segment_type_oracle_number,
         segment.segment_name
@@ -1100,6 +1282,13 @@ export default function TransferDetails() {
 
         render: (_, row) => {
           const transferRow = row as unknown as TransferTableRow;
+          // Get options based on row context (first row vs others, internal vs external)
+          const segmentOptions = getSegmentOptionsForRow(
+            transferRow.id,
+            segment.segment_type_oracle_number,
+            segment.segment_id
+          );
+
           return isSubmitted ? (
             <span className="text-sm text-gray-900">
               {transferRow[segmentKey] as string}
