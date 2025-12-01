@@ -342,7 +342,7 @@ export default function Reports() {
   const periodOptions: SelectOption[] = [
     { value: "1-25", label: `${t("reports.january")} 2025` },
     { value: "1-24", label: `${t("reports.january")} 2024` },
-    { value: "1-23", label: `${t("reports.january")} 2023` },
+    // { value: "1-23", label: `${t("reports.january")} 2023` },
   ];
 
   // Select options for control budget

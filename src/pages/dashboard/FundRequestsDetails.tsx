@@ -1662,6 +1662,103 @@ export default function TransferDetails() {
         </div>
       </div>
 
+      {/* Transfer Information Card */}
+      {apiData?.summary && (
+        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Side - Transfer Details */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Code */}
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    {t("tableColumns.code")}
+                  </p>
+                  <p className="text-lg font-semibold text-[#4E8476]">
+                    {apiData.summary.code || "-"}
+                  </p>
+                </div>
+
+                {/* Request Date */}
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    {t("tableColumns.requestDate")}
+                  </p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {apiData.summary.request_date
+                      ? new Date(
+                          apiData.summary.request_date
+                        ).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : "-"}
+                  </p>
+                </div>
+
+                {/* Transfer Type */}
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    {t("transfer.transferType")}
+                  </p>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M8 5V8L10 10"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    {apiData.summary.transfer_type || "-"}
+                  </div>
+                </div>
+
+                {/* Control Budget */}
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    {t("tableColumns.budgetControl")}
+                  </p>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M2 4L8 2L14 4V8.5C14 11.5 11.5 14 8 14C4.5 14 2 11.5 2 8.5V4Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    {apiData.summary.control_budget || "-"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div>
         <SharedTable
           columns={columnsDetails}

@@ -650,7 +650,7 @@ export default function FundRequests() {
     // Current Year (2025)
     { value: "1-25", label: "1-25" },
     // Next Year (2026)
-    { value: "1-26", label: "1-26" },
+    // { value: "1-26", label: "1-26" },
   ];
 
   // Select options for budget control
