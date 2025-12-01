@@ -105,7 +105,13 @@
     "reservationsPercentage": "Reservations Percentage",
     "expenditureIndicators": "Expenditure Indicators",
     "segmentType": "Segment Type",
-    "controlBudget": "Control Budget"
+    "controlBudget": "Control Budget",
+    "totalSpent": "Total Spent",
+    "remainingBudget": "Remaining",
+    "encumbranceInProgress": "Encumbrance In Progress",
+    "covenant": "Covenant",
+    "actualSpent": "Actual Spent",
+    "adjustedBudget": "Adjusted Budget"
   },
   "dashboardDetails": {
     "backToDashboard": "Back to Dashboard",

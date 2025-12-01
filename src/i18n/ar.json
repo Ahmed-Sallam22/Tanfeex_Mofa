@@ -104,7 +104,13 @@
     "reservationsPercentage": "نسبة الحجوزات",
     "expenditureIndicators": "مؤشرات الصرف",
     "segmentType": "نوع الشريحة",
-    "controlBudget": "ميزانية التحكم"
+    "controlBudget": "ميزانية التحكم",
+    "totalSpent": "إجمالي المنصرف",
+    "remainingBudget": "المتبقي",
+    "encumbranceInProgress": "حجوزات تحت الإجراء",
+    "covenant": "العهد",
+    "actualSpent": "المنصرف الفعلي",
+    "adjustedBudget": "الاعتماد بعد التعديل"
   },
   "dashboardDetails": {
     "backToDashboard": "العودة إلى لوحة التحكم",

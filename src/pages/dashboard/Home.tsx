@@ -6,7 +6,6 @@ import {
   Pie,
   Cell,
   Tooltip as RTooltip,
-  Legend,
   BarChart,
   CartesianGrid,
   XAxis,
@@ -195,7 +194,10 @@ export default function Home() {
 
   // Prepare pie chart data with theme colors
   const pieChartsData = useMemo(() => {
-    if (!analyticalData?.summary) {
+    // Use API data
+    const summary = analyticalData?.summary;
+
+    if (!summary) {
       return {
         exchangeRateData: [],
         totalExpenditureData: [],
@@ -207,7 +209,6 @@ export default function Home() {
       };
     }
 
-    const summary = analyticalData.summary;
     const totalBudget = summary.grand_total_budget || 1; // Avoid division by zero
 
     // Calculate percentages
@@ -217,87 +218,77 @@ export default function Home() {
     const totalActualPercentage =
       (summary.grand_total_actual / totalBudget) * 100;
 
-    // Theme colors - matching the app theme
+    // Theme colors - 4 colors derived from primary #4E8476
     const COLORS = {
-      primary: "#4E8476", // Main theme green
-      secondary: "#6BE6E4", // Teal/cyan accent
-      accent: "#007E77", // Dark teal
-      light: "#A7F3D0", // Light green
-      muted: "#D1D5DB", // Gray for remaining/empty
-      warning: "#F59E0B", // Amber
+      primary: "#4E8476", // Main theme green (original)
+      secondary: "#6BA399", // Lighter teal
+      tertiary: "#3D6860", // Darker shade
+      light: "#8FB8AF", // Light muted green
     };
 
     // 1. مؤشر الصرف (Exchange Rate Indicator) - Total Actual vs Remaining Budget
-    const spentAmount = summary.grand_total_actual;
-    const remainingBudget = totalBudget - spentAmount;
     const exchangeRateData = [
       {
-        name: t("home.spent"),
-        value: spentAmount,
+        name: t("home.totalSpent"),
+        value: summary.grand_total_actual,
         color: COLORS.primary,
       },
       {
-        name: t("home.remaining"),
-        value: remainingBudget > 0 ? remainingBudget : 0,
-        color: COLORS.muted,
+        name: t("home.remainingBudget"),
+        value: summary.grand_funds_available,
+        color: COLORS.light,
       },
     ];
 
     // 2. نسب اجمالي الصرف (Total Expenditure Ratio) - Breakdown of budget usage
     const totalExpenditureData = [
       {
-        name: t("home.encumbrance"),
+        name: t("home.encumbranceInProgress"),
         value: summary.grand_encumbrance,
         color: COLORS.secondary,
       },
       {
-        name: t("home.futures"),
-        value: summary.grand_Futures_column || 0,
-        color: COLORS.warning,
+        name: t("home.covenant"),
+        value: summary.grand_Futures_column,
+        color: COLORS.tertiary,
       },
       {
-        name: t("home.actual"),
+        name: t("home.actualSpent"),
         value: summary.grand_actual,
         color: COLORS.primary,
       },
       {
-        name: t("home.available"),
+        name: t("home.remainingBudget"),
         value: summary.grand_funds_available,
         color: COLORS.light,
       },
-    ].filter((item) => item.value > 0); // Filter out zero values
+    ];
 
     // 3. نسبة المنصرف الفعلي (Actual Expenditure Percentage)
     const actualExpenditureData = [
       {
-        name: t("home.actual"),
+        name: t("home.actualSpent"),
         value: summary.grand_actual,
         color: COLORS.primary,
       },
       {
-        name: t("home.remaining"),
-        value:
-          totalBudget - summary.grand_actual > 0
-            ? totalBudget - summary.grand_actual
-            : 0,
-        color: COLORS.muted,
+        name: t("home.adjustedBudget"),
+        value: summary.grand_total_budget,
+        color: COLORS.light,
       },
     ];
 
     // 4. نسبة الحجوزات (Reservations/Encumbrance Percentage)
     const reservationsData = [
       {
-        name: t("home.encumbrance"),
-        value: summary.grand_encumbrance,
-        color: COLORS.secondary,
+        name: t("home.adjustedBudget"),
+        value: summary.grand_total_budget,
+        color: COLORS.light,
       },
       {
-        name: t("home.remaining"),
-        value:
-          totalBudget - summary.grand_encumbrance > 0
-            ? totalBudget - summary.grand_encumbrance
-            : 0,
-        color: COLORS.muted,
+        name: t("home.encumbranceInProgress"),
+        value: summary.grand_encumbrance,
+        color: COLORS.secondary,
       },
     ];
 
@@ -310,7 +301,7 @@ export default function Home() {
       actualPercentage: actualPercentage.toFixed(2),
       encumbrancePercentage: encumbrancePercentage.toFixed(2),
     };
-  }, [analyticalData, t]);
+  }, [analyticalData, t]); // Using API data with translations
 
   // Helper function to format numbers
   const formatValue = (value: number) => {
@@ -318,35 +309,6 @@ export default function Home() {
     if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
     if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
     return value.toLocaleString();
-  };
-
-  // Custom label renderer for pie charts
-  const renderCustomizedLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-  }: any) => {
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor={x > cx ? "start" : "end"}
-        dominantBaseline="central"
-        fontSize={14}
-        fontWeight={600}
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
   };
 
   return (
@@ -508,47 +470,74 @@ export default function Home() {
                   {pieChartsData.exchangeRatePercentage}%
                 </div>
               </div>
-              <div className="h-[280px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieChartsData.exchangeRateData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={renderCustomizedLabel}
-                      outerRadius={100}
-                      innerRadius={60}
-                      dataKey="value"
-                      strokeWidth={0}
-                    >
-                      {pieChartsData.exchangeRateData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RTooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null;
-                        const data = payload[0];
-                        return (
-                          <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-                            <p className="font-medium text-gray-900">
-                              {data.name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {formatValue(Number(data.value))}
-                            </p>
+              <div className="flex items-center justify-center gap-8">
+                {/* Pie Chart */}
+                <div className="h-[180px] w-[180px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieChartsData.exchangeRateData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        innerRadius={55}
+                        dataKey="value"
+                        strokeWidth={0}
+                        paddingAngle={3}
+                      >
+                        {pieChartsData.exchangeRateData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RTooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const data = payload[0];
+                          return (
+                            <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+                              <p className="font-medium text-gray-900">
+                                {data.name}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {formatValue(Number(data.value))}
+                              </p>
+                            </div>
+                          );
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                {/* Custom Legend */}
+                <div className="flex flex-col gap-4">
+                  {pieChartsData.exchangeRateData.map((item, index) => {
+                    const total = pieChartsData.exchangeRateData.reduce(
+                      (sum, d) => sum + d.value,
+                      0
+                    );
+                    const percentage = ((item.value / total) * 100).toFixed(1);
+                    return (
+                      <div key={index} className="flex items-start gap-3">
+                        <div
+                          className="w-3 h-3 rounded-full mt-1 flex-shrink-0"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <div>
+                          <div className="text-sm font-medium text-gray-700">
+                            {item.name}
                           </div>
-                        );
-                      }}
-                    />
-                    <Legend
-                      verticalAlign="bottom"
-                      align="center"
-                      iconType="circle"
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                          <div className="text-lg font-bold text-gray-900">
+                            {formatValue(item.value)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {percentage}%
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -559,49 +548,76 @@ export default function Home() {
                   {t("home.totalExpenditureRatio")}
                 </div>
               </div>
-              <div className="h-[280px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieChartsData.totalExpenditureData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={renderCustomizedLabel}
-                      outerRadius={100}
-                      innerRadius={60}
-                      dataKey="value"
-                      strokeWidth={0}
-                    >
-                      {pieChartsData.totalExpenditureData.map(
-                        (entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        )
-                      )}
-                    </Pie>
-                    <RTooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null;
-                        const data = payload[0];
-                        return (
-                          <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-                            <p className="font-medium text-gray-900">
-                              {data.name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {formatValue(Number(data.value))}
-                            </p>
+              <div className="flex items-center justify-center gap-8">
+                {/* Pie Chart */}
+                <div className="h-[180px] w-[180px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieChartsData.totalExpenditureData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        innerRadius={55}
+                        dataKey="value"
+                        strokeWidth={0}
+                        paddingAngle={3}
+                      >
+                        {pieChartsData.totalExpenditureData.map(
+                          (entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          )
+                        )}
+                      </Pie>
+                      <RTooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const data = payload[0];
+                          return (
+                            <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+                              <p className="font-medium text-gray-900">
+                                {data.name}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {formatValue(Number(data.value))}
+                              </p>
+                            </div>
+                          );
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                {/* Custom Legend */}
+                <div className="flex flex-col gap-3">
+                  {pieChartsData.totalExpenditureData.map((item, index) => {
+                    const total = pieChartsData.totalExpenditureData.reduce(
+                      (sum, d) => sum + d.value,
+                      0
+                    );
+                    const percentage = ((item.value / total) * 100).toFixed(1);
+                    return (
+                      <div key={index} className="flex items-start gap-3">
+                        <div
+                          className="w-3 h-3 rounded-full mt-1 flex-shrink-0"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <div>
+                          <div className="text-sm font-medium text-gray-700">
+                            {item.name}
                           </div>
-                        );
-                      }}
-                    />
-                    <Legend
-                      verticalAlign="bottom"
-                      align="center"
-                      iconType="circle"
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                          <div className="text-base font-bold text-gray-900">
+                            {formatValue(item.value)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {percentage}%
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -615,49 +631,76 @@ export default function Home() {
                   {pieChartsData.actualPercentage}%
                 </div>
               </div>
-              <div className="h-[280px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieChartsData.actualExpenditureData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={renderCustomizedLabel}
-                      outerRadius={100}
-                      innerRadius={60}
-                      dataKey="value"
-                      strokeWidth={0}
-                    >
-                      {pieChartsData.actualExpenditureData.map(
-                        (entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        )
-                      )}
-                    </Pie>
-                    <RTooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null;
-                        const data = payload[0];
-                        return (
-                          <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-                            <p className="font-medium text-gray-900">
-                              {data.name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {formatValue(Number(data.value))}
-                            </p>
+              <div className="flex items-center justify-center gap-8">
+                {/* Pie Chart */}
+                <div className="h-[180px] w-[180px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieChartsData.actualExpenditureData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        innerRadius={55}
+                        dataKey="value"
+                        strokeWidth={0}
+                        paddingAngle={3}
+                      >
+                        {pieChartsData.actualExpenditureData.map(
+                          (entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          )
+                        )}
+                      </Pie>
+                      <RTooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const data = payload[0];
+                          return (
+                            <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+                              <p className="font-medium text-gray-900">
+                                {data.name}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {formatValue(Number(data.value))}
+                              </p>
+                            </div>
+                          );
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                {/* Custom Legend */}
+                <div className="flex flex-col gap-4">
+                  {pieChartsData.actualExpenditureData.map((item, index) => {
+                    const total = pieChartsData.actualExpenditureData.reduce(
+                      (sum, d) => sum + d.value,
+                      0
+                    );
+                    const percentage = ((item.value / total) * 100).toFixed(1);
+                    return (
+                      <div key={index} className="flex items-start gap-3">
+                        <div
+                          className="w-3 h-3 rounded-full mt-1 flex-shrink-0"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <div>
+                          <div className="text-sm font-medium text-gray-700">
+                            {item.name}
                           </div>
-                        );
-                      }}
-                    />
-                    <Legend
-                      verticalAlign="bottom"
-                      align="center"
-                      iconType="circle"
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                          <div className="text-lg font-bold text-gray-900">
+                            {formatValue(item.value)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {percentage}%
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -671,47 +714,74 @@ export default function Home() {
                   {pieChartsData.encumbrancePercentage}%
                 </div>
               </div>
-              <div className="h-[280px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieChartsData.reservationsData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={renderCustomizedLabel}
-                      outerRadius={100}
-                      innerRadius={60}
-                      dataKey="value"
-                      strokeWidth={0}
-                    >
-                      {pieChartsData.reservationsData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RTooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null;
-                        const data = payload[0];
-                        return (
-                          <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-                            <p className="font-medium text-gray-900">
-                              {data.name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {formatValue(Number(data.value))}
-                            </p>
+              <div className="flex items-center justify-center gap-8">
+                {/* Pie Chart */}
+                <div className="h-[180px] w-[180px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieChartsData.reservationsData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        innerRadius={55}
+                        dataKey="value"
+                        strokeWidth={0}
+                        paddingAngle={3}
+                      >
+                        {pieChartsData.reservationsData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RTooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const data = payload[0];
+                          return (
+                            <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+                              <p className="font-medium text-gray-900">
+                                {data.name}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {formatValue(Number(data.value))}
+                              </p>
+                            </div>
+                          );
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                {/* Custom Legend */}
+                <div className="flex flex-col gap-4">
+                  {pieChartsData.reservationsData.map((item, index) => {
+                    const total = pieChartsData.reservationsData.reduce(
+                      (sum, d) => sum + d.value,
+                      0
+                    );
+                    const percentage = ((item.value / total) * 100).toFixed(1);
+                    return (
+                      <div key={index} className="flex items-start gap-3">
+                        <div
+                          className="w-3 h-3 rounded-full mt-1 flex-shrink-0"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <div>
+                          <div className="text-sm font-medium text-gray-700">
+                            {item.name}
                           </div>
-                        );
-                      }}
-                    />
-                    <Legend
-                      verticalAlign="bottom"
-                      align="center"
-                      iconType="circle"
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                          <div className="text-lg font-bold text-gray-900">
+                            {formatValue(item.value)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {percentage}%
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
