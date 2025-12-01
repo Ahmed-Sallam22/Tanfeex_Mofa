@@ -677,6 +677,8 @@
     "order": "الترتيب",
     "enterValue": "أدخل القيمة",
     "enterDescription": "أدخل الوصف...",
+    "downloadTemplate": "تحميل القالب",
+    "downloading": "جاري التحميل...",
     "aboutToDelete": "أنت على وشك حذف",
     "cannotUndo": "لا يمكن التراجع عن هذا الإجراء",
     "warning": "تحذير",

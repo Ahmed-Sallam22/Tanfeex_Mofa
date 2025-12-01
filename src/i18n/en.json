@@ -678,6 +678,8 @@
     "order": "Order",
     "enterValue": "Enter value",
     "enterDescription": "Enter description...",
+    "downloadTemplate": "Download Template",
+    "downloading": "Downloading...",
     "aboutToDelete": "You are about to delete",
     "cannotUndo": "This action cannot be undone",
     "warning": "Warning",

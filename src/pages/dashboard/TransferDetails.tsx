@@ -12,6 +12,7 @@ import {
   useSubmitTransferMutation,
   useUploadExcelMutation,
   useReopenTransferMutation,
+  useLazyGetExcelTemplateQuery,
   transferDetailsApi,
 } from "@/api/transferDetails.api";
 import { useUpdateTransferMutation } from "@/api/transfer.api";
@@ -87,6 +88,7 @@ export default function TransferDetails() {
   const [submitTransfer] = useSubmitTransferMutation();
   const [uploadExcel] = useUploadExcelMutation();
   const [reopenTransfer] = useReopenTransferMutation();
+  const [getExcelTemplate] = useLazyGetExcelTemplateQuery();
   const [updateTransfer, { isLoading: isUpdatingTransfer }] =
     useUpdateTransferMutation();
 
@@ -1959,6 +1961,7 @@ export default function TransferDetails() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isReopenClicked, setIsReopenClicked] = useState(false);
+  const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
 
   // Notes modal state
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
@@ -1968,6 +1971,35 @@ export default function TransferDetails() {
   // Handler for attachments click
   const handleAttachmentsClick = () => {
     setIsAttachmentsModalOpen(true);
+  };
+
+  // Handler for downloading Excel template
+  const handleDownloadExcelTemplate = async () => {
+    setIsDownloadingTemplate(true);
+    try {
+      const result = await getExcelTemplate().unwrap();
+
+      if (result.download_url) {
+        // Create a temporary link and trigger download
+        const link = document.createElement("a");
+        link.href = result.download_url;
+        link.download = result.filename || "transfer_template.xlsx";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        toast.success(
+          t("messages.downloadSuccess") || "Template downloaded successfully"
+        );
+      } else {
+        throw new Error("Download URL not found");
+      }
+    } catch (error) {
+      console.error("Error downloading template:", error);
+      toast.error(t("messages.downloadError") || "Failed to download template");
+    } finally {
+      setIsDownloadingTemplate(false);
+    }
   };
 
   // Handler for notes button click
@@ -2141,14 +2173,45 @@ export default function TransferDetails() {
           </h1>
         </div>
 
-        {/* Segment Types Loader */}
+        {/* Download Excel Template Button */}
         <div className="flex items-center gap-2">
-          {isLoadingSegmentTypes && (
-            <div className="flex items-center text-sm text-gray-500">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-              {t("messages.loadingData")}
-            </div>
-          )}
+          <button
+            onClick={handleDownloadExcelTemplate}
+            disabled={isDownloadingTemplate}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#4E8476] text-white text-sm font-medium rounded-lg hover:bg-[#3d6b5f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDownloadingTemplate ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                {t("common.downloading") || "Downloading..."}
+              </>
+            ) : (
+              <>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4.66732 6.00122C3.21731 6.00929 2.43203 6.07359 1.91977 6.58585C1.33398 7.17164 1.33398 8.11444 1.33398 10.0001V10.6667C1.33398 12.5523 1.33398 13.4952 1.91977 14.0809C2.50556 14.6667 3.44837 14.6667 5.33398 14.6667H10.6673C12.5529 14.6667 13.4957 14.6667 14.0815 14.0809C14.6673 13.4952 14.6673 12.5523 14.6673 10.6667L14.6673 10.0001C14.6673 8.11444 14.6673 7.17163 14.0815 6.58585C13.5693 6.07359 12.784 6.00929 11.334 6.00122"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M8 1.33333L8 10M8 10L10 7.66667M8 10L6 7.66667"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                {t("common.downloadTemplate") || "Download Template"}
+              </>
+            )}
+          </button>
         </div>
       </div>
 

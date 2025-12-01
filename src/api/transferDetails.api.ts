@@ -151,6 +151,12 @@ export interface ReopenTransferResponse {
   message?: string;
 }
 
+export interface ExcelTemplateResponse {
+  message: string;
+  download_url: string;
+  filename: string;
+}
+
 export interface FinancialDataParams {
   segments: Record<string, string | number>; // Dynamic segments (e.g., { Segment5: "100", Segment9: "200" })
 }
@@ -265,6 +271,12 @@ export const transferDetailsApi = createApi({
       }),
       invalidatesTags: ['TransferDetails'],
     }),
+    getExcelTemplate: builder.query<ExcelTemplateResponse, void>({
+      query: () => ({
+        url: `/transfers/excel-template/`,
+        method: 'GET',
+      }),
+    }),
   }),
 });
 
@@ -276,4 +288,5 @@ export const {
   useGetFinancialDataQuery,
   useUploadExcelMutation,
   useReopenTransferMutation,
+  useLazyGetExcelTemplateQuery,
 } = transferDetailsApi;
