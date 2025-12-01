@@ -704,6 +704,8 @@
     "selectBudgetControl": "Select Budget Control",
     "transferType": "Transfer Type",
     "selectTransferType": "Select Transfer Type",
+    "allocationSubType": "Allocation Sub-Type",
+    "selectAllocationSubType": "Select Allocation Sub-Type",
     "enterReason": "Enter the reason for this transfer",
     "validationError": "Please fill in all required fields",
     "saveSuccess": "Transfer details saved successfully",
@@ -1271,6 +1273,7 @@
     "enterNotes": "Please enter notes for the transfer",
     "selectBudgetControl": "Please select a budget control",
     "selectTransferType": "Please select transfer type",
+    "selectAllocationSubType": "Please select allocation sub-type",
     "oracleNumberRequired": "Oracle segment number must be greater than 0",
     "displayOrderRequired": "Display order must be greater than 0"
   },

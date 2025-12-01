@@ -40,6 +40,7 @@ export default function Transfer() {
   const [reason, setreason] = useState<string>("");
   const [budget_control, setBudgetControl] = useState<string>("");
   const [transfer_type, setTransferType] = useState<string>("");
+  const [allocation_sub_type, setAllocationSubType] = useState<string>("");
 
   // Attachments state
   const [isAttachmentsModalOpen, setIsAttachmentsModalOpen] = useState(false);
@@ -59,6 +60,7 @@ export default function Transfer() {
     reason?: string;
     budget_control?: string;
     transfer_type?: string;
+    allocation_sub_type?: string;
   }>({});
 
   // API calls
@@ -544,6 +546,7 @@ export default function Transfer() {
     setreason("");
     setBudgetControl("");
     setTransferType("");
+    setAllocationSubType("");
 
     // Open modal after clearing values
     setIsCreateModalOpen(true);
@@ -559,6 +562,7 @@ export default function Transfer() {
     setreason("");
     setBudgetControl("");
     setTransferType("");
+    setAllocationSubType("");
     setValidationErrors({});
     setShouldOpenModal(false); // Reset the modal trigger
   };
@@ -573,6 +577,7 @@ export default function Transfer() {
       reason?: string;
       budget_control?: string;
       transfer_type?: string;
+      allocation_sub_type?: string;
     } = {};
 
     if (!time_period.trim()) {
@@ -591,19 +596,30 @@ export default function Transfer() {
       errors.transfer_type = t("validation.selectTransferType");
     }
 
+    // Validate sub-type when "مخصصات" is selected
+    if (transfer_type === "مخصصات" && !allocation_sub_type.trim()) {
+      errors.allocation_sub_type = t("validation.selectAllocationSubType");
+    }
+
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       return;
     }
 
     try {
+      // Combine transfer_type with sub-type if "مخصصات" is selected
+      const finalTransferType =
+        transfer_type === "مخصصات"
+          ? `${transfer_type}-${allocation_sub_type}`
+          : transfer_type;
+
       // Use HTML directly from the rich text editor (no conversion needed)
       const transferData = {
         transaction_date: time_period,
         notes: reason, // reason already contains HTML from RichTextEditor
         type: "FAR", // Static as requested
         budget_control: budget_control,
-        transfer_type: transfer_type,
+        transfer_type: finalTransferType,
       };
 
       if (isEditMode && selectedTransfer) {
@@ -648,6 +664,13 @@ export default function Transfer() {
   const transferTypeOptions: SelectOption[] = [
     { value: "داخلية", label: "داخلية" },
     { value: "خارجية", label: "خارجية" },
+    { value: "مخصصات", label: "مخصصات" },
+  ];
+
+  // Sub-type options for "مخصصات" (Allocations)
+  const allocationSubTypeOptions: SelectOption[] = [
+    { value: "مراكز التكلفة", label: "مراكز التكلفة" },
+    { value: "الموقع الجغرافي", label: "الموقع الجغرافي" },
   ];
 
   const handleChat = (row: TableRow) => {
@@ -745,7 +768,7 @@ export default function Transfer() {
         }
         size="md"
       >
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 overflow-y-auto max-h-[600px]">
           <div>
             <SharedSelect
               key={`budget-control-${
@@ -773,7 +796,13 @@ export default function Transfer() {
               title={t("transfer.transferType")}
               options={transferTypeOptions}
               value={transfer_type}
-              onChange={(value) => setTransferType(String(value))}
+              onChange={(value) => {
+                setTransferType(String(value));
+                // Clear sub-type when transfer type changes
+                if (value !== "مخصصات") {
+                  setAllocationSubType("");
+                }
+              }}
               placeholder={t("transfer.selectTransferType")}
               required
             />
@@ -783,6 +812,28 @@ export default function Transfer() {
               </p>
             )}
           </div>
+
+          {/* Show sub-type select when "مخصصات" is selected */}
+          {transfer_type === "مخصصات" && (
+            <div>
+              <SharedSelect
+                key={`allocation-sub-type-${
+                  isEditMode ? selectedTransfer?.transaction_id : "create"
+                }`}
+                title={t("transfer.allocationSubType")}
+                options={allocationSubTypeOptions}
+                value={allocation_sub_type}
+                onChange={(value) => setAllocationSubType(String(value))}
+                placeholder={t("transfer.selectAllocationSubType")}
+                required
+              />
+              {validationErrors.allocation_sub_type && (
+                <p className="mt-1 text-sm text-red-600">
+                  {validationErrors.allocation_sub_type}
+                </p>
+              )}
+            </div>
+          )}
 
           <div>
             <SharedSelect
@@ -837,7 +888,8 @@ export default function Transfer() {
                 !budget_control.trim() ||
                 !transfer_type.trim() ||
                 !time_period.trim() ||
-                !reason.trim()
+                !reason.trim() ||
+                (transfer_type === "مخصصات" && !allocation_sub_type.trim())
               }
               className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#4E8476] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >

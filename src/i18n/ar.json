@@ -703,6 +703,8 @@
     "selectBudgetControl": "اختر رقابة الميزانية",
     "transferType": "نوع التحويل",
     "selectTransferType": "اختر نوع التحويل",
+    "allocationSubType": "النوع الفرعي للمخصصات",
+    "selectAllocationSubType": "اختر النوع الفرعي للمخصصات",
     "enterReason": "أدخل سبب هذا التحويل",
     "validationError": "يرجى ملء جميع الحقول المطلوبة",
     "saveSuccess": "تم حفظ تفاصيل التحويل بنجاح",
@@ -1270,6 +1272,7 @@
     "enterNotes": "يرجى إدخال ملاحظات للتحويل",
     "selectBudgetControl": "يرجى اختيار رقابة الميزانية",
     "selectTransferType": "الرجاء اختيار نوع التحويل",
+    "selectAllocationSubType": "يرجى اختيار النوع الفرعي للمخصصات",
     "oracleNumberRequired": "رقم Oracle يجب أن يكون أكبر من 0",
     "displayOrderRequired": "ترتيب العرض يجب أن يكون أكبر من 0"
   },
