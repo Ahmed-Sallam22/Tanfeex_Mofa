@@ -101,7 +101,10 @@
     "exchangeRateIndicator": "مؤشر الصرف",
     "totalExpenditureRatio": "نسب اجمالي الصرف",
     "actualExpenditurePercentage": "نسبة المنصرف الفعلي",
-    "reservationsPercentage": "نسبة الحجوزات"
+    "reservationsPercentage": "نسبة الحجوزات",
+    "expenditureIndicators": "مؤشرات الصرف",
+    "segmentType": "نوع الشريحة",
+    "controlBudget": "ميزانية التحكم"
   },
   "dashboardDetails": {
     "backToDashboard": "العودة إلى لوحة التحكم",

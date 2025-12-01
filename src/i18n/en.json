@@ -102,7 +102,10 @@
     "exchangeRateIndicator": "Exchange Rate Indicator",
     "totalExpenditureRatio": "Total Expenditure Ratio",
     "actualExpenditurePercentage": "Actual Expenditure Percentage",
-    "reservationsPercentage": "Reservations Percentage"
+    "reservationsPercentage": "Reservations Percentage",
+    "expenditureIndicators": "Expenditure Indicators",
+    "segmentType": "Segment Type",
+    "controlBudget": "Control Budget"
   },
   "dashboardDetails": {
     "backToDashboard": "Back to Dashboard",

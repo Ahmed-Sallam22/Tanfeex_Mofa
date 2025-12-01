@@ -15,9 +15,15 @@ import {
 } from "recharts";
 import { useGetDashboardDataQuery } from "@/api/dashboard.api";
 import { useGetAnalyticalReportQuery } from "@/api/analyticalReport.api";
+import { useGetSegmentsByTypeQuery } from "@/api/segmentConfiguration.api";
+import SharedSelect from "@/shared/SharedSelect";
 
 import { cn } from "@/utils/cn";
 
+interface SelectOption {
+  value: string;
+  label: string;
+}
 // ===== Reusable Pieces =====
 function LoadingSkeleton({ className = "" }: { className?: string }) {
   return (
@@ -70,6 +76,14 @@ export default function Home() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
 
+  // Filter states for pie charts
+  const [controlBudget, setControlBudget] = useState<string>("MOFA_COST_2");
+  const [segmentFilter, setSegmentFilter] = useState<string>("all");
+  const [selectedSegment, setSelectedSegment] = useState<number | null>(null);
+
+  // Fetch segments for segment_type 11
+  const { data: segmentsData } = useGetSegmentsByTypeQuery(11);
+
   // API call
   const {
     data: dashboardData,
@@ -77,16 +91,68 @@ export default function Home() {
     refetch: refetchDashboard,
   } = useGetDashboardDataQuery({ type: "all" });
 
-  // Analytical Report API call for pie charts
+  // Analytical Report API call for pie charts - now dynamic based on filter
   const { data: analyticalData, isLoading: isLoadingAnalytical } =
     useGetAnalyticalReportQuery({
       segment_type_id: 11,
-      control_budget_name: "MOFA_COST_2",
-      segment_filter: "all",
+      segment_code: selectedSegment,
+      control_budget_name: controlBudget,
+      segment_filter: segmentFilter as
+        | "all"
+        | "with_transfers"
+        | "with_funds"
+        | "with_both"
+        | "with_either",
       transaction_status: "approved",
       page: 1,
       page_size: 20,
     });
+
+  // Budget filter options
+  const budgetOptions = [
+    { value: "MOFA_COST_2", label: t("analyticalReport.costs") || "التكاليف" },
+    { value: "MOFA_CASH", label: t("analyticalReport.liquidity") || "السيولة" },
+  ];
+
+  // Segment filter options
+  const segmentFilterOptions: SelectOption[] = [
+    { value: "all", label: t("analyticalReport.filterOptions.all") },
+    {
+      value: "with_transfers",
+      label: t("analyticalReport.filterOptions.withTransfers"),
+    },
+    {
+      value: "with_funds",
+      label: t("analyticalReport.filterOptions.withFunds"),
+    },
+    { value: "with_both", label: t("analyticalReport.filterOptions.withBoth") },
+    {
+      value: "with_either",
+      label: t("analyticalReport.filterOptions.withEither"),
+    },
+  ];
+
+  // Segment options from API
+  const segmentOptions: SelectOption[] = useMemo(() => {
+    if (!segmentsData?.data) return [];
+    return segmentsData.data.map((segment) => ({
+      value: String(segment.code),
+      label: `${segment.code} - ${segment.alias}`,
+    }));
+  }, [segmentsData]);
+
+  // Filter change handlers
+  const handleBudgetChange = (value: string | number) => {
+    setControlBudget(String(value));
+  };
+
+  const handleSegmentChange = (value: string | number) => {
+    setSelectedSegment(value ? Number(value) : null);
+  };
+
+  const handleSegmentFilterChange = (value: string | number) => {
+    setSegmentFilter(String(value));
+  };
 
   const [year, setYear] = useState<string>("2025");
 
@@ -127,7 +193,7 @@ export default function Home() {
     // year affects only derived memos in your code; if your APIs support year, add it to args and refetch here too.
   }, [year, refetchDashboard]);
 
-  // Prepare pie chart data
+  // Prepare pie chart data with theme colors
   const pieChartsData = useMemo(() => {
     if (!analyticalData?.summary) {
       return {
@@ -151,6 +217,16 @@ export default function Home() {
     const totalActualPercentage =
       (summary.grand_total_actual / totalBudget) * 100;
 
+    // Theme colors - matching the app theme
+    const COLORS = {
+      primary: "#4E8476", // Main theme green
+      secondary: "#6BE6E4", // Teal/cyan accent
+      accent: "#007E77", // Dark teal
+      light: "#A7F3D0", // Light green
+      muted: "#D1D5DB", // Gray for remaining/empty
+      warning: "#F59E0B", // Amber
+    };
+
     // 1. مؤشر الصرف (Exchange Rate Indicator) - Total Actual vs Remaining Budget
     const spentAmount = summary.grand_total_actual;
     const remainingBudget = totalBudget - spentAmount;
@@ -158,12 +234,12 @@ export default function Home() {
       {
         name: t("home.spent"),
         value: spentAmount,
-        color: "#007E77",
+        color: COLORS.primary,
       },
       {
         name: t("home.remaining"),
         value: remainingBudget > 0 ? remainingBudget : 0,
-        color: "#E5E7EB",
+        color: COLORS.muted,
       },
     ];
 
@@ -172,22 +248,22 @@ export default function Home() {
       {
         name: t("home.encumbrance"),
         value: summary.grand_encumbrance,
-        color: "#6BE6E4",
+        color: COLORS.secondary,
       },
       {
         name: t("home.futures"),
         value: summary.grand_Futures_column || 0,
-        color: "#4E8476",
+        color: COLORS.warning,
       },
       {
         name: t("home.actual"),
         value: summary.grand_actual,
-        color: "#007E77",
+        color: COLORS.primary,
       },
       {
         name: t("home.available"),
         value: summary.grand_funds_available,
-        color: "#A7F3D0",
+        color: COLORS.light,
       },
     ].filter((item) => item.value > 0); // Filter out zero values
 
@@ -196,7 +272,7 @@ export default function Home() {
       {
         name: t("home.actual"),
         value: summary.grand_actual,
-        color: "#007E77",
+        color: COLORS.primary,
       },
       {
         name: t("home.remaining"),
@@ -204,7 +280,7 @@ export default function Home() {
           totalBudget - summary.grand_actual > 0
             ? totalBudget - summary.grand_actual
             : 0,
-        color: "#E5E7EB",
+        color: COLORS.muted,
       },
     ];
 
@@ -213,7 +289,7 @@ export default function Home() {
       {
         name: t("home.encumbrance"),
         value: summary.grand_encumbrance,
-        color: "#6BE6E4",
+        color: COLORS.secondary,
       },
       {
         name: t("home.remaining"),
@@ -221,7 +297,7 @@ export default function Home() {
           totalBudget - summary.grand_encumbrance > 0
             ? totalBudget - summary.grand_encumbrance
             : 0,
-        color: "#E5E7EB",
+        color: COLORS.muted,
       },
     ];
 
@@ -362,211 +438,285 @@ export default function Home() {
       </div>
 
       {/* Pie Charts Section - مؤشرات الصرف */}
-      {isLoadingAnalytical ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5"
-            >
-              <LoadingSkeleton className="h-6 w-32 mb-4" />
-              <div className="h-[280px] flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="space-y-4">
+        {/* Filters Section */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 ring-1 ring-black/5">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            {t("home.expenditureIndicators") || "مؤشرات الصرف"}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t("analyticalReport.controlBudget")}
+              </label>
+              <SharedSelect
+                options={budgetOptions}
+                value={controlBudget}
+                onChange={handleBudgetChange}
+                placeholder={t("analyticalReport.selectControlBudget")}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t("analyticalReport.segment")}
+              </label>
+              <SharedSelect
+                options={segmentOptions}
+                value={selectedSegment ? String(selectedSegment) : ""}
+                onChange={handleSegmentChange}
+                placeholder={t("analyticalReport.selectSegment")}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t("analyticalReport.segmentFilter")}
+              </label>
+              <SharedSelect
+                options={segmentFilterOptions}
+                value={segmentFilter}
+                onChange={handleSegmentFilterChange}
+                placeholder={t("analyticalReport.selectSegmentFilter")}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Charts Grid */}
+        {isLoadingAnalytical ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5"
+              >
+                <LoadingSkeleton className="h-6 w-32 mb-4" />
+                <div className="h-[280px] flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4E8476]"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 1. مؤشر الصرف - Exchange Rate Indicator */}
+            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
+              <div className="flex items-center justify-between mb-4">
+                <div className="font-semibold text-gray-900">
+                  {t("home.exchangeRateIndicator")}
+                </div>
+                <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                  {pieChartsData.exchangeRatePercentage}%
+                </div>
+              </div>
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieChartsData.exchangeRateData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={renderCustomizedLabel}
+                      outerRadius={100}
+                      innerRadius={60}
+                      dataKey="value"
+                      strokeWidth={0}
+                    >
+                      {pieChartsData.exchangeRateData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RTooltip
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const data = payload[0];
+                        return (
+                          <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+                            <p className="font-medium text-gray-900">
+                              {data.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {formatValue(Number(data.value))}
+                            </p>
+                          </div>
+                        );
+                      }}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      align="center"
+                      iconType="circle"
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* 1. مؤشر الصرف - Exchange Rate Indicator */}
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-            <div className="font-semibold text-gray-900 mb-4">
-              {t("home.exchangeRateIndicator")}
-            </div>
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieChartsData.exchangeRateData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={renderCustomizedLabel}
-                    outerRadius={100}
-                    dataKey="value"
-                  >
-                    {pieChartsData.exchangeRateData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <RTooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
-                      const data = payload[0];
-                      return (
-                        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-                          <p className="font-medium text-gray-900">
-                            {data.name}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {formatValue(Number(data.value))}
-                          </p>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    align="center"
-                    iconType="circle"
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
 
-          {/* 2. نسب اجمالي الصرف - Total Expenditure Ratio */}
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-            <div className="font-semibold text-gray-900 mb-4">
-              {t("home.totalExpenditureRatio")}
+            {/* 2. نسب اجمالي الصرف - Total Expenditure Ratio */}
+            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
+              <div className="flex items-center justify-between mb-4">
+                <div className="font-semibold text-gray-900">
+                  {t("home.totalExpenditureRatio")}
+                </div>
+              </div>
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieChartsData.totalExpenditureData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={renderCustomizedLabel}
+                      outerRadius={100}
+                      innerRadius={60}
+                      dataKey="value"
+                      strokeWidth={0}
+                    >
+                      {pieChartsData.totalExpenditureData.map(
+                        (entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        )
+                      )}
+                    </Pie>
+                    <RTooltip
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const data = payload[0];
+                        return (
+                          <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+                            <p className="font-medium text-gray-900">
+                              {data.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {formatValue(Number(data.value))}
+                            </p>
+                          </div>
+                        );
+                      }}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      align="center"
+                      iconType="circle"
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieChartsData.totalExpenditureData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={renderCustomizedLabel}
-                    outerRadius={100}
-                    dataKey="value"
-                  >
-                    {pieChartsData.totalExpenditureData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <RTooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
-                      const data = payload[0];
-                      return (
-                        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-                          <p className="font-medium text-gray-900">
-                            {data.name}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {formatValue(Number(data.value))}
-                          </p>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    align="center"
-                    iconType="circle"
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
 
-          {/* 3. نسبة المنصرف الفعلي - Actual Expenditure Percentage */}
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-            <div className="font-semibold text-gray-900 mb-4">
-              {t("home.actualExpenditurePercentage")}
+            {/* 3. نسبة المنصرف الفعلي - Actual Expenditure Percentage */}
+            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
+              <div className="flex items-center justify-between mb-4">
+                <div className="font-semibold text-gray-900">
+                  {t("home.actualExpenditurePercentage")}
+                </div>
+                <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                  {pieChartsData.actualPercentage}%
+                </div>
+              </div>
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieChartsData.actualExpenditureData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={renderCustomizedLabel}
+                      outerRadius={100}
+                      innerRadius={60}
+                      dataKey="value"
+                      strokeWidth={0}
+                    >
+                      {pieChartsData.actualExpenditureData.map(
+                        (entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        )
+                      )}
+                    </Pie>
+                    <RTooltip
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const data = payload[0];
+                        return (
+                          <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+                            <p className="font-medium text-gray-900">
+                              {data.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {formatValue(Number(data.value))}
+                            </p>
+                          </div>
+                        );
+                      }}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      align="center"
+                      iconType="circle"
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieChartsData.actualExpenditureData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={renderCustomizedLabel}
-                    outerRadius={100}
-                    dataKey="value"
-                  >
-                    {pieChartsData.actualExpenditureData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <RTooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
-                      const data = payload[0];
-                      return (
-                        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-                          <p className="font-medium text-gray-900">
-                            {data.name}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {formatValue(Number(data.value))}
-                          </p>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    align="center"
-                    iconType="circle"
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
 
-          {/* 4. نسبة الحجوزات - Reservations Percentage */}
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-            <div className="font-semibold text-gray-900 mb-4">
-              {t("home.reservationsPercentage")}
-            </div>
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieChartsData.reservationsData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={renderCustomizedLabel}
-                    outerRadius={100}
-                    dataKey="value"
-                  >
-                    {pieChartsData.reservationsData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <RTooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
-                      const data = payload[0];
-                      return (
-                        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-                          <p className="font-medium text-gray-900">
-                            {data.name}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {formatValue(Number(data.value))}
-                          </p>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    align="center"
-                    iconType="circle"
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+            {/* 4. نسبة الحجوزات - Reservations Percentage */}
+            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
+              <div className="flex items-center justify-between mb-4">
+                <div className="font-semibold text-gray-900">
+                  {t("home.reservationsPercentage")}
+                </div>
+                <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                  {pieChartsData.encumbrancePercentage}%
+                </div>
+              </div>
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieChartsData.reservationsData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={renderCustomizedLabel}
+                      outerRadius={100}
+                      innerRadius={60}
+                      dataKey="value"
+                      strokeWidth={0}
+                    >
+                      {pieChartsData.reservationsData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RTooltip
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const data = payload[0];
+                        return (
+                          <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+                            <p className="font-medium text-gray-900">
+                              {data.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {formatValue(Number(data.value))}
+                            </p>
+                          </div>
+                        );
+                      }}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      align="center"
+                      iconType="circle"
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
