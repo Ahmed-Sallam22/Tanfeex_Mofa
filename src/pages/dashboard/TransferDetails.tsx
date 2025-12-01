@@ -107,9 +107,25 @@ export default function TransferDetails() {
   // State to track the first row's segment 11 (Mofa Budget) value for filtering
   const [firstRowMofaBudget, setFirstRowMofaBudget] = useState<string>("");
 
+  // State to track first row segment values for allocation transfers
+  const [firstRowSegmentValues, setFirstRowSegmentValues] = useState<{
+    segment5: string;
+    segment9: string;
+    segment11: string;
+  }>({ segment5: "", segment9: "", segment11: "" });
+
   // Check if transfer type is "داخلية" (Internal)
   const isInternalTransfer = useMemo(() => {
     return apiData?.summary?.transfer_type === "داخلية";
+  }, [apiData?.summary?.transfer_type]);
+
+  // Check for allocation transfer types
+  const isAllocationCostCenter = useMemo(() => {
+    return apiData?.summary?.transfer_type === "مخصصات-مراكز التكلفة";
+  }, [apiData?.summary?.transfer_type]);
+
+  const isAllocationGeographic = useMemo(() => {
+    return apiData?.summary?.transfer_type === "مخصصات-الموقع الجغرافي";
   }, [apiData?.summary?.transfer_type]);
 
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -283,6 +299,100 @@ export default function TransferDetails() {
       setFirstRowMofaBudget("");
     }
   }, [editedRows, localRows, isInternalTransfer]);
+
+  // Track first row segment values for allocation transfers
+  useEffect(() => {
+    const allRows = [...editedRows, ...localRows];
+    if (
+      allRows.length > 0 &&
+      (isAllocationCostCenter || isAllocationGeographic)
+    ) {
+      const firstRow = allRows[0];
+      setFirstRowSegmentValues({
+        segment5: (firstRow.segment5 as string) || "",
+        segment9: (firstRow.segment9 as string) || "",
+        segment11: (firstRow.segment11 as string) || "",
+      });
+    }
+  }, [editedRows, localRows, isAllocationCostCenter, isAllocationGeographic]);
+
+  // Sync locked segment values from first row to all other rows for allocation transfers
+  useEffect(() => {
+    if (!isAllocationCostCenter && !isAllocationGeographic) return;
+
+    const allRows = [...editedRows, ...localRows];
+    if (allRows.length <= 1) return;
+
+    const firstRow = allRows[0];
+
+    // Determine which segments are locked based on transfer type
+    const lockedSegments: number[] = [];
+    if (isAllocationCostCenter) {
+      lockedSegments.push(5, 11); // Geographic and Budget
+    }
+    if (isAllocationGeographic) {
+      lockedSegments.push(9, 11); // Cost Center and Budget
+    }
+
+    // Check if any row needs to be updated
+    let needsEditedRowsUpdate = false;
+    let needsLocalRowsUpdate = false;
+
+    const updatedEditedRows = editedRows.map((row, index) => {
+      if (index === 0) return row; // Skip first row
+
+      let rowUpdated = false;
+      const updatedRow = { ...row };
+
+      lockedSegments.forEach((oracleNumber) => {
+        const segmentKey = `segment${oracleNumber}`;
+        const firstRowValue = (firstRow[segmentKey] as string) || "";
+        const firstRowName = (firstRow[`${segmentKey}_name`] as string) || "";
+
+        if (updatedRow[segmentKey] !== firstRowValue) {
+          updatedRow[segmentKey] = firstRowValue;
+          updatedRow[`${segmentKey}_name`] = firstRowName;
+          rowUpdated = true;
+        }
+      });
+
+      if (rowUpdated) needsEditedRowsUpdate = true;
+      return updatedRow;
+    });
+
+    const updatedLocalRows = localRows.map((row) => {
+      let rowUpdated = false;
+      const updatedRow = { ...row };
+
+      lockedSegments.forEach((oracleNumber) => {
+        const segmentKey = `segment${oracleNumber}`;
+        const firstRowValue = (firstRow[segmentKey] as string) || "";
+        const firstRowName = (firstRow[`${segmentKey}_name`] as string) || "";
+
+        if (updatedRow[segmentKey] !== firstRowValue) {
+          updatedRow[segmentKey] = firstRowValue;
+          updatedRow[`${segmentKey}_name`] = firstRowName;
+          rowUpdated = true;
+        }
+      });
+
+      if (rowUpdated) needsLocalRowsUpdate = true;
+      return updatedRow;
+    });
+
+    if (needsEditedRowsUpdate) {
+      setEditedRows(updatedEditedRows);
+    }
+
+    if (needsLocalRowsUpdate) {
+      setLocalRows(updatedLocalRows);
+      localStorage.setItem(
+        `localRows_${transactionId}`,
+        JSON.stringify(updatedLocalRows)
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstRowSegmentValues, isAllocationCostCenter, isAllocationGeographic]);
 
   type Option = { value: string; label: string; name: string };
 
@@ -982,11 +1092,40 @@ export default function TransferDetails() {
       other_consumption: "0",
     };
 
+    // Get first row to copy locked segment values
+    const allRows = [...editedRows, ...localRows];
+    const firstRow = allRows.length > 0 ? allRows[0] : null;
+
     // Add dynamic segment fields
     requiredSegments.forEach((segment) => {
       const segmentKey = `segment${segment.segment_type_oracle_number}`;
-      newRow[segmentKey] = "";
-      newRow[`${segmentKey}_name`] = "";
+      const oracleNumber = segment.segment_type_oracle_number;
+
+      // Check if this segment should be locked and copy value from first row
+      let shouldCopyFromFirstRow = false;
+
+      // مخصصات-مراكز التكلفة: Copy segment 5 (Geographic) and 11 (Budget) from first row
+      if (isAllocationCostCenter) {
+        if (oracleNumber === 5 || oracleNumber === 11) {
+          shouldCopyFromFirstRow = true;
+        }
+      }
+
+      // مخصصات-الموقع الجغرافي: Copy segment 9 (Cost Center) and 11 (Budget) from first row
+      if (isAllocationGeographic) {
+        if (oracleNumber === 9 || oracleNumber === 11) {
+          shouldCopyFromFirstRow = true;
+        }
+      }
+
+      if (shouldCopyFromFirstRow && firstRow) {
+        newRow[segmentKey] = (firstRow[segmentKey] as string) || "";
+        newRow[`${segmentKey}_name`] =
+          (firstRow[`${segmentKey}_name`] as string) || "";
+      } else {
+        newRow[segmentKey] = "";
+        newRow[`${segmentKey}_name`] = "";
+      }
     });
 
     setLocalRows((prevRows) => {
@@ -1313,6 +1452,52 @@ export default function TransferDetails() {
             segment.segment_id
           );
 
+          // Determine if this row is the first row
+          const allRows = [...editedRows, ...localRows];
+          const rowIndex = allRows.findIndex((r) => r.id === transferRow.id);
+          const isFirstRow = rowIndex === 0;
+          const oracleNumber = segment.segment_type_oracle_number;
+
+          // Check if this segment should be locked based on transfer type
+          let isSegmentLocked = false;
+
+          // مخصصات-مراكز التكلفة: Lock segment 5 (Geographic) and 11 (Budget) for non-first rows
+          if (isAllocationCostCenter && !isFirstRow) {
+            if (oracleNumber === 5 || oracleNumber === 11) {
+              isSegmentLocked = true;
+            }
+          }
+
+          // مخصصات-الموقع الجغرافي: Lock segment 9 (Cost Center) and 11 (Budget) for non-first rows
+          if (isAllocationGeographic && !isFirstRow) {
+            if (oracleNumber === 9 || oracleNumber === 11) {
+              isSegmentLocked = true;
+            }
+          }
+
+          // Get the locked value from first row if segment is locked
+          const getLockedValue = () => {
+            if (!isSegmentLocked || allRows.length === 0) return null;
+            const firstRow = allRows[0];
+            return {
+              value: (firstRow[segmentKey] as string) || "",
+              name: (firstRow[`${segmentKey}_name`] as string) || "",
+            };
+          };
+
+          const lockedValue = getLockedValue();
+
+          // If segment is locked and we have a locked value, show it as read-only
+          if (isSegmentLocked && lockedValue && lockedValue.value) {
+            return (
+              <div className="bg-gray-100 px-3 py-2 rounded border border-gray-200">
+                <span className="text-sm text-gray-600">
+                  {lockedValue.value}
+                </span>
+              </div>
+            );
+          }
+
           return isSubmitted ? (
             <span className="text-sm text-gray-900">
               {transferRow[segmentKey] as string}
@@ -1365,6 +1550,35 @@ export default function TransferDetails() {
 
         render: (_, row) => {
           const transferRow = row as unknown as TransferTableRow;
+
+          // Determine if this row is the first row
+          const allRows = [...editedRows, ...localRows];
+          const rowIndex = allRows.findIndex((r) => r.id === transferRow.id);
+          const isFirstRow = rowIndex === 0;
+          const oracleNumber = segment.segment_type_oracle_number;
+
+          // Check if this segment should be locked based on transfer type
+          let isSegmentLocked = false;
+
+          if (isAllocationCostCenter && !isFirstRow) {
+            if (oracleNumber === 5 || oracleNumber === 11) {
+              isSegmentLocked = true;
+            }
+          }
+
+          if (isAllocationGeographic && !isFirstRow) {
+            if (oracleNumber === 9 || oracleNumber === 11) {
+              isSegmentLocked = true;
+            }
+          }
+
+          // Get the locked value from first row if segment is locked
+          if (isSegmentLocked && allRows.length > 0) {
+            const firstRow = allRows[0];
+            const lockedName = (firstRow[`${segmentKey}_name`] as string) || "";
+            return <span className="text-sm text-gray-500">{lockedName}</span>;
+          }
+
           return (
             <span className="text-sm text-gray-900">
               {transferRow[`${segmentKey}_name`] as string}
