@@ -130,52 +130,64 @@ export default function TransferDetails() {
   useEffect(() => {
     if (apiData?.transfers && apiData.transfers.length > 0) {
       const initialRows = apiData.transfers.map((transfer) => {
-        // Get MOFA_CASH budget data (first control budget)
+        // Get MOFA_CASH budget data
         const mofaCash = transfer.control_budgets?.find(
           (cb) => cb.Control_budget_name === "MOFA_CASH"
         );
 
-        // Get MOFA_COST_2 budget data (second control budget)
+        // Get MOFA_COST_2 budget data
         const mofaCost2 = transfer.control_budgets?.find(
           (cb) => cb.Control_budget_name === "MOFA_COST_2"
         );
+
+        // Determine which budget record to use based on transfer_type
+        // If transfer_type === "سيولة" (liquidity), use MOFA_CASH
+        // Otherwise, use MOFA_COST_2
+        const isLiquidityTransfer = apiData?.summary?.transfer_type === "سيولة";
+        const primaryBudget = isLiquidityTransfer ? mofaCash : mofaCost2;
 
         const row: TransferTableRow = {
           id: transfer.transfer_id?.toString() || "0",
           to: parseFloat(transfer.to_center) || 0,
           from: parseFloat(transfer.from_center) || 0,
-          // Use control_budgets data if available, otherwise fall back to transfer data
-          encumbrance: mofaCash
-            ? mofaCash.Encumbrance
+          // Use primaryBudget data based on transfer_type, otherwise fall back to transfer data
+          encumbrance: primaryBudget
+            ? primaryBudget.Encumbrance
             : parseFloat(transfer.encumbrance) || 0,
-          availableBudget: mofaCash
-            ? mofaCash.Funds_available
+          availableBudget: primaryBudget
+            ? primaryBudget.Funds_available
             : parseFloat(transfer.available_budget) || 0,
-          actual: mofaCash ? mofaCash.Actual : parseFloat(transfer.actual) || 0,
-          approvedBudget: mofaCash
-            ? mofaCash.Budget
+          actual: primaryBudget
+            ? primaryBudget.Actual
+            : parseFloat(transfer.actual) || 0,
+          approvedBudget: primaryBudget
+            ? primaryBudget.Budget
             : parseFloat(transfer.approved_budget) || 0,
-          other_ytd: mofaCash ? mofaCash.Other : 0,
-          period: mofaCash
-            ? mofaCash.Period_name
+          other_ytd: primaryBudget ? primaryBudget.Other : 0,
+          period: primaryBudget
+            ? primaryBudget.Period_name
             : apiData?.summary.period || "",
-          control_budget_name: mofaCash ? mofaCash.Control_budget_name : "",
+          control_budget_name: primaryBudget
+            ? primaryBudget.Control_budget_name
+            : "",
           validation_errors: transfer.validation_errors,
-          commitments: mofaCash
-            ? mofaCash.Commitments.toString()
+          commitments: primaryBudget
+            ? primaryBudget.Commitments.toString()
             : transfer.commitments || "0",
-          obligations: mofaCash
-            ? mofaCash.Obligation.toString()
+          obligations: primaryBudget
+            ? primaryBudget.Obligation.toString()
             : transfer.obligations || "0",
-          other_consumption: mofaCash
-            ? mofaCash.Other.toString()
+          other_consumption: primaryBudget
+            ? primaryBudget.Other.toString()
             : transfer.other_consumption || "0",
-          // Calculate cost value from MOFA_COST_2
+          // Calculate cost value ALWAYS from MOFA_COST_2
           costValue: mofaCost2 ? Number(mofaCost2.Total_budget) / 2 : 0,
-          // Add new budget tracking fields from MOFA_CASH
-          total_budget: mofaCash ? mofaCash.Total_budget || 0 : 0,
-          initial_budget: mofaCash ? mofaCash.Initial_budget || 0 : 0,
-          budget_adjustments: mofaCash ? mofaCash.Budget_adjustments || 0 : 0,
+          // Add new budget tracking fields from primaryBudget
+          total_budget: primaryBudget ? primaryBudget.Total_budget || 0 : 0,
+          initial_budget: primaryBudget ? primaryBudget.Initial_budget || 0 : 0,
+          budget_adjustments: primaryBudget
+            ? primaryBudget.Budget_adjustments || 0
+            : 0,
         };
 
         // Add dynamic segment fields from the transfer data
@@ -889,16 +901,29 @@ export default function TransferDetails() {
         records
       );
 
-      // Use the FIRST record (MOFA_CASH) for main column values
-      const firstRecord = records[0];
-      console.log(firstRecord);
-
-      // Find MOFA_COST_2 record for cost value calculation
+      // Find MOFA_CASH and MOFA_COST_2 records
+      const mofaCashRecord = records.find(
+        (r) => r.Control_budget_name === "MOFA_CASH"
+      );
       const mofaCost2Record = records.find(
         (r) => r.Control_budget_name === "MOFA_COST_2"
       );
 
-      // Calculate cost value from MOFA_COST_2 (Funds_available / 2)
+      // Determine which budget record to use based on transfer_type
+      // If transfer_type === "سيولة" (liquidity), use MOFA_CASH
+      // Otherwise, use MOFA_COST_2
+      const isLiquidityTransfer = apiData?.summary?.transfer_type === "سيولة";
+      const primaryRecord = isLiquidityTransfer
+        ? mofaCashRecord
+        : mofaCost2Record;
+
+      // Fallback to first record if primary is not found
+      const recordToUse = primaryRecord || records[0];
+      console.log(
+        `Row ${rowId}: Transfer type is "${apiData?.summary?.transfer_type}", using ${recordToUse?.Control_budget_name} for main values`
+      );
+
+      // Calculate cost value ALWAYS from MOFA_COST_2 (Funds_available / 2)
       const costValue = mofaCost2Record
         ? (mofaCost2Record.Funds_available || 0) / 2
         : 0;
@@ -908,24 +933,24 @@ export default function TransferDetails() {
         .map((r) => r.Control_budget_name)
         .filter(Boolean);
 
-      // Apply financial data using FIRST record values
+      // Apply financial data using the selected record based on transfer_type
       const financialUpdates = {
-        encumbrance: firstRecord.Encumbrance || 0,
-        availableBudget: firstRecord.Funds_available || 0,
-        actual: firstRecord.Actual || 0,
-        approvedBudget: firstRecord.Budget || 0,
-        other_ytd: firstRecord.Other || 0,
-        period: firstRecord.Period_name || "",
+        encumbrance: recordToUse.Encumbrance || 0,
+        availableBudget: recordToUse.Funds_available || 0,
+        actual: recordToUse.Actual || 0,
+        approvedBudget: recordToUse.Budget || 0,
+        other_ytd: recordToUse.Other || 0,
+        period: recordToUse.Period_name || "",
         control_budget_name: controlBudgetNames.join(", "),
-        costValue: costValue, // From MOFA_COST_2 (second record)
+        costValue: costValue, // Always from MOFA_COST_2
         // Add new budget tracking fields
-        total_budget: firstRecord.Total_budget || 0,
-        initial_budget: firstRecord.Initial_budget || 0,
-        budget_adjustments: firstRecord.Budget_adjustments || 0,
+        total_budget: recordToUse.Total_budget || 0,
+        initial_budget: recordToUse.Initial_budget || 0,
+        budget_adjustments: recordToUse.Budget_adjustments || 0,
       };
 
       console.log(
-        `Row ${rowId}: Using first record (${firstRecord.Control_budget_name}) for main values`
+        `Row ${rowId}: Using ${recordToUse.Control_budget_name} for main values`
       );
       console.log(`Row ${rowId}: Cost value from MOFA_COST_2: ${costValue}`);
       console.log(

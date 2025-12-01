@@ -1,37 +1,48 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RTooltip,
   PieChart,
   Pie,
   Cell,
-  AreaChart,
-  Area,
+  Tooltip as RTooltip,
+  Legend,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Bar,
 } from "recharts";
-import { format, subDays, differenceInDays } from "date-fns";
-import { useGetDashboardDataQuery } from "@/api/dashboard.api";
+import {
+  useGetAccountWiseDashboardQuery,
+  useGetDashboardDataQuery,
+  useGetEntitiesMappingQuery,
+  useGetProjectWiseDashboardQuery,
+} from "@/api/dashboard.api";
 import {
   SharedTable,
   type TableColumn,
-  type TableRow,
+  type TableRow as SharedTableRow,
 } from "@/shared/SharedTable";
-const COLORS = {
-  primary: "#4E8476",
-  success: "#16A34A",
-  warning: "#F59E0B",
-  danger: "#EF4444",
-  gray100: "#F3F4F6",
-  gray300: "#E5E7EB",
-  gray500: "#6B7280",
-  text: "#111827",
-};
+import { SharedTable2 } from "@/shared/SharedTable 2";
+
+import {
+  useGetActiveProjectsWithEnvelopeQuery,
+  useGetProjectsQuery,
+  type EnvelopeProject,
+} from "@/api/envelope.api";
+import SharedSelect from "@/shared/SharedSelect";
+import ModeSelect from "@/components/ui/ModeSelect";
+import { useUserLevel } from "@/features/auth/hooks";
+import { cn } from "@/utils/cn";
+interface EnvelopeTableRow {
+  id: string;
+  project_code: string;
+  submitted_total: number;
+  approved_total: number;
+}
 
 // ===== Reusable Pieces =====
 function LoadingSkeleton({ className = "" }: { className?: string }) {
@@ -39,15 +50,19 @@ function LoadingSkeleton({ className = "" }: { className?: string }) {
     <div className={`animate-pulse bg-gray-200 rounded ${className}`}></div>
   );
 }
-
-function ChartLoadingSkeleton() {
+function formatPctFromFraction(p: number) {
+  return `${(p * 1000000).toFixed(2)}%`;
+}
+function ChartLoadingSkeleton({ t }: { t: (key: string) => string }) {
   return (
     <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
       <LoadingSkeleton className="h-6 w-32 mb-4" />
       <div className="h-[280px] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <span className="text-gray-500 text-sm">Loading chart...</span>
+          <span className="text-gray-500 text-sm">
+            {t("home.loadingChart")}
+          </span>
         </div>
       </div>
     </div>
@@ -70,7 +85,13 @@ function StatCardSkeleton() {
   );
 }
 
-function ErrorState({ message = "Failed to load data" }: { message?: string }) {
+function ErrorState({
+  message = "Failed to load data",
+  t,
+}: {
+  message?: string;
+  t: (key: string) => string;
+}) {
   return (
     <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/5">
       <div className="flex flex-col items-center justify-center text-center">
@@ -90,14 +111,14 @@ function ErrorState({ message = "Failed to load data" }: { message?: string }) {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">
-          Error Loading Dashboard
+          {t("home.errorLoadingDashboard")}
         </h3>
         <p className="text-gray-500 mb-4">{message}</p>
         <button
           onClick={() => window.location.reload()}
           className="px-4 py-2 bg-[#4E8476] text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Retry
+          {t("common.retry")}
         </button>
       </div>
     </div>
@@ -108,456 +129,589 @@ function StatCard({
   title,
   value,
   subtitle,
-  delta,
-  trend = "up", // 'up' | 'down' | 'flat'
+  deltaPct, // <- pass a number like 0.0123 for +1.23%. Omit/undefined to hide.
 }: {
   title: string;
   value: string | number;
   subtitle?: string;
-  delta?: string;
-  trend?: "up" | "down" | "flat";
+  deltaPct?: number; // percent in decimal form (e.g. 0.0123)
 }) {
-  const isUp = trend === "up";
-  const isDown = trend === "down";
-  const arrow = isUp ? "↗" : isDown ? "↘" : "→";
+  const hasDelta = typeof deltaPct === "number" && !Number.isNaN(deltaPct);
+  const isUp = hasDelta && deltaPct > 0;
+  const isDown = hasDelta && deltaPct < 0;
+
+  const arrow = hasDelta ? (isUp ? "↗" : isDown ? "↘" : "→") : null;
   const deltaColor = isUp
     ? "text-green-600"
     : isDown
     ? "text-red-600"
     : "text-gray-500";
 
+  const formattedValue =
+    typeof value === "number" ? value.toLocaleString() : value;
+
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
       <div className="flex justify-between items-center">
         <div className="text-sm text-gray-500">{title}</div>
-        <span className={`text-xs font-medium ${deltaColor}`}>{arrow}</span>
+        {arrow && (
+          <div className={`text-xs font-medium ${deltaColor}`}>{arrow}</div>
+        )}
       </div>
-      <div className="mt-2 text-2xl font-meduim text-gray-900">{value}</div>
+
+      <div className="mt-2 text-2xl font-meduim text-gray-900">
+        {formattedValue}
+      </div>
+
       <div className="flex justify-between items-center">
-        <div className="mt-1 text-xs text-[#282828]">{subtitle}</div>
-        <span className={`text-xs font-medium ${deltaColor}`}>{delta}</span>
+        {subtitle ? (
+          <div className="mt-1 text-xs text-[#282828]">{subtitle}</div>
+        ) : (
+          <span />
+        )}
+        {hasDelta ? (
+          <span className={`text-xs font-medium ${deltaColor}`}>
+            {formatPctFromFraction(deltaPct)}
+          </span>
+        ) : null}
       </div>
     </div>
   );
 }
 
-function DotLegend({ items }: { items: { label: string; color: string }[] }) {
-  return (
-    <div className="mt-3 flex flex-wrap gap-2">
-      {items.map((it) => (
-        <div
-          key={it.label}
-          className="flex items-center gap-2 text-sm text-gray-700"
-        >
-          <span
-            className="h-3 w-3 rounded-full"
-            style={{ background: it.color }}
-          />
-          {it.label}
-        </div>
-      ))}
-    </div>
-  );
-}
+// Move this outside the component to avoid re-creation on every render
+const LABEL_TO_GROUP: Record<string, "MenPower" | "NonMenPower" | "Copex"> = {
+  Manpower: "MenPower",
+  "Non-Manpower": "NonMenPower",
+  Capex: "Copex",
+  // tolerate raw keys too (in case you call setFilter with them)
+  MenPower: "MenPower",
+  NonMenPower: "NonMenPower",
+  Copex: "Copex",
+};
 
-function SimpleTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: any[];
-  label?: string;
-}) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-lg bg-white px-3 py-2 text-sm shadow ring-1 ring-black/10">
-      <div className="font-semibold text-gray-800">{label}</div>
-      {payload.map((p: any, i: number) => (
-        <div key={i} className="flex items-center gap-2">
-          <span
-            className="h-2 w-2 rounded-full"
-            style={{ background: p.color || p.fill }}
-          />
-          <span className="text-gray-700">{p.name ?? p.dataKey}:</span>
-          <span className="font-medium text-gray-900">{p.value}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-function DailyTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: any[];
-  label?: string;
-}) {
-  if (!active || !payload?.length) return null;
-  // label is "yyyy-MM-dd"
-  const [y, m, d] = String(label).split("-").map(Number);
-  const formatted = `${d}/${m}/${y}`;
-  const v = payload[0]?.value ?? 0;
-
-  return (
-    <div className="rounded-xl bg-[#4E8476] text-white px-3 py-1.5 text-sm shadow">
-      {formatted} | <span className="font-semibold">Req: {v}</span>
-    </div>
-  );
-}
 // ===== Page =====
 export default function Home() {
-  const { t } = useTranslation();
-
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
+  const navigate = useNavigate();
   // Mode & Date Range
-  const [mode, setMode] = useState<"all" | "normal" | "smart">("all");
+  const [mode, setMode] = useState<"all" | "Envelope" | "Budget">("all");
   // const [from, setFrom] = useState<string>(format(subDays(new Date(), 7), "yyyy-MM-dd"));
-  const [to] = useState<string>(format(new Date(), "yyyy-MM-dd"));
 
   // API call
   const {
     data: dashboardData,
     isLoading,
     error,
-  } = useGetDashboardDataQuery({ type: mode });
+    refetch: refetchDashboard,
+  } = useGetDashboardDataQuery({ type: "all" });
+  const [selectedProject, setSelectedProject] = useState<string | number>(
+    "843"
+  );
 
+  const [year, setYear] = useState<string>("2025");
+  const [filter, setFilter] = useState<string | null>(null); // e.g. "MenPower"
+
+  const {
+    data: accountWiseData,
+    isLoading: isLoadingAccountWise,
+    error: accountWiseError,
+    refetch: refetchAccountWise,
+  } = useGetAccountWiseDashboardQuery(
+    { project_code: String(selectedProject) },
+    { skip: !selectedProject }
+  );
+
+  const accountSummaryData = useMemo(() => {
+    if (!accountWiseData?.data) return [];
+
+    return [
+      {
+        name: t("home.manpower"),
+        value:
+          year === "2025"
+            ? accountWiseData.data.MenPower.summary.total_fy25_budget
+            : accountWiseData.data.MenPower.summary.total_fy24_budget,
+        color: "#007E77",
+      },
+      {
+        name: t("home.nonManpower"),
+        value:
+          year === "2025"
+            ? accountWiseData.data.NonMenPower.summary.total_fy25_budget
+            : accountWiseData.data.NonMenPower.summary.total_fy24_budget,
+        color: "#6BE6E4",
+      },
+      {
+        name: t("home.capex"),
+        value:
+          year === "2025"
+            ? accountWiseData.data.Copex.summary.total_fy25_budget
+            : accountWiseData.data.Copex.summary.total_fy24_budget,
+        color: "#4E8476",
+      },
+    ];
+  }, [accountWiseData, year, t]);
+  const [selectedEntity, setSelectedEntity] = useState<string>("10001"); // default
+  const { data: entitiesData } = useGetEntitiesMappingQuery();
   // Process request dates for timeline table (only for normal data)
-  const requestTimelineData: TableRow[] = useMemo(() => {
-    if (!dashboardData?.normal?.request_dates) return [];
-
-    const now = new Date();
-    return dashboardData.normal.request_dates
-      .map((dateString, index) => {
-        try {
-          const requestDate = new Date(dateString);
-          // Convert to Cairo time (UTC+2)
-          const cairoTime = new Date(
-            requestDate.getTime() + 2 * 60 * 60 * 1000
-          );
-          const daysDifference = differenceInDays(now, requestDate);
-
-          return {
-            id: `${index}`,
-            requestDate: format(cairoTime, "dd/MM/yyyy HH:mm:ss"),
-            daysSince: daysDifference,
-            originalDate: dateString,
-          };
-        } catch (error) {
-          console.error("Error parsing date:", dateString, error);
-          return null;
-        }
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null)
-      .sort(
-        (a, b) =>
-          new Date(b.originalDate).getTime() -
-          new Date(a.originalDate).getTime()
-      );
-  }, [dashboardData?.normal?.request_dates]);
-
+  const {
+    data: projectWiseData,
+    isLoading: isLoadingProjectWise,
+    error: projectWiseError,
+    refetch: refetchProjectWise,
+  } = useGetProjectWiseDashboardQuery({ entity_code: selectedEntity });
   // Table columns for request timeline
   const timelineColumns: TableColumn[] = [
     {
-      id: "requestDate",
-      header: "Request Date (Cairo Time)",
-      accessor: "requestDate",
+      id: "project_code",
+      header: t("home.projectCode"),
+      accessor: "project_code",
       render: (value) => (
         <span className="text-sm text-gray-900">{String(value)}</span>
       ),
     },
     {
-      id: "daysSince",
-      header: "Number of Days",
-      accessor: "daysSince",
+      id: "project_name",
+      header: t("home.projectName"),
+      accessor: "project_name",
       render: (value) => (
-        <span className="text-sm font-medium">{String(value)} days ago</span>
+        <span className="text-sm font-medium">{String(value)}</span>
+      ),
+    },
+    {
+      id: "FY24_budget",
+      header: t("home.fy24Budget"),
+      accessor: "FY24_budget",
+      render: (value) => (
+        <span className="text-sm font-medium">{String(value)}</span>
+      ),
+    },
+    {
+      id: "FY25_budget_current",
+      header: t("home.fy25BudgetCurrent"),
+      accessor: "FY25_budget_current",
+      render: (value) => (
+        <span className="text-sm font-medium">{String(value)}</span>
+      ),
+    },
+    {
+      id: "variances",
+      header: t("home.variances"),
+      accessor: "variances",
+      render: (value) => (
+        <span className="text-sm font-medium">{String(value)}</span>
       ),
     },
   ];
 
-  // Process request_dates to count requests per day
-  const timeline = useMemo(() => {
-    const requestDates = dashboardData?.normal?.request_dates || [];
-
-    if (requestDates.length === 0) {
-      // Fallback to mock data if no API data
-      return Array.from({ length: 14 }).map((_, i) => {
-        const d = subDays(new Date(to), 13 - i);
-        const base = 260 + Math.sin(i / 2) * 80 + (i % 3) * 20;
-        return {
-          date: format(d, "yyyy-MM-dd"),
-          requests: Math.round(base),
-        };
-      });
-    }
-
-    // Group requests by date
-    const requestsByDate: Record<string, number> = {};
-
-    requestDates.forEach((dateString) => {
-      try {
-        const date = new Date(dateString);
-        const dateKey = format(date, "yyyy-MM-dd");
-        requestsByDate[dateKey] = (requestsByDate[dateKey] || 0) + 1;
-      } catch (error) {
-        console.error("Error parsing date:", dateString, error);
-      }
-    });
-
-    // Get all unique dates and sort them
-    const allDates = Object.keys(requestsByDate).sort();
-
-    if (allDates.length === 0) {
-      // Fallback if no valid dates
-      return Array.from({ length: 14 }).map((_, i) => {
-        const d = subDays(new Date(to), 13 - i);
-        return {
-          date: format(d, "yyyy-MM-dd"),
-          requests: 0,
-        };
-      });
-    }
-
-    // Create timeline with all dates that have requests
-    return allDates.map((date) => ({
-      date,
-      requests: requestsByDate[date],
-    }));
-  }, [dashboardData?.normal?.request_dates, to]);
-
   // ===== Mock Data =====
-  const stats = useMemo(() => {
-    const normalData = dashboardData?.normal;
-    if (!normalData) {
-      return [
-        {
-          title: "Total Transfers",
-          value: 0,
-          subtitle: "from last month",
-          delta: "-",
-          trend: "flat" as const,
-        },
-        {
-          title: "Total Approved",
-          value: 0,
-          subtitle: "from last month",
-          delta: "-",
-          trend: "flat" as const,
-        },
-        {
-          title: "Total Pending",
-          value: 0,
-          subtitle: "from last month",
-          delta: "-",
-          trend: "flat" as const,
-        },
-        {
-          title: "Total Rejected",
-          value: 0,
-          subtitle: "from last month",
-          delta: "-",
-          trend: "flat" as const,
-        },
-      ];
-    }
-
-    return [
-      {
-        title: "Total Transfers",
-        value: normalData.total_transfers,
-        subtitle: "from last month",
-        delta: "+10%",
-        trend: "up" as const,
-      },
-      {
-        title: "Total Approved",
-        value: normalData.approved_transfers,
-        subtitle: "from last month",
-        delta: "-2%",
-        trend: "down" as const,
-      },
-      {
-        title: "Total Pending",
-        value: normalData.pending_transfers,
-        subtitle: "from last month",
-        delta: "-2%",
-        trend: "down" as const,
-      },
-      {
-        title: "Total Rejected",
-        value: normalData.rejected_transfers,
-        subtitle: "from last month",
-        delta: "-2%",
-        trend: "down" as const,
-      },
-    ];
-  }, [dashboardData?.normal]);
-
-  const transferCategories = useMemo(() => {
-    const normalData = dashboardData?.normal;
-    if (!normalData) {
-      return [
-        { code: "FAD", value: 0 },
-        { code: "AFR", value: 0 },
-        { code: "FAR", value: 0 },
-      ];
-    }
-
-    return [
-      { code: "FAD", value: normalData.total_transfers_fad },
-      { code: "AFR", value: normalData.total_transfers_afr },
-      { code: "FAR", value: normalData.total_transfers_far },
-    ];
-  }, [dashboardData?.normal]);
 
   const statusData = useMemo(() => {
     const normalData = dashboardData?.normal;
     if (!normalData) {
       return [
-        { name: "Approved", value: 0, color: COLORS.success },
-        { name: "Pending", value: 0, color: COLORS.warning },
-        { name: "Rejected", value: 0, color: COLORS.danger },
+        { name: t("home.approved"), value: 0, color: "#007E77" },
+        { name: t("home.pending"), value: 0, color: "#6BE6E4" },
+        { name: t("home.rejected"), value: 0, color: "#4E8476" },
       ];
     }
 
     return [
       {
-        name: "Approved",
+        name: t("home.approved"),
         value: normalData.approved_transfers,
-        color: COLORS.success,
+        color: "#007E77",
       },
       {
-        name: "Pending",
+        name: t("home.pending"),
         value: normalData.pending_transfers,
-        color: COLORS.warning,
+        color: "#6BE6E4",
       },
       {
-        name: "Rejected",
+        name: t("home.rejected"),
         value: normalData.rejected_transfers,
-        color: COLORS.danger,
+        color: "#4E8476",
       },
     ];
-  }, [dashboardData?.normal]);
+  }, [dashboardData?.normal, t]);
 
-  const pendingByLevel = useMemo(() => {
-    const normalData = dashboardData?.normal;
-    if (!normalData?.pending_transfers_by_level) {
-      return [
-        { level: "Level 4", value: 0 },
-        { level: "Level 3", value: 0 },
-        { level: "Level 2", value: 0 },
-        { level: "Level 1", value: 0 },
-      ];
+  // Fetch projects list
+  const { data: projectsData } = useGetProjectsQuery();
+
+  const {
+    data: envelopeData,
+    isLoading: isLoadingEnvelope,
+    error: envelopeError,
+  } = useGetActiveProjectsWithEnvelopeQuery();
+  const userLevel = useUserLevel(); // number (e.g., 4)
+
+  const stats = useMemo(() => {
+    const base: Array<{
+      title: string;
+      value: number | string;
+      subtitle?: string;
+      deltaPct?: number; // decimal (e.g., 0.0123)
+    }> = envelopeData
+      ? [
+          {
+            title: t("home.initialEnvelope"),
+            value: envelopeData.initial_envelope,
+            subtitle: t("home.yearStartEnvelope"),
+            // no deltaPct for initial -> hidden automatically
+          },
+          {
+            title: t("home.projectedEnvelope"),
+            value: envelopeData.estimated_envelope ?? "-",
+            subtitle: t("home.afterApprovalPending"),
+            deltaPct: envelopeData.estimated_envelope_change_percentage, // may be +/-
+          },
+          {
+            title: t("home.final"),
+            value: envelopeData.current_envelope,
+            subtitle: t("home.approvedTransactions"),
+            deltaPct: envelopeData.current_envelope_change_percentage, // may be +/-
+          },
+        ]
+      : [
+          {
+            title: t("home.initialEnvelope"),
+            value: "-",
+            subtitle: t("home.yearStartEnvelope"),
+          },
+          {
+            title: t("home.projectedEnvelope"),
+            value: "-",
+            subtitle: t("home.afterApprovalPending"),
+          },
+          {
+            title: t("home.final"),
+            value: "-",
+            subtitle: t("home.approvedTransactions"),
+          },
+        ];
+
+    if (userLevel === 4) {
+      base.push({
+        title: t("home.contingency"),
+        value: 564_318_837,
+        subtitle: t("home.contingency"),
+        // no deltaPct -> hidden
+      });
     }
 
-    return [
-      { level: "Level 4", value: normalData.pending_transfers_by_level.Level4 },
-      { level: "Level 3", value: normalData.pending_transfers_by_level.Level3 },
-      { level: "Level 2", value: normalData.pending_transfers_by_level.Level2 },
-      { level: "Level 1", value: normalData.pending_transfers_by_level.Level1 },
-    ];
-  }, [dashboardData?.normal]);
+    return base;
+  }, [envelopeData, userLevel, t]);
 
-  // Smart Dashboard Data Processing
-  const smartCostCenterChart = useMemo(() => {
-    const smartData = dashboardData?.smart;
-    if (!smartData?.cost_center_totals) return [];
+  const accountColumns: TableColumn[] = [
+    { id: "account", header: t("home.accountCode"), accessor: "account" },
+    {
+      id: "account_name",
+      header: t("home.accountName"),
+      accessor: "account_name",
+    },
+    {
+      id: "approved_total",
+      header: t("home.approvedTotal"),
+      accessor: "approved_total",
+      render: (v: any) => (
+        <span
+          className={(v as number) >= 0 ? "text-green-600" : "text-red-600"}
+        >
+          {(v as number)?.toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      id: "FY24_budget",
+      header: t("home.fy24Budget"),
+      accessor: "FY24_budget",
+    },
+    { id: "FY25_budget", header: "FY25 Budget", accessor: "FY25_budget" },
+  ];
+  const accountGroupedData = useMemo(() => {
+    if (!accountWiseData?.data) return [];
 
-    return smartData.cost_center_totals.map((center) => ({
-      name: `CC ${center.cost_center_code}`,
-      from: center.total_from_center,
-      to: center.total_to_center,
-    }));
-  }, [dashboardData?.smart]);
+    const sections = [
+      { key: "MenPower", title: t("home.manpower") },
+      { key: "NonMenPower", title: t("home.nonManpower") },
+      { key: "Copex", title: t("home.capex") },
+    ] as const;
 
-  const smartAccountCodeChart = useMemo(() => {
-    const smartData = dashboardData?.smart;
-    if (!smartData?.account_code_totals) return [];
+    return sections.map(({ key, title }) => {
+      const section = (accountWiseData.data as any)[key] ?? {};
+      const summary = section.summary ?? {};
+      const rows = section.accounts ?? [];
 
-    return smartData.account_code_totals.map((account) => ({
-      name: `AC ${account.account_code}`,
-      from: account.total_from_center,
-      to: account.total_to_center,
-    }));
-  }, [dashboardData?.smart]);
+      return {
+        __type: "group",
+        id: key, // unique id for toggling
+        title, // group title
+        totals: {
+          // map to your column ids so they land in the right cells
+          approved_total: Number(summary.total_approved_transfers || 0),
+          FY24_budget: Number(summary.total_fy24_budget || 0),
+          FY25_budget: Number(summary.total_fy25_budget || 0),
+        },
+        rows, // the original accounts array
+      };
+    });
+  }, [accountWiseData, t]);
 
-  const smartCombinationsChart = useMemo(() => {
-    const smartData = dashboardData?.smart;
-    if (!smartData?.filtered_combinations) return [];
+  useEffect(() => {
+    // when project changes: clear account filter & refetch project-related endpoints
+    setFilter(null);
+    refetchAccountWise();
+  }, [selectedProject, refetchAccountWise]);
 
-    return smartData.filtered_combinations.map((combo, index) => ({
-      name: `${combo.cost_center_code}-${combo.account_code}`,
-      from: combo.total_from_center,
-      to: combo.total_to_center,
-      id: index,
-    }));
-  }, [dashboardData?.smart]);
+  useEffect(() => {
+    // when entity changes: refetch the project-wise table
+    refetchProjectWise();
+  }, [selectedEntity, refetchProjectWise]);
+
+  useEffect(() => {
+    // if mode or year changes and you want to force a fresh pull
+    refetchDashboard();
+    // year affects only derived memos in your code; if your APIs support year, add it to args and refetch here too.
+  }, [mode, year, refetchDashboard]);
+  const filteredAccountGroupedData = useMemo(() => {
+    if (!accountGroupedData?.length || !filter) return accountGroupedData;
+    const key = LABEL_TO_GROUP[filter];
+    return key
+      ? accountGroupedData.filter((g: any) => g.id === key)
+      : accountGroupedData;
+  }, [accountGroupedData, filter]);
+
+  const tableRows: EnvelopeTableRow[] =
+    envelopeData?.data?.map((project: EnvelopeProject, index: number) => ({
+      id: `${project.project_code}-${index}`,
+      project_code: project.project_code,
+      submitted_total: project.submitted_total,
+      approved_total: project.approved_total,
+    })) || [];
+
+  const columns: TableColumn[] = [
+    {
+      id: "project_code",
+      header: t("home.projectCode"),
+      render: (_, row) => {
+        const envelopeRow = row as unknown as EnvelopeTableRow;
+        return (
+          <span className="text-sm font-medium text-gray-900">
+            {envelopeRow.project_code}
+          </span>
+        );
+      },
+    },
+    {
+      id: "submitted_total",
+      header: t("home.submittedTotal"),
+      showSum: true,
+      render: (_, row) => {
+        const envelopeRow = row as unknown as EnvelopeTableRow;
+        const value = envelopeRow.submitted_total;
+        const isPositive = value >= 0;
+        const arrow = isPositive ? (
+          <svg
+            width="11"
+            height="11"
+            viewBox="0 0 11 11"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M4 0.34375V1.65625H8.40625L0.65625 9.40625L1.59375 10.3438L9.34375 2.59375V7H10.6562V0.34375H4Z"
+              fill="#00A350"
+            />
+          </svg>
+        ) : (
+          <svg
+            width="11"
+            height="11"
+            viewBox="0 0 11 11"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M10.3438 1.59375L9.40625 0.65625L1.65625 8.40625V4H0.34375V10.6562H7V9.34375H2.59375L10.3438 1.59375Z"
+              fill="#D44333"
+            />
+          </svg>
+        );
+        return (
+          <span
+            className={`flex items-center gap-1 text-sm font-medium ${
+              isPositive ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {value.toLocaleString()}
+            {isPositive ? arrow : arrow}
+          </span>
+        );
+      },
+    },
+    {
+      id: "approved_total",
+      header: t("home.approvedTotal"),
+      showSum: true,
+      render: (_, row) => {
+        const envelopeRow = row as unknown as EnvelopeTableRow;
+        const value = envelopeRow.approved_total;
+        const isPositive = value >= 0;
+        const arrow = isPositive ? (
+          <svg
+            width="11"
+            height="11"
+            viewBox="0 0 11 11"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M4 0.34375V1.65625H8.40625L0.65625 9.40625L1.59375 10.3438L9.34375 2.59375V7H10.6562V0.34375H4Z"
+              fill="#00A350"
+            />
+          </svg>
+        ) : (
+          <svg
+            width="11"
+            height="11"
+            viewBox="0 0 11 11"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M10.3438 1.59375L9.40625 0.65625L1.65625 8.40625V4H0.34375V10.6562H7V9.34375H2.59375L10.3438 1.59375Z"
+              fill="#D44333"
+            />
+          </svg>
+        );
+        return (
+          <span
+            className={`flex items-center gap-1 text-sm font-medium ${
+              isPositive ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {value.toLocaleString()}
+            {isPositive ? arrow : arrow}
+          </span>
+        );
+      },
+    },
+  ];
+  const isLevel4 = userLevel === 4;
+
+  // formatter used by both label and tooltip
+  const fmtAmount = (n: number) => {
+    const v = Number(n);
+    if (!Number.isFinite(v)) return "";
+    if (Math.abs(v) >= 1_000_000_000)
+      return (v / 1_000_000_000).toFixed(1) + "B";
+    if (Math.abs(v) >= 1_000_000) return (v / 1_000_000).toFixed(1) + "M";
+    if (Math.abs(v) >= 1_000) return (v / 1_000).toFixed(1) + "K";
+    return v.toLocaleString();
+  };
+
+  const renderCustomizedLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    value,
+  }: any) => {
+    const v = Number(value);
+    if (!Number.isFinite(v) || v === 0) return null; // 🔒 hide for 0
+
+    const RADIAN = Math.PI / 180;
+    const r = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + r * Math.cos(-(midAngle ?? 0) * RADIAN);
+    const y = cy + r * Math.sin(-(midAngle ?? 0) * RADIAN);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="#fff"
+        fontSize={14}
+        fontWeight={600}
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+      >
+        {fmtAmount(v)}
+      </text>
+    );
+  };
 
   return (
     <div className="space-y-6">
       {/* Error State */}
       {error && (
-        <ErrorState message="Failed to load dashboard data. Please try again." />
+        <ErrorState message={t("home.failedToLoadDashboardData")} t={t} />
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
-            {t("dashboard") || "Dashboard"}
-          </h1>
-        </div>
-
-        {/* Controls */}
-        <div className="flex items-center gap-3">
-          {/* Mode */}
-          <div className="relative">
-            <select
-              value={mode}
-              onChange={(e) =>
-                setMode(e.target.value as "all" | "normal" | "smart")
-              }
-              className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-              disabled={isLoading}
-            >
-              <option value="all">All</option>
-              <option value="normal">Normal</option>
-              <option value="smart">Smart</option>
-            </select>
-          </div>
-
-          {/* Loading indicator in header */}
-          {isLoading && (
-            <div className="flex items-center gap-2 text-blue-600">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span className="text-sm">Loading...</span>
-            </div>
+      {/* Header */}
+      <div className={cn("flex items-center justify-between gap-4")}>
+        {/* Left side */}
+        <h1
+          className={cn(
+            "text-2xl font-bold text-gray-900",
+            isRTL ? "text-right" : "text-left"
           )}
+        >
+          {t("dashboard") || "Dashboard"}
+        </h1>
 
-          {/* Date range */}
-          {/* <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm">
-            <input
-              type="date"
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-              className="outline-none"
-            />
-            <span className="text-gray-400">–</span>
-            <input
-              type="date"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              className="outline-none"
-            />
-          </div> */}
+        {/* Right side */}
+        <div
+          className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}
+        >
+          {/* Project Selection */}
+
+          <ModeSelect
+            value={mode} // "all" | "Envelope" | "Budget"
+            onChange={(v) => setMode(v)}
+          />
         </div>
       </div>
-
+      {(mode === "Budget" || mode === "all") && (
+        <div className={cn("flex items-center gap-4 mb-4")}>
+          <SharedSelect
+            className="w-full"
+            required={false}
+            value={selectedProject}
+            onChange={(option) => setSelectedProject(option)}
+            placeholder={t("home.selectProject")}
+            options={[
+              ...(projectsData?.data?.map((project) => ({
+                value: project.id.toString(),
+                label: project.alias_default || project.project || project.id,
+              })) || []),
+            ]}
+          />
+          <SharedSelect
+            className="w-full"
+            required={false}
+            value={selectedEntity}
+            onChange={(value) => setSelectedEntity(String(value))}
+            placeholder={t("home.selectEntity")}
+            options={[
+              ...(entitiesData?.data?.data?.map((entity: any) => ({
+                value: entity.entity_code,
+                label: entity.entity_name,
+              })) || []),
+            ]}
+          />
+        </div>
+      )}
       {/* Stats */}
-      {(mode === "normal" || mode === "all") && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {(mode === "Envelope" || mode === "all") && (
+        <div
+          className={`grid grid-cols-1 gap-4 md:grid-cols-2 ${
+            isLevel4 ? "xl:grid-cols-4" : "xl:grid-cols-3"
+          }`}
+        >
           {isLoading
             ? Array.from({ length: 4 }).map((_, i) => (
                 <StatCardSkeleton key={i} />
@@ -574,250 +728,282 @@ export default function Home() {
                 >
                   <StatCard
                     title={s.title}
-                    value={s.value.toLocaleString()}
+                    value={
+                      typeof s.value === "number"
+                        ? s.value.toLocaleString()
+                        : s.value
+                    }
                     subtitle={s.subtitle}
-                    delta={s.delta}
-                    trend={s.trend}
+                    deltaPct={s.deltaPct}
                   />
                 </div>
               ))}
         </div>
       )}
-
-      {/* Charts Row 1 */}
-      {(mode === "normal" || mode === "all") && (
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          {isLoading ? (
-            <>
-              <ChartLoadingSkeleton />
-              <ChartLoadingSkeleton />
-            </>
+      {mode === "Envelope" && (
+        <div className="bg-white rounded-2xl shadow-sm">
+          {isLoadingEnvelope ? (
+            <div
+              className={cn(
+                "flex justify-center items-center h-64"
+                // isRTL && "flex-row-reverse"
+              )}
+            >
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
+                {t("home.loadingEnvelopeData")}
+              </span>
+            </div>
+          ) : envelopeError ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="text-red-600 text-lg font-medium">
+                  {t("home.errorLoadingData")}
+                </div>
+                <div className="text-gray-500 text-sm mt-1">
+                  {t("home.checkConnection")}
+                </div>
+              </div>
+            </div>
+          ) : tableRows.length > 0 ? (
+            <SharedTable
+              title={t("home.activeProjectsWithEnvelope")}
+              columns={columns}
+              data={tableRows as unknown as SharedTableRow[]}
+              showFooter={true}
+              showPagination={false}
+              maxHeight="600px"
+              showColumnSelector={true}
+            />
           ) : (
-            <>
-              {/* Transfer Categories */}
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-                <div className="mb-4 font-semibold text-gray-900">
-                  Transfer Categories
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="text-gray-500 text-lg">
+                  {t("home.noDataAvailable")}
                 </div>
-                <div className="h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={transferCategories} barSize={40}>
-                      <CartesianGrid vertical={false} stroke={COLORS.gray300} />
-                      <XAxis
-                        dataKey="code"
-                        style={{ fontSize: 12 }}
-                        tick={{ fill: COLORS.gray500 }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        style={{ fontSize: 14 }}
-                        tick={{ fill: COLORS.gray500 }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <RTooltip content={<SimpleTooltip />} />
-                      {/* أول اتنين رمادي، الأخيرة Primary زي الصورة */}
-                      <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                        {transferCategories.map((_, i) => (
-                          <Cell
-                            key={i}
-                            fill={
-                              i === transferCategories.length - 1
-                                ? COLORS.primary
-                                : COLORS.gray300
-                            }
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div className="text-gray-400 text-sm mt-1">
+                  {t("home.tryAdjustingFilters")}
                 </div>
               </div>
-
-              {/* Transfer Status (Donut) */}
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-                <div className="mb-4 font-semibold text-gray-900">
-                  Transfer Status
-                </div>
-                <div className="h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={statusData}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius={80}
-                        outerRadius={95}
-                        paddingAngle={1}
-                        cornerRadius={2}
-                      >
-                        {statusData.map((entry, i) => (
-                          <Cell key={`slice-${i}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <RTooltip content={<SimpleTooltip />} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-
-                <DotLegend
-                  items={[
-                    { label: "Approved", color: COLORS.success },
-                    { label: "Pending", color: COLORS.warning },
-                    { label: "Rejected", color: COLORS.danger },
-                  ]}
-                />
-              </div>
-            </>
+            </div>
           )}
         </div>
       )}
-
-      {/* Charts Row 2 */}
-      {(mode === "normal" || mode === "all") && (
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      {/* Charts Row 1 */}
+      {(mode === "Budget" || mode === "all") && (
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-1">
           {isLoading ? (
             <>
-              <ChartLoadingSkeleton />
-              <ChartLoadingSkeleton />
+              <ChartLoadingSkeleton t={t} />
+              <ChartLoadingSkeleton t={t} />
             </>
           ) : (
             <>
-              {/* Requests Timeline (Area) */}
-              {/* Requests Timeline */}
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-                <div className="mb-4 font-semibold text-gray-900">
-                  Requests Timeline
-                </div>
+              {/* Breakdown of Budget (Donut) */}
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
+                  <div
+                    className={cn(
+                      "flex items-center justify-between mb-4"
+                      // isRTL && "flex-row-reverse"
+                    )}
+                  >
+                    <div className="font-semibold text-gray-900">
+                      {t("home.breakdownOfBudget")}
+                    </div>
+                    <div>
+                      <select
+                        className="rounded-xl border border-[#F6F6F6] bg-[#F6F6F6] px-3 py-1.5 text-sm  focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        defaultValue="2025"
+                        onChange={(e) => setYear(e.target.value)}
+                      >
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                      </select>
+                    </div>
+                  </div>
 
-                <div className="h-[260px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    {(() => {
-                      // use your dataset here (timeline or weeklyTimeline)
-                      const chartData = timeline; // <-- or weeklyTimeline
-                      const xKey = "date"; // <-- "label" if you use weeklyTimeline
-                      const startTick = chartData[0]?.[xKey];
-                      const endTick = chartData.at(-2)?.[xKey];
+                  <div className="flex items-center justify-center">
+                    {/* Chart */}
 
-                      return (
-                        <AreaChart
-                          data={chartData}
-                          margin={{ left: 8, right: 8 }}
-                        >
-                          <defs>
-                            <linearGradient
-                              id="areaFill"
-                              x1="0"
-                              y1="0"
-                              x2="0"
-                              y2="1"
-                            >
-                              <stop
-                                offset="5%"
-                                stopColor={COLORS.primary}
-                                stopOpacity={0.25}
+                    <div className="h-[280px] w-full   ms-auto">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={accountSummaryData}
+                            dataKey="value"
+                            nameKey="name"
+                            paddingAngle={1}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={renderCustomizedLabel}
+                            outerRadius={100}
+                            onClick={(data) => {
+                              // Navigate to dashboard details page for the selected type
+                              const typeMap: Record<string, string> = {
+                                Manpower: "manpower",
+                                "Non-Manpower": "non-manpower",
+                                Capex: "capex",
+                              };
+                              const type = typeMap[data.name] || "manpower";
+                              navigate(
+                                `/app/dashboard-details/${type}?project=${selectedProject}`
+                              );
+                            }}
+                          >
+                            {accountSummaryData.map((entry, i) => (
+                              <Cell
+                                key={i}
+                                fill={entry.color}
+                                cursor="pointer"
+                                stroke="#ffffff"
+                                strokeWidth={2}
                               />
-                              <stop
-                                offset="95%"
-                                stopColor={COLORS.primary}
-                                stopOpacity={0}
-                              />
-                            </linearGradient>
-                          </defs>
-
-                          <CartesianGrid
-                            vertical={false}
-                            stroke={COLORS.gray300}
-                          />
-
-                          {/* Only show first & last ticks, bold */}
-                          <XAxis
-                            dataKey={xKey}
-                            ticks={[startTick!, endTick!].filter(Boolean)}
-                            tick={{ fill: COLORS.text, fontWeight: 700 }}
-                            interval={0}
-                            axisLine={false}
-                            tickLine={false}
-                            tickMargin={12}
-                            style={{ fontSize: 14 }}
-                          />
-
-                          <YAxis
-                            domain={[0, "dataMax + 50"]}
-                            tick={{ fill: COLORS.gray500 }}
-                            axisLine={false}
-                            tickLine={false}
-                            width={28}
-                            style={{ fontSize: 12 }}
-                          />
+                            ))}
+                          </Pie>
 
                           <RTooltip
-                            content={<DailyTooltip />}
-                            cursor={{
-                              stroke: COLORS.primary,
-                              strokeWidth: 2,
-                              fill: "transparent",
-                            }} // vertical line
-                            wrapperStyle={{ outline: "none" }}
-                          />
-
-                          <Area
-                            type="monotone"
-                            dataKey="requests"
-                            stroke={COLORS.primary}
-                            fill="url(#areaFill)"
-                            strokeWidth={3}
-                            dot={false}
-                            activeDot={{
-                              r: 5,
-                              fill: "#fff",
-                              stroke: COLORS.primary,
-                              strokeWidth: 3,
+                            content={({ active, payload }) => {
+                              if (!active || !payload?.length) return null;
+                              const p = payload[0];
+                              return (
+                                <div className="rounded-lg bg-black text-white px-3 py-2 text-sm shadow">
+                                  <div className="font-medium">{p.name}</div>
+                                  <div>{(p.value / 1_000_000).toFixed(1)}M</div>
+                                </div>
+                              );
                             }}
                           />
-                        </AreaChart>
-                      );
-                    })()}
-                  </ResponsiveContainer>
-                </div>
-              </div>
+                          <Legend
+                            verticalAlign="bottom"
+                            align="center"
+                            iconType="circle"
+                            content={(props: any) => {
+                              const payload = (props?.payload ??
+                                []) as Array<any>;
+                              if (!payload.length) return null;
 
-              {/* Pending by Level (Horizontal Bars) */}
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-                <div className="mb-4 font-semibold text-gray-900">
-                  Pending by Level
+                              return (
+                                <div className="mt-6 flex items-center justify-center gap-8 sm:gap-12">
+                                  {payload.map((item) => {
+                                    const label = String(
+                                      item?.value ?? ""
+                                    ).replace("_", " ");
+                                    const isActive =
+                                      filter === label ||
+                                      filter === LABEL_TO_GROUP[label];
+                                    return (
+                                      <button
+                                        key={`${item?.dataKey ?? "k"}-${
+                                          item?.value ?? "v"
+                                        }`}
+                                        type="button"
+                                        onClick={() =>
+                                          setFilter((prev) =>
+                                            prev === label ||
+                                            prev === LABEL_TO_GROUP[label]
+                                              ? null
+                                              : label
+                                          )
+                                        }
+                                        className={`inline-flex items-center gap-3 ${
+                                          isActive ? "opacity-100" : ""
+                                        }`}
+                                      >
+                                        <span
+                                          className="inline-block h-4 w-4 rounded-[6px] ring-1 ring-white shadow"
+                                          style={{
+                                            backgroundColor: item?.color,
+                                          }}
+                                          aria-hidden
+                                        />
+                                        <span className="text-[#0B2440] text-sm font-semibold">
+                                          {label}
+                                        </span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
                 </div>
-                <div className="h-[260px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={pendingByLevel}
-                      layout="vertical"
-                      margin={{ left: 30, right: 16 }}
-                      barSize={30}
-                    >
-                      <CartesianGrid
-                        horizontal={false}
-                        stroke={COLORS.gray300}
-                      />
-                      <XAxis type="number" hide />
-                      <YAxis
-                        style={{ fontSize: 13 }}
-                        type="category"
-                        dataKey="level"
-                        tick={{ fill: COLORS.gray500 }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <RTooltip content={<SimpleTooltip />} />
-                      <Bar
-                        dataKey="value"
-                        style={{ touchAction: "none" }}
-                        fill={COLORS.primary}
-                        radius={[0, 8, 8, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+
+                {/* Transfer Status Chart */}
+                <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
+                  <div
+                    className={cn(
+                      "flex items-center justify-between mb-4"
+                      // isRTL && "flex-row-reverse"
+                    )}
+                  >
+                    <div className="font-semibold text-gray-900">
+                      {t("home.transferStatus")}
+                    </div>
+                    <div>
+                      <select
+                        className="rounded-xl border border-[#F6F6F6] bg-[#F6F6F6] px-3 py-1.5 text-sm  focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        defaultValue="2025"
+                        onChange={(e) => setYear(e.target.value)}
+                      >
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-center">
+                    {/* Chart */}
+                    <div className="h-[280px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={statusData} barSize={40}>
+                          <CartesianGrid vertical={false} stroke={"#E5E7EB"} />{" "}
+                          <XAxis
+                            dataKey="name"
+                            tickFormatter={(v) => String(v).replace("_", " ")}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            axisLine={false}
+                            tickLine={false}
+                            // tick={false} // uncomment to hide labels
+                          />
+                          <RTooltip
+                            wrapperStyle={{
+                              background: "transparent",
+                              border: "none",
+                              boxShadow: "none",
+                            }}
+                            contentStyle={{
+                              background: "#E5E7EB",
+                              color: "#fff",
+                              border: "none",
+                            }} // keep tooltip pill
+                            formatter={(value: number, name: string) => [
+                              Number(value).toLocaleString(),
+                              String(name).replace("_", " "),
+                            ]}
+                            labelFormatter={() => ""}
+                          />
+                          <Bar
+                            dataKey="value"
+                            name="Transfers"
+                            radius={[8, 8, 0, 0]}
+                          >
+                            {statusData.map((entry, i) => (
+                              <Cell key={i} fill={entry.color} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
                 </div>
               </div>
             </>
@@ -826,27 +1012,37 @@ export default function Home() {
       )}
 
       {/* Request Timeline Pipeline Table - Only for Normal mode */}
-      {(mode === "normal" || mode === "all") && dashboardData?.normal && (
+      {(mode === "Budget" || mode === "all") && (
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-          <div className="mb-4 font-semibold text-gray-900">
-            Request Timeline Pipeline
+          <div
+            className={cn(
+              "mb-4 font-semibold text-gray-900",
+              isRTL ? "text-right" : "text-left"
+            )}
+          >
+            {t("home.projectWiseBreakdown")}
           </div>
 
-          {isLoading ? (
-            <div className="flex justify-center items-center h-32">
+          {isLoadingProjectWise ? (
+            <div
+              className={cn(
+                "flex justify-center items-center h-32"
+                // isRTL && "flex-row-reverse"
+              )}
+            >
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600">
-                Loading timeline data...
+              <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
+                {t("home.loadingProjectWiseData")}
               </span>
             </div>
-          ) : error ? (
+          ) : projectWiseError ? (
             <div className="flex justify-center items-center h-32 text-red-600">
-              Failed to load timeline data
+              {t("home.failedToLoadProjectWiseData")}
             </div>
           ) : (
             <SharedTable
               columns={timelineColumns}
-              data={requestTimelineData}
+              data={projectWiseData?.data || []}
               showPagination={false}
               itemsPerPage={10}
               currentPage={1}
@@ -856,219 +1052,42 @@ export default function Home() {
           )}
         </div>
       )}
-
-      {/* Smart Dashboard Section - Only for Smart mode */}
-      {(mode === "smart" || mode === "all") && (
-        <div className="space-y-6">
-          {isLoading ? (
-            <>
-              {/* Smart Charts Row 1 Loading */}
-              <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-                <ChartLoadingSkeleton />
-                <ChartLoadingSkeleton />
-              </div>
-              {/* Smart Charts Row 2 Loading */}
-              <div className="grid grid-cols-1 gap-6">
-                <ChartLoadingSkeleton />
-              </div>
-              {/* Smart Data Table Loading */}
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-                <LoadingSkeleton className="h-6 w-32 mb-4" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="p-4 border rounded-lg">
-                      <LoadingSkeleton className="h-4 w-24 mb-2" />
-                      <LoadingSkeleton className="h-6 w-20 mb-1" />
-                      <LoadingSkeleton className="h-6 w-20" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : dashboardData?.smart ? (
-            <>
-              {/* Smart Charts Row 1 */}
-              <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-                {/* Cost Center Analysis Chart */}
-                <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-                  <div className="mb-4 font-semibold text-gray-900">
-                    Cost Center Analysis
-                  </div>
-                  <div className="h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={smartCostCenterChart} barSize={30}>
-                        <CartesianGrid
-                          vertical={false}
-                          stroke={COLORS.gray300}
-                        />
-                        <XAxis
-                          dataKey="name"
-                          style={{ fontSize: 11 }}
-                          tick={{ fill: COLORS.gray500 }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          style={{ fontSize: 12 }}
-                          tick={{ fill: COLORS.gray500 }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <RTooltip content={<SimpleTooltip />} />
-                        <Bar
-                          dataKey="from"
-                          fill={COLORS.primary}
-                          radius={[4, 4, 0, 0]}
-                          name="From Center"
-                        />
-                        <Bar
-                          dataKey="to"
-                          fill={COLORS.success}
-                          radius={[4, 4, 0, 0]}
-                          name="To Center"
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <DotLegend
-                    items={[
-                      { label: "From Center", color: COLORS.primary },
-                      { label: "To Center", color: COLORS.success },
-                    ]}
-                  />
-                </div>
-
-                {/* Account Code Analysis Chart */}
-                <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-                  <div className="mb-4 font-semibold text-gray-900">
-                    Account Code Analysis
-                  </div>
-                  <div className="h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={smartAccountCodeChart} barSize={30}>
-                        <CartesianGrid
-                          vertical={false}
-                          stroke={COLORS.gray300}
-                        />
-                        <XAxis
-                          dataKey="name"
-                          style={{ fontSize: 11 }}
-                          tick={{ fill: COLORS.gray500 }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          style={{ fontSize: 12 }}
-                          tick={{ fill: COLORS.gray500 }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <RTooltip content={<SimpleTooltip />} />
-                        <Bar
-                          dataKey="from"
-                          fill={COLORS.warning}
-                          radius={[4, 4, 0, 0]}
-                          name="From Center"
-                        />
-                        <Bar
-                          dataKey="to"
-                          fill={COLORS.danger}
-                          radius={[4, 4, 0, 0]}
-                          name="To Center"
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <DotLegend
-                    items={[
-                      { label: "From Center", color: COLORS.warning },
-                      { label: "To Center", color: COLORS.danger },
-                    ]}
-                  />
-                </div>
-              </div>
-
-              {/* Smart Charts Row 2 */}
-              <div className="grid grid-cols-1 gap-6">
-                {/* Combinations Analysis Chart */}
-                <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-                  <div className="mb-4 font-semibold text-gray-900">
-                    Cost Center & Account Code Combinations
-                  </div>
-                  <div className="h-[320px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={smartCombinationsChart} barSize={40}>
-                        <CartesianGrid
-                          vertical={false}
-                          stroke={COLORS.gray300}
-                        />
-                        <XAxis
-                          dataKey="name"
-                          style={{ fontSize: 10 }}
-                          tick={{ fill: COLORS.gray500 }}
-                          axisLine={false}
-                          tickLine={false}
-                          angle={-45}
-                          textAnchor="end"
-                          height={80}
-                        />
-                        <YAxis
-                          style={{ fontSize: 12 }}
-                          tick={{ fill: COLORS.gray500 }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <RTooltip content={<SimpleTooltip />} />
-                        <Bar
-                          dataKey="from"
-                          fill={COLORS.primary}
-                          radius={[4, 4, 0, 0]}
-                          name="From Center"
-                        />
-                        <Bar
-                          dataKey="to"
-                          fill={COLORS.success}
-                          radius={[4, 4, 0, 0]}
-                          name="To Center"
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <DotLegend
-                    items={[
-                      { label: "From Center", color: COLORS.primary },
-                      { label: "To Center", color: COLORS.success },
-                    ]}
-                  />
-                </div>
-              </div>
-
-              {/* Smart Dashboard Data Tables */}
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-                <div className="mb-4 font-semibold text-gray-900">
-                  Detailed Analysis
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {dashboardData.smart.cost_center_totals.map((center) => (
-                    <div
-                      key={center.cost_center_code}
-                      className="p-4 border rounded-lg"
-                    >
-                      <div className="text-sm font-medium text-gray-700">
-                        Cost Center: {center.cost_center_code}
-                      </div>
-                      <div className="text-lg font-semibold text-gray-900">
-                        From: {center.total_from_center.toLocaleString()}
-                      </div>
-                      <div className="text-lg font-semibold text-gray-900">
-                        To: {center.total_to_center.toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : null}
+      {/* Request Timeline Pipeline Table - Only for Normal mode */}
+      {(mode === "Budget" || mode === "all") && (
+        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+          <div
+            className={cn(
+              "mb-4 font-semibold text-gray-900",
+              isRTL ? "text-right" : "text-left"
+            )}
+          >
+            {t("home.accountWiseBreakdown")}
+          </div>
+          {isLoadingAccountWise ? (
+            <div
+              className={cn(
+                "flex justify-center items-center h-32",
+                isRTL && "flex-row-reverse"
+              )}
+            >
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
+                {t("home.loadingAccountWiseData")}
+              </span>
+            </div>
+          ) : accountWiseError ? (
+            <ErrorState message={t("home.failedToLoadAccountWiseData")} t={t} />
+          ) : (
+            <SharedTable2
+              columns={accountColumns}
+              data={filteredAccountGroupedData as any}
+              showPagination={false}
+              groupable={true}
+              itemsPerPage={10}
+              currentPage={1}
+              maxHeight="600px"
+            />
+          )}
         </div>
       )}
     </div>
