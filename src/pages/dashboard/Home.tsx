@@ -135,27 +135,39 @@ export default function Home() {
         totalExpenditureData: [],
         actualExpenditureData: [],
         reservationsData: [],
+        exchangeRatePercentage: 0,
+        actualPercentage: 0,
+        encumbrancePercentage: 0,
       };
     }
 
     const summary = analyticalData.summary;
+    const totalBudget = summary.grand_total_budget || 1; // Avoid division by zero
 
-    // 1. مؤشر الصرف (Exchange Rate Indicator)
-    // 
+    // Calculate percentages
+    const actualPercentage = (summary.grand_actual / totalBudget) * 100;
+    const encumbrancePercentage =
+      (summary.grand_encumbrance / totalBudget) * 100;
+    const totalActualPercentage =
+      (summary.grand_total_actual / totalBudget) * 100;
+
+    // 1. مؤشر الصرف (Exchange Rate Indicator) - Total Actual vs Remaining Budget
+    const spentAmount = summary.grand_total_actual;
+    const remainingBudget = totalBudget - spentAmount;
     const exchangeRateData = [
       {
         name: t("home.spent"),
-        value: summary.grand_total_actual,
+        value: spentAmount,
         color: "#007E77",
       },
       {
-        name: t("home.budget"),
-        value: summary.grand_total_budget,
+        name: t("home.remaining"),
+        value: remainingBudget > 0 ? remainingBudget : 0,
         color: "#E5E7EB",
       },
     ];
 
-    // 2. نسب اجمالي الصرف (Total Expenditure Ratio)
+    // 2. نسب اجمالي الصرف (Total Expenditure Ratio) - Breakdown of budget usage
     const totalExpenditureData = [
       {
         name: t("home.encumbrance"),
@@ -164,7 +176,7 @@ export default function Home() {
       },
       {
         name: t("home.futures"),
-        value: summary.grand_Futures_column,
+        value: summary.grand_Futures_column || 0,
         color: "#4E8476",
       },
       {
@@ -175,35 +187,41 @@ export default function Home() {
       {
         name: t("home.available"),
         value: summary.grand_funds_available,
-        color: "#007E77",
+        color: "#A7F3D0",
       },
-    ];
+    ].filter((item) => item.value > 0); // Filter out zero values
 
     // 3. نسبة المنصرف الفعلي (Actual Expenditure Percentage)
     const actualExpenditureData = [
-      {
-        name: t("home.budget"),
-        value: summary.grand_total_budget,
-        color: "#E5E7EB",
-      },
       {
         name: t("home.actual"),
         value: summary.grand_actual,
         color: "#007E77",
       },
-    ];
-
-    // 4. نسبة الحجوزات (Reservations Percentage)
-    const reservationsData = [
       {
-        name: t("home.budget"),
-        value: summary.grand_total_budget,
+        name: t("home.remaining"),
+        value:
+          totalBudget - summary.grand_actual > 0
+            ? totalBudget - summary.grand_actual
+            : 0,
         color: "#E5E7EB",
       },
+    ];
+
+    // 4. نسبة الحجوزات (Reservations/Encumbrance Percentage)
+    const reservationsData = [
       {
         name: t("home.encumbrance"),
         value: summary.grand_encumbrance,
         color: "#6BE6E4",
+      },
+      {
+        name: t("home.remaining"),
+        value:
+          totalBudget - summary.grand_encumbrance > 0
+            ? totalBudget - summary.grand_encumbrance
+            : 0,
+        color: "#E5E7EB",
       },
     ];
 
@@ -212,6 +230,9 @@ export default function Home() {
       totalExpenditureData,
       actualExpenditureData,
       reservationsData,
+      exchangeRatePercentage: totalActualPercentage.toFixed(2),
+      actualPercentage: actualPercentage.toFixed(2),
+      encumbrancePercentage: encumbrancePercentage.toFixed(2),
     };
   }, [analyticalData, t]);
 
@@ -359,7 +380,9 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 1. مؤشر الصرف - Exchange Rate Indicator */}
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
-            <div className="font-semibold text-gray-900 mb-4">مؤشر الصرف</div>
+            <div className="font-semibold text-gray-900 mb-4">
+              {t("home.exchangeRateIndicator")}
+            </div>
             <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -386,9 +409,7 @@ export default function Home() {
                             {data.name}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {typeof data.value === "number"
-                              ? `${data.value.toFixed(2)}%`
-                              : data.value}
+                            {formatValue(Number(data.value))}
                           </p>
                         </div>
                       );
@@ -407,7 +428,7 @@ export default function Home() {
           {/* 2. نسب اجمالي الصرف - Total Expenditure Ratio */}
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
             <div className="font-semibold text-gray-900 mb-4">
-              نسب اجمالي الصرف
+              {t("home.totalExpenditureRatio")}
             </div>
             <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -454,7 +475,7 @@ export default function Home() {
           {/* 3. نسبة المنصرف الفعلي - Actual Expenditure Percentage */}
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
             <div className="font-semibold text-gray-900 mb-4">
-              نسبة المنصرف الفعلي
+              {t("home.actualExpenditurePercentage")}
             </div>
             <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -501,7 +522,7 @@ export default function Home() {
           {/* 4. نسبة الحجوزات - Reservations Percentage */}
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn">
             <div className="font-semibold text-gray-900 mb-4">
-              نسبة الحجوزات
+              {t("home.reservationsPercentage")}
             </div>
             <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">

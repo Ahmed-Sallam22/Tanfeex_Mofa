@@ -91,7 +91,18 @@
     "failedToLoadProjectWiseData": "Failed to load project wise data",
     "noDataAvailable": "No data available",
     "tryAdjustingFilters": "Try adjusting your filters or select a different project.",
-    "checkConnection": "Please try selecting a different project or check your connection."
+    "checkConnection": "Please try selecting a different project or check your connection.",
+    "spent": "Spent",
+    "remaining": "Remaining",
+    "budget": "Budget",
+    "encumbrance": "Encumbrance",
+    "futures": "Futures",
+    "actual": "Actual",
+    "available": "Available",
+    "exchangeRateIndicator": "Exchange Rate Indicator",
+    "totalExpenditureRatio": "Total Expenditure Ratio",
+    "actualExpenditurePercentage": "Actual Expenditure Percentage",
+    "reservationsPercentage": "Reservations Percentage"
   },
   "dashboardDetails": {
     "backToDashboard": "Back to Dashboard",

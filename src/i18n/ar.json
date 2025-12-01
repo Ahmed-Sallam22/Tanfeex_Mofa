@@ -90,7 +90,18 @@
     "failedToLoadProjectWiseData": "فشل في تحميل البيانات حسب المشروع",
     "noDataAvailable": "لا توجد بيانات متاحة",
     "tryAdjustingFilters": "حاول تعديل الفلاتر أو اختيار مشروع آخر.",
-    "checkConnection": "يرجى محاولة اختيار مشروع آخر أو التحقق من الاتصال."
+    "checkConnection": "يرجى محاولة اختيار مشروع آخر أو التحقق من الاتصال.",
+    "spent": "المنصرف",
+    "remaining": "المتبقي",
+    "budget": "الميزانية",
+    "encumbrance": "الارتباطات",
+    "futures": "المستقبليات",
+    "actual": "الفعلي",
+    "available": "المتاح",
+    "exchangeRateIndicator": "مؤشر الصرف",
+    "totalExpenditureRatio": "نسب اجمالي الصرف",
+    "actualExpenditurePercentage": "نسبة المنصرف الفعلي",
+    "reservationsPercentage": "نسبة الحجوزات"
   },
   "dashboardDetails": {
     "backToDashboard": "العودة إلى لوحة التحكم",
