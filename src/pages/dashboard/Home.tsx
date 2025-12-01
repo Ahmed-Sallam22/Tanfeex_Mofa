@@ -141,49 +141,22 @@ export default function Home() {
     const summary = analyticalData.summary;
 
     // 1. مؤشر الصرف (Exchange Rate Indicator)
+    // 
     const exchangeRateData = [
       {
         name: t("home.spent"),
-        value: summary.grand_exchange_rate,
+        value: summary.grand_total_actual,
         color: "#007E77",
       },
       {
-        name: t("home.remaining"),
-        value: 100 - summary.grand_exchange_rate,
+        name: t("home.budget"),
+        value: summary.grand_total_budget,
         color: "#E5E7EB",
       },
     ];
 
     // 2. نسب اجمالي الصرف (Total Expenditure Ratio)
     const totalExpenditureData = [
-      {
-        name: t("home.totalActual"),
-        value: summary.grand_total_actual,
-        color: "#6BE6E4",
-      },
-      {
-        name: t("home.fundsAvailable"),
-        value: summary.grand_funds_available,
-        color: "#4E8476",
-      },
-    ];
-
-    // 3. نسبة المنصرف الفعلي (Actual Expenditure Percentage)
-    const actualExpenditureData = [
-      {
-        name: t("home.actual"),
-        value: summary.grand_actual,
-        color: "#007E77",
-      },
-      {
-        name: t("home.budget"),
-        value: summary.grand_total_budget - summary.grand_actual,
-        color: "#E5E7EB",
-      },
-    ];
-
-    // 4. نسبة الحجوزات (Reservations Percentage)
-    const reservationsData = [
       {
         name: t("home.encumbrance"),
         value: summary.grand_encumbrance,
@@ -195,9 +168,42 @@ export default function Home() {
         color: "#4E8476",
       },
       {
+        name: t("home.actual"),
+        value: summary.grand_actual,
+        color: "#007E77",
+      },
+      {
         name: t("home.available"),
         value: summary.grand_funds_available,
         color: "#007E77",
+      },
+    ];
+
+    // 3. نسبة المنصرف الفعلي (Actual Expenditure Percentage)
+    const actualExpenditureData = [
+      {
+        name: t("home.budget"),
+        value: summary.grand_total_budget,
+        color: "#E5E7EB",
+      },
+      {
+        name: t("home.actual"),
+        value: summary.grand_actual,
+        color: "#007E77",
+      },
+    ];
+
+    // 4. نسبة الحجوزات (Reservations Percentage)
+    const reservationsData = [
+      {
+        name: t("home.budget"),
+        value: summary.grand_total_budget,
+        color: "#E5E7EB",
+      },
+      {
+        name: t("home.encumbrance"),
+        value: summary.grand_encumbrance,
+        color: "#6BE6E4",
       },
     ];
 
