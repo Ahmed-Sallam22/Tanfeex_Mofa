@@ -185,8 +185,8 @@
     "budgetAdjustments": "تعديلات الميزانية",
     "otherYTD": "أخرى حتى تاريخه",
     "period": "الفترة",
-    "costBudget": "50% من ميزانية التكاليف",
-    "costBudget50": "50% من ميزانية التكاليف",
+    "costBudget": "الحد الأقصى للطلب",
+    "costBudget50": "الحد الأقصى للطلب",
     "from": "من",
     "to": "إلى",
     "mofaGeographic": "التصنيف الجغرافي للخارجية",
@@ -337,7 +337,7 @@
       "budgetAdjustments": "تعديلات الميزانية",
       "otherYTD": "أخرى حتى تاريخه",
       "period": "الفترة",
-      "costBudget50": "50% من ميزانية التكلفة",
+      "costBudget50": "الحد الأقصى للطلب",
       "from": "من",
       "to": "إلى"
     }
@@ -359,7 +359,7 @@
     "budgetAdjustments": "تعديلات الميزانية",
     "otherYtd": "أخرى حتى تاريخه",
     "period": "الفترة",
-    "costBudget50": "50% من ميزانية التكاليف",
+    "costBudget50": "الحد الأقصى للطلب",
     "from": "من",
     "to": "إلى",
     "mofaGeographic": "التصنيف الجغرافي للخارجية",
@@ -512,7 +512,7 @@
     "budgetAdjustments": "تعديلات الميزانية",
     "otherYtd": "أخرى حتى تاريخه",
     "period": "الفترة",
-    "costBudget50": "50% من ميزانية التكلفة",
+    "costBudget50": "الحد الأقصى للطلب",
     "from": "من",
     "to": "إلى",
     "selectSegment": "اختر {{segmentName}}",
@@ -600,7 +600,7 @@
       "budgetAdjustments": "تعديلات الميزانية",
       "otherYtd": "أخرى حتى تاريخه",
       "period": "الفترة",
-      "costBudget50": "50% من ميزانية التكلفة"
+      "costBudget50": "الحد الأقصى للطلب"
     }
   },
   "common": {
@@ -934,7 +934,7 @@
     "segment5": "القطاع 5",
     "segment9": "القطاع 9",
     "segment11": "القطاع 11",
-    "costValue": "قيمة التكلفة",
+    "costValue": "الحد الأقصي للطلب",
     "encumbrance": "الارتباطات",
     "availableBudget": "الميزانية المتاحة",
     "actual": "الفعلي",

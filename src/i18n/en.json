@@ -186,8 +186,8 @@
     "budgetAdjustments": "Budget Adjustments",
     "otherYTD": "Other YTD",
     "period": "Period",
-    "costBudget": "50% of Cost Budget",
-    "costBudget50": "50% of Cost Budget",
+    "costBudget": "Max Transfer Amount",
+    "costBudget50": "Max Transfer Amount",
     "from": "From",
     "to": "To",
     "mofaGeographic": "Mofa Geographic",
@@ -338,7 +338,7 @@
       "budgetAdjustments": "Budget Adjustments",
       "otherYTD": "Other YTD",
       "period": "Period",
-      "costBudget50": "50% of Cost Budget",
+      "costBudget50": "Max Transfer Amount",
       "from": "From",
       "to": "To"
     }
@@ -360,7 +360,7 @@
     "budgetAdjustments": "Budget Adjustments",
     "otherYtd": "Other YTD",
     "period": "Period",
-    "costBudget50": "50% of Cost Budget",
+    "costBudget50": "Max Transfer Amount",
     "from": "From",
     "to": "To",
     "mofaGeographic": "Mofa Geographic",
@@ -513,7 +513,7 @@
     "budgetAdjustments": "Budget Adjustments",
     "otherYtd": "Other YTD",
     "period": "Period",
-    "costBudget50": "50% of Cost Budget",
+    "costBudget50": "Max Transfer Amount",
     "from": "From",
     "to": "To",
     "selectSegment": "Select {{segmentName}}",
@@ -601,7 +601,7 @@
       "budgetAdjustments": "Budget Adjustments",
       "otherYtd": "Other YTD",
       "period": "Period",
-      "costBudget50": "50% of Cost Budget"
+      "costBudget50": "Max Transfer Amount"
     }
   },
   "common": {
@@ -935,7 +935,7 @@
     "segment5": "Segment 5",
     "segment9": "Segment 9",
     "segment11": "Segment 11",
-    "costValue": "Cost Value",
+    "costValue": "Max Transfer Amount",
     "encumbrance": "Encumbrance",
     "availableBudget": "Available Fund",
     "actual": "Actual",
