@@ -161,7 +161,8 @@ export default function TransferDetails() {
         // Determine which budget record to use based on transfer_type
         // If transfer_type === "سيولة" (liquidity), use MOFA_CASH
         // Otherwise, use MOFA_COST_2
-        const isLiquidityTransfer = apiData?.summary?.transfer_type === "سيولة";
+        const isLiquidityTransfer =
+          apiData?.summary?.control_budget === "سيولة";
         const primaryBudget = isLiquidityTransfer ? mofaCash : mofaCost2;
 
         const row: TransferTableRow = {
@@ -1024,7 +1025,7 @@ export default function TransferDetails() {
       // Determine which budget record to use based on transfer_type
       // If transfer_type === "سيولة" (liquidity), use MOFA_CASH
       // Otherwise, use MOFA_COST_2
-      const isLiquidityTransfer = apiData?.summary?.transfer_type === "سيولة";
+      const isLiquidityTransfer = apiData?.summary?.control_budget === "سيولة";
       const primaryRecord = isLiquidityTransfer
         ? mofaCashRecord
         : mofaCost2Record;
