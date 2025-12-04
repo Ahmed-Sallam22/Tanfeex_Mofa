@@ -39,6 +39,8 @@ export default function Reservations() {
   const [time_period, settime_period] = useState<string>("");
   const [reason, setreason] = useState<string>("");
   const [budget_control, setBudgetControl] = useState<string>("");
+  const [transfer_type, setTransferType] = useState<string>("");
+  const [allocation_sub_type, setAllocationSubType] = useState<string>("");
 
   // Attachments state
   const [isAttachmentsModalOpen, setIsAttachmentsModalOpen] = useState(false);
@@ -48,6 +50,9 @@ export default function Reservations() {
 
   // Transfer modal state (for Transfer button action)
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [transferTransactionId, setTransferTransactionId] = useState<
+    number | null
+  >(null);
 
   // Status pipeline modal state
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -211,27 +216,6 @@ export default function Reservations() {
         >
           {t("common.view")}
         </span>
-      ),
-    },
-    {
-      id: "custom_actions",
-      header: t("reservations.title"),
-      accessor: "id",
-      render: (_value, row) => (
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleUnhold(row)}
-            className="px-3 py-1 text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-md transition"
-          >
-            {t("reservations.unhold")}
-          </button>
-          <button
-            onClick={() => handleTransferAction(row)}
-            className="px-3 py-1 text-xs font-medium text-white bg-purple-500 hover:bg-purple-600 rounded-md transition"
-          >
-            {t("reservations.transfer")}
-          </button>
-        </div>
       ),
     },
     {
@@ -661,6 +645,19 @@ export default function Reservations() {
     { value: "تكاليف", label: "تكاليف" },
   ];
 
+  // Select options for transfer type
+  const transferTypeOptions: SelectOption[] = [
+    { value: "داخلية", label: "داخلية" },
+    { value: "خارجية", label: "خارجية" },
+    { value: "مخصصات", label: "مخصصات" },
+  ];
+
+  // Sub-type options for "مخصصات" (Allocations)
+  const allocationSubTypeOptions: SelectOption[] = [
+    { value: "مراكز التكلفة", label: "مراكز التكلفة" },
+    { value: "الموقع الجغرافي", label: "الموقع الجغرافي" },
+  ];
+
   const handleUnhold = (row: TableRow) => {
     // TODO: Implement unhold logic
     console.log("Unhold reservation:", row.id);
@@ -670,11 +667,14 @@ export default function Reservations() {
   const handleTransferAction = (row: TableRow) => {
     const originalTransfer = row.original as TransferItem;
     setSelectedTransfer(originalTransfer);
-    
+
+    // Store the transaction_id
+    setTransferTransactionId(originalTransfer.transaction_id);
+
     // Populate form with existing data (read-only for budget_control and time_period)
     const budgetControl = originalTransfer.budget_control || "";
     setBudgetControl(budgetControl);
-    
+
     let transactionDate = originalTransfer.transaction_date || "";
     if (
       transactionDate &&
@@ -684,8 +684,18 @@ export default function Reservations() {
         const date = new Date(transactionDate);
         if (!isNaN(date.getTime())) {
           const monthNames = [
-            "January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December",
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
           ];
           transactionDate = monthNames[date.getMonth()];
         }
@@ -698,10 +708,12 @@ export default function Reservations() {
     );
     const finalDateValue = isValidOption ? transactionDate : "";
     settime_period(finalDateValue);
-    
+
     // Clear other fields for new transfer
     setreason("");
-    
+    setTransferType("");
+    setAllocationSubType("");
+
     setIsTransferModalOpen(true);
   };
 
@@ -788,6 +800,9 @@ export default function Reservations() {
           onDelete={handleDelete}
           onFilter={handleFilter}
           filterLabel={t("common.filterLabel")}
+          isHFR={true}
+          onUnhold={handleUnhold}
+          onTransfer={handleTransferAction}
         />
       )}
 
@@ -1514,44 +1529,97 @@ export default function Reservations() {
         onClose={() => {
           setIsTransferModalOpen(false);
           setSelectedTransfer(null);
+          setTransferTransactionId(null);
           settime_period("");
           setreason("");
           setBudgetControl("");
+          setTransferType("");
+          setAllocationSubType("");
           setValidationErrors({});
         }}
         title={t("reservations.createTransfer")}
         size="md"
       >
         <div className="p-4 space-y-4 overflow-y-auto max-h-[600px]">
-          {/* Budget Control - Read Only */}
           <div>
             <SharedSelect
-              key={`budget-control-transfer-${selectedTransfer?.transaction_id}`}
+              key={`budget-control-transfer-${transferTransactionId}`}
               title={t("tableColumns.budgetControl")}
               options={budgetControlOptions}
               value={budget_control}
-              onChange={() => {}} // Read only
+              onChange={(value) => setBudgetControl(String(value))}
               placeholder={t("transfer.selectBudgetControl")}
               required
               disabled={true}
             />
+            {validationErrors.budget_control && (
+              <p className="mt-1 text-sm text-red-600">
+                {validationErrors.budget_control}
+              </p>
+            )}
           </div>
 
-          {/* Transaction Date - Read Only */}
           <div>
             <SharedSelect
-              key={`transaction-date-transfer-${selectedTransfer?.transaction_id}`}
+              key={`transfer-type-${transferTransactionId}`}
+              title={t("transfer.transferType")}
+              options={transferTypeOptions}
+              value={transfer_type}
+              onChange={(value) => {
+                setTransferType(String(value));
+                // Clear sub-type when transfer type changes
+                if (value !== "مخصصات") {
+                  setAllocationSubType("");
+                }
+              }}
+              placeholder={t("transfer.selectTransferType")}
+              required
+            />
+            {validationErrors.transfer_type && (
+              <p className="mt-1 text-sm text-red-600">
+                {validationErrors.transfer_type}
+              </p>
+            )}
+          </div>
+
+          {/* Show sub-type select when "مخصصات" is selected */}
+          {transfer_type === "مخصصات" && (
+            <div>
+              <SharedSelect
+                key={`allocation-sub-type-${transferTransactionId}`}
+                title={t("transfer.allocationSubType")}
+                options={allocationSubTypeOptions}
+                value={allocation_sub_type}
+                onChange={(value) => setAllocationSubType(String(value))}
+                placeholder={t("transfer.selectAllocationSubType")}
+                required
+              />
+              {validationErrors.allocation_sub_type && (
+                <p className="mt-1 text-sm text-red-600">
+                  {validationErrors.allocation_sub_type}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div>
+            <SharedSelect
+              key={`transaction-date-transfer-${transferTransactionId}`}
               title={t("tableColumns.transactionDate")}
               options={accountOptions}
               value={time_period}
-              onChange={() => {}} // Read only
+              onChange={(value) => settime_period(String(value))}
               placeholder={t("transfer.selectTimePeriod")}
               required
               disabled={true}
             />
+            {validationErrors.time_period && (
+              <p className="mt-1 text-sm text-red-600">
+                {validationErrors.time_period}
+              </p>
+            )}
           </div>
 
-          {/* Notes - Editable */}
           <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
               {t("common.notes")} *
@@ -1575,20 +1643,44 @@ export default function Reservations() {
               onClick={() => {
                 setIsTransferModalOpen(false);
                 setSelectedTransfer(null);
+                setTransferTransactionId(null);
                 settime_period("");
                 setreason("");
                 setBudgetControl("");
+                setTransferType("");
+                setAllocationSubType("");
                 setValidationErrors({});
               }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+              disabled={isCreating || isUpdating}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t("common.cancel")}
             </button>
             <button
               onClick={async () => {
                 // Validation
+                const errors: typeof validationErrors = {};
+
+                if (!budget_control.trim()) {
+                  errors.budget_control = t("validation.selectBudgetControl");
+                }
+                if (!transfer_type.trim()) {
+                  errors.transfer_type = t("validation.selectTransferType");
+                }
+                if (transfer_type === "مخصصات" && !allocation_sub_type.trim()) {
+                  errors.allocation_sub_type = t(
+                    "validation.selectAllocationSubType"
+                  );
+                }
+                if (!time_period.trim()) {
+                  errors.time_period = t("validation.selectTimePeriod");
+                }
                 if (!reason.trim()) {
-                  setValidationErrors({ reason: t("validation.enterNotes") });
+                  errors.reason = t("validation.enterNotes");
+                }
+
+                if (Object.keys(errors).length > 0) {
+                  setValidationErrors(errors);
                   return;
                 }
 
@@ -1596,26 +1688,46 @@ export default function Reservations() {
                   const transferData = {
                     transaction_date: time_period,
                     notes: reason,
-                    type: "FAR", // Convert reservation to transfer
+                    type: "FAR",
                     budget_control: budget_control,
-                    transfer_type: "", // No transfer type for this case
+                    transfer_type: transfer_type,
+                    allocation_sub_type:
+                      transfer_type === "مخصصات"
+                        ? allocation_sub_type
+                        : undefined,
+                    source_transaction_id: transferTransactionId, // Pass the original transaction_id
                   };
 
                   await createTransfer(transferData).unwrap();
                   toast.success(t("reservations.createSuccess"));
                   setIsTransferModalOpen(false);
                   setSelectedTransfer(null);
+                  setTransferTransactionId(null);
                   settime_period("");
                   setreason("");
                   setBudgetControl("");
+                  setTransferType("");
+                  setAllocationSubType("");
+                  setValidationErrors({});
                 } catch (error) {
                   console.error("Error creating transfer:", error);
                   toast.error(t("messages.createFailed"));
                 }
               }}
-              disabled={!reason.trim()}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#3d6b5f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={
+                isCreating ||
+                isUpdating ||
+                !budget_control.trim() ||
+                !transfer_type.trim() ||
+                !time_period.trim() ||
+                !reason.trim() ||
+                (transfer_type === "مخصصات" && !allocation_sub_type.trim())
+              }
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#4E8476] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
+              {(isCreating || isUpdating) && (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              )}
               {t("common.create")}
             </button>
           </div>

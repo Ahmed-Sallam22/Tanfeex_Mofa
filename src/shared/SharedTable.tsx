@@ -232,6 +232,10 @@ export interface SharedTableProps {
   showColumnFilters?: boolean; // Default true - show search inputs under each column
   onColumnFilterChange?: (filters: { [key: string]: string }) => void; // Callback when filters change
   initialColumnFilters?: { [key: string]: string }; // Initial filter values from parent
+  // HFR mode control
+  isHFR?: boolean; // Special mode for HFR (Reservations)
+  onUnhold?: (row: TableRow, index: number) => void;
+  onTransfer?: (row: TableRow, index: number) => void;
 }
 
 export function SharedTable({
@@ -271,6 +275,9 @@ export function SharedTable({
   showColumnFilters = false, // Default to true
   onColumnFilterChange, // Callback when filters change
   initialColumnFilters, // Initial filter values from parent
+  isHFR = false,
+  onUnhold,
+  onTransfer,
 }: SharedTableProps) {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
@@ -706,6 +713,18 @@ export function SharedTable({
   const handleView = (row: TableRow, index: number) => {
     if (onView) {
       onView(row, index);
+    }
+  };
+
+  const handleUnhold = (row: TableRow, index: number) => {
+    if (onUnhold) {
+      onUnhold(row, index);
+    }
+  };
+
+  const handleTransfer = (row: TableRow, index: number) => {
+    if (onTransfer) {
+      onTransfer(row, index);
     }
   };
 
@@ -1266,6 +1285,56 @@ export function SharedTable({
                                 >
                                   <ChatIcon />
                                 </button>
+                              )}
+                              {isHFR && (
+                                <>
+                                  <button
+                                    onClick={() =>
+                                      handleUnhold(row, globalIndex)
+                                    }
+                                    className="p-1.5 hover:bg-blue-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-blue-700 transition-colors"
+                                    title="Unhold"
+                                  >
+                                    <svg
+                                      width="16"
+                                      height="16"
+                                      viewBox="0 0 16 16"
+                                      fill="none"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                      <path
+                                        d="M8 10.6667V8M8 5.33333H8.00667M14.6667 8C14.6667 11.6819 11.6819 14.6667 8 14.6667C4.3181 14.6667 1.33333 11.6819 1.33333 8C1.33333 4.3181 4.3181 1.33333 8 1.33333C11.6819 1.33333 14.6667 4.3181 14.6667 8Z"
+                                        stroke="currentColor"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleTransfer(row, globalIndex)
+                                    }
+                                    className="p-1.5 hover:bg-purple-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-purple-700 transition-colors"
+                                    title="Transfer"
+                                  >
+                                    <svg
+                                      width="16"
+                                      height="16"
+                                      viewBox="0 0 16 16"
+                                      fill="none"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                      <path
+                                        d="M10.6667 4.66667L13.3333 2M13.3333 2L10.6667 2M13.3333 2V4.66667M5.33333 11.3333L2.66667 14M2.66667 14H5.33333M2.66667 14V11.3333M13.3333 14L10.6667 11.3333M2.66667 2L5.33333 4.66667"
+                                        stroke="currentColor"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                  </button>
+                                </>
                               )}
                               {documents && (
                                 <button
