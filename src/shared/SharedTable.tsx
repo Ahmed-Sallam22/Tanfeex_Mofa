@@ -1286,7 +1286,7 @@ export function SharedTable({
                                   <ChatIcon />
                                 </button>
                               )}
-                              {isHFR && (
+                              {isHFR && row.status === "approved" && (
                                 <>
                                   <button
                                     onClick={() =>
