@@ -738,6 +738,19 @@
     "statusPipeline": "Transfer Status Pipeline",
     "details": "Decrease Fund Requests Details"
   },
+  "reservations": {
+    "title": "Reservations",
+    "createReservation": "Create New Reservation",
+    "editReservation": "Edit Reservation",
+    "deleteReservation": "Delete Reservation",
+    "createSuccess": "Reservation created successfully",
+    "updateSuccess": "Reservation updated successfully",
+    "deleteSuccess": "Reservation deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete this reservation?",
+    "cannotDelete": "Cannot delete reservation with this status",
+    "oracleStatus": "Oracle ERP Status",
+    "statusPipeline": "Reservation Status Pipeline"
+  },
   "fundRequests": {
     "title": "Additional Fund",
     "fundAdjuments": "Additional Requests",
@@ -1332,6 +1345,9 @@
     "hierarchyStatusFailed": "Failed to update hierarchy status",
     "errorLoadingTransfers": "Failed to load transfers",
     "noTransfers": "No transfer requests found",
+    "loadingReservations": "Loading reservations...",
+    "errorLoadingReservations": "Failed to load reservations",
+    "noReservations": "No reservations found",
     "uploading": "Uploading...",
     "loadingAttachments": "Loading attachments...",
     "noAttachments": "No attachments found",

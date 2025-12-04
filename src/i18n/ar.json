@@ -737,6 +737,19 @@
     "statusPipeline": "مراحل حالة التحويل",
     "details": "تفاصيل تعديلات التمويل"
   },
+  "reservations": {
+    "title": "الحجوزات",
+    "createReservation": "إنشاء حجز جديد",
+    "editReservation": "تعديل الحجز",
+    "deleteReservation": "حذف الحجز",
+    "createSuccess": "تم إنشاء الحجز بنجاح",
+    "updateSuccess": "تم تحديث الحجز بنجاح",
+    "deleteSuccess": "تم حذف الحجز بنجاح",
+    "deleteConfirm": "هل أنت متأكد من حذف هذا الحجز؟",
+    "cannotDelete": "لا يمكن حذف الحجز بهذه الحالة",
+    "oracleStatus": "حالة Oracle ERP",
+    "statusPipeline": "مراحل حالة الحجز"
+  },
   "fundRequests": {
     "title": "طلبات التمويل",
     "fundAdjuments": "تعديلات التمويل",
@@ -1331,6 +1344,9 @@
     "hierarchyStatusFailed": "فشل تحديث حالة التدرج الهرمي",
     "errorLoadingTransfers": "فشل تحميل التحويلات",
     "noTransfers": "لم يتم العثور على طلبات تحويل",
+    "loadingReservations": "جاري تحميل الحجوزات...",
+    "errorLoadingReservations": "فشل تحميل الحجوزات",
+    "noReservations": "لم يتم العثور على حجوزات",
     "uploading": "جاري الرفع...",
     "loadingAttachments": "جاري تحميل المرفقات...",
     "noAttachments": "لم يتم العثور على مرفقات",

@@ -5,6 +5,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import RoleProtectedRoute from "../components/RoleProtectedRoute";
 import Transfer from "@/pages/dashboard/Transfer";
 import TransferDetails from "@/pages/dashboard/TransferDetails";
+import Reservations from "@/pages/dashboard/Reservations";
 import FundRequests from "@/pages/dashboard/FundRequests";
 import FundRequestsDetails from "@/pages/dashboard/FundRequestsDetails";
 import FundAdjustments from "@/pages/dashboard/FundAdjustments";
@@ -89,6 +90,17 @@ export default function AppRoutes() {
                 allowedLevels={[1]}
               >
                 <TransferDetails />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="reservations"
+            element={
+              <RoleProtectedRoute
+                allowedRoles={["superadmin"]}
+                allowedLevels={[1]}
+              >
+                <Reservations />
               </RoleProtectedRoute>
             }
           />

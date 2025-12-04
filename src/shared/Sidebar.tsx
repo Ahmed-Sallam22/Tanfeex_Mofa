@@ -589,6 +589,26 @@ const getSections = (
       }),
     },
     {
+      title: t("reservations.title"),
+      items: [
+        {
+          to: "/app/reservations",
+          label: t("reservations.title"),
+          icon: TransferIcon,
+          allowedRoles: ["superadmin"],
+          allowedLevels: [1] as number[],
+        },
+      ].filter((item) => {
+        const hasRoleAccess =
+          item.allowedRoles.length === 0 ||
+          (userRole && item.allowedRoles.includes(userRole));
+        const hasLevelAccess =
+          item.allowedLevels.length === 0 ||
+          (userLevel !== null && item.allowedLevels.includes(userLevel));
+        return hasRoleAccess || hasLevelAccess;
+      }),
+    },
+    {
       title: t("fundRequests.title"),
       items: [
         {
@@ -785,6 +805,12 @@ export default function Sidebar({
                             window.location.pathname === "/app/transfer" ||
                             window.location.pathname.startsWith(
                               "/app/transfer/"
+                            );
+                        } else if (to === "/app/reservations") {
+                          finalIsActive =
+                            window.location.pathname === "/app/reservations" ||
+                            window.location.pathname.startsWith(
+                              "/app/reservations/"
                             );
                         } else {
                           finalIsActive = isActive;
