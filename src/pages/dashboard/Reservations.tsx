@@ -23,6 +23,7 @@ import {
   useUploadAttachmentMutation,
 } from "@/api/attachments.api";
 import type { Attachment } from "@/api/attachments.api";
+import { useBulkApproveRejectTransferMutation } from "@/api/pendingTransfer.api";
 
 export default function Reservations() {
   const { t } = useTranslation();
@@ -53,6 +54,11 @@ export default function Reservations() {
   const [transferTransactionId, setTransferTransactionId] = useState<
     number | null
   >(null);
+
+  // Unhold modal state
+  const [isUnholdModalOpen, setIsUnholdModalOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<TableRow | null>(null);
+  const [unholdReason, setUnholdReason] = useState<string>("");
 
   // Status pipeline modal state
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -85,6 +91,7 @@ export default function Reservations() {
   const [updateTransfer, { isLoading: isUpdating }] =
     useUpdateTransferMutation();
   const [deleteTransfer] = useDeleteTransferMutation();
+  const [bulkApproveRejectTransfer] = useBulkApproveRejectTransferMutation();
 
   // Attachments API calls
   const {
@@ -659,9 +666,30 @@ export default function Reservations() {
   ];
 
   const handleUnhold = (row: TableRow) => {
-    // TODO: Implement unhold logic
-    console.log("Unhold reservation:", row.id);
-    toast.success(t("reservations.unholdSuccess"));
+    setSelectedRow(row);
+    setIsUnholdModalOpen(true);
+  };
+
+  const confirmUnhold = async () => {
+    if (selectedRow) {
+      try {
+        const ACTION_REJECT = "reject";
+        await bulkApproveRejectTransfer({
+          transaction_id: [parseInt(selectedRow.id as string)],
+          decide: [ACTION_REJECT],
+          reason: unholdReason ? [unholdReason] : [],
+          other_user_id: [],
+        }).unwrap();
+        console.log("Reservation unholded successfully:", selectedRow);
+        setUnholdReason(""); // Clear reason after success
+        toast.success(t("reservations.unholdSuccess"));
+      } catch (error) {
+        console.error("Error unholding reservation:", error);
+        toast.error(t("reservations.unholdFailed"));
+      }
+    }
+    setIsUnholdModalOpen(false);
+    setSelectedRow(null);
   };
 
   const handleTransferAction = (row: TableRow) => {
@@ -1518,6 +1546,60 @@ export default function Reservations() {
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
               {t("common.close")}
+            </button>
+          </div>
+        </div>
+      </SharedModal>
+
+      {/* Unhold Modal */}
+      <SharedModal
+        isOpen={isUnholdModalOpen}
+        onClose={() => {
+          setIsUnholdModalOpen(false);
+          setUnholdReason(""); // Clear reason when closing modal
+          setSelectedRow(null);
+        }}
+        title={t("reservations.unholdReservation")}
+        size="md"
+      >
+        <div className="p-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div>
+              <p className="text-sm text-[#282828]">
+                {t("reservations.unholdMessage")}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-[#282828] mb-2">
+              {t("reservations.reasonForUnholdOptional")}
+            </label>
+            <textarea
+              rows={7}
+              value={unholdReason}
+              onChange={(e) => setUnholdReason(e.target.value)}
+              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
+              placeholder={t("reservations.describeUnholdReason")}
+            />
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => {
+                setIsUnholdModalOpen(false);
+                setUnholdReason(""); // Clear reason when cancelling
+                setSelectedRow(null);
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700  border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              {t("common.cancel")}
+            </button>
+            <button
+              onClick={confirmUnhold}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#3d6b5f] transition-colors"
+            >
+              {t("reservations.unholdButton")}
             </button>
           </div>
         </div>

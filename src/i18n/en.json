@@ -752,6 +752,12 @@
     "statusPipeline": "Reservation Status Pipeline",
     "unhold": "Unhold",
     "unholdSuccess": "Reservation unhold successfully",
+    "unholdFailed": "Failed to unhold reservation",
+    "unholdReservation": "Unhold Reservation",
+    "unholdMessage": "Are you sure you want to unhold this reservation?",
+    "reasonForUnholdOptional": "Reason for Unhold (Optional)",
+    "describeUnholdReason": "Describe the reason for unholding...",
+    "unholdButton": "Unhold Reservation",
     "transfer": "Transfer",
     "createTransfer": "Create Transfer from Reservation"
   },

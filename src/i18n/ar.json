@@ -751,6 +751,12 @@
     "statusPipeline": "مراحل حالة الحجز",
     "unhold": "إلغاء التجميد",
     "unholdSuccess": "تم إلغاء تجميد الحجز بنجاح",
+    "unholdFailed": "فشل إلغاء تجميد الحجز",
+    "unholdReservation": "إلغاء تجميد الحجز",
+    "unholdMessage": "هل أنت متأكد من إلغاء تجميد هذا الحجز؟",
+    "reasonForUnholdOptional": "سبب إلغاء التجميد (اختياري)",
+    "describeUnholdReason": "اكتب سبب إلغاء التجميد...",
+    "unholdButton": "إلغاء تجميد الحجز",
     "transfer": "تحويل",
     "createTransfer": "إنشاء تحويل من الحجز"
   },
