@@ -749,7 +749,11 @@
     "deleteConfirm": "Are you sure you want to delete this reservation?",
     "cannotDelete": "Cannot delete reservation with this status",
     "oracleStatus": "Oracle ERP Status",
-    "statusPipeline": "Reservation Status Pipeline"
+    "statusPipeline": "Reservation Status Pipeline",
+    "unhold": "Unhold",
+    "unholdSuccess": "Reservation unhold successfully",
+    "transfer": "Transfer",
+    "createTransfer": "Create Transfer from Reservation"
   },
   "fundRequests": {
     "title": "Additional Fund",

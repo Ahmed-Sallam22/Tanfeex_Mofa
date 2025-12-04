@@ -39,14 +39,15 @@ export default function Reservations() {
   const [time_period, settime_period] = useState<string>("");
   const [reason, setreason] = useState<string>("");
   const [budget_control, setBudgetControl] = useState<string>("");
-  const [transfer_type, setTransferType] = useState<string>("");
-  const [allocation_sub_type, setAllocationSubType] = useState<string>("");
 
   // Attachments state
   const [isAttachmentsModalOpen, setIsAttachmentsModalOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedTransactionId, setSelectedTransactionId] =
     useState<string>("");
+
+  // Transfer modal state (for Transfer button action)
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
   // Status pipeline modal state
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -210,6 +211,27 @@ export default function Reservations() {
         >
           {t("common.view")}
         </span>
+      ),
+    },
+    {
+      id: "custom_actions",
+      header: t("reservations.title"),
+      accessor: "id",
+      render: (_value, row) => (
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleUnhold(row)}
+            className="px-3 py-1 text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-md transition"
+          >
+            {t("reservations.unhold")}
+          </button>
+          <button
+            onClick={() => handleTransferAction(row)}
+            className="px-3 py-1 text-xs font-medium text-white bg-purple-500 hover:bg-purple-600 rounded-md transition"
+          >
+            {t("reservations.transfer")}
+          </button>
+        </div>
       ),
     },
     {
@@ -545,8 +567,6 @@ export default function Reservations() {
     settime_period("");
     setreason("");
     setBudgetControl("");
-    setTransferType("");
-    setAllocationSubType("");
 
     // Open modal after clearing values
     setIsCreateModalOpen(true);
@@ -561,8 +581,6 @@ export default function Reservations() {
     settime_period("");
     setreason("");
     setBudgetControl("");
-    setTransferType("");
-    setAllocationSubType("");
     setValidationErrors({});
     setShouldOpenModal(false); // Reset the modal trigger
   };
@@ -571,13 +589,11 @@ export default function Reservations() {
     // Clear previous validation errors
     setValidationErrors({});
 
-    // Validation
+    // Validation - Only budget_control, time_period, and reason are required for reservations
     const errors: {
       time_period?: string;
       reason?: string;
       budget_control?: string;
-      transfer_type?: string;
-      allocation_sub_type?: string;
     } = {};
 
     if (!time_period.trim()) {
@@ -592,38 +608,23 @@ export default function Reservations() {
       errors.budget_control = t("validation.selectBudgetControl");
     }
 
-    if (!transfer_type.trim()) {
-      errors.transfer_type = t("validation.selectTransferType");
-    }
-
-    // Validate sub-type when "مخصصات" is selected
-    if (transfer_type === "مخصصات" && !allocation_sub_type.trim()) {
-      errors.allocation_sub_type = t("validation.selectAllocationSubType");
-    }
-
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       return;
     }
 
     try {
-      // Combine transfer_type with sub-type if "مخصصات" is selected
-      const finalTransferType =
-        transfer_type === "مخصصات"
-          ? `${transfer_type}-${allocation_sub_type}`
-          : transfer_type;
-
       // Use HTML directly from the rich text editor (no conversion needed)
       const transferData = {
         transaction_date: time_period,
         notes: reason, // reason already contains HTML from RichTextEditor
-        type: "HFR", // Changed to HFR for Reservations
+        type: "HFR", // HFR for Reservations
         budget_control: budget_control,
-        transfer_type: finalTransferType,
+        transfer_type: "", // No transfer type for reservations
       };
 
       if (isEditMode && selectedTransfer) {
-        // Update existing transfer
+        // Update existing reservation
         await updateTransfer({
           id: selectedTransfer.transaction_id,
           body: transferData,
@@ -632,7 +633,7 @@ export default function Reservations() {
         toast.success(t("reservations.updateSuccess"));
         console.log("Reservation updated successfully");
       } else {
-        // Create new transfer
+        // Create new reservation
         await createTransfer(transferData).unwrap();
 
         toast.success(t("reservations.createSuccess"));
@@ -641,7 +642,7 @@ export default function Reservations() {
 
       handleCloseModal();
     } catch (error: unknown) {
-      console.error("Error saving transfer:", error);
+      console.error("Error saving reservation:", error);
     }
   };
 
@@ -660,18 +661,49 @@ export default function Reservations() {
     { value: "تكاليف", label: "تكاليف" },
   ];
 
-  // Select options for transfer type
-  const transferTypeOptions: SelectOption[] = [
-    { value: "داخلية", label: "داخلية" },
-    { value: "خارجية", label: "خارجية" },
-    { value: "مخصصات", label: "مخصصات" },
-  ];
+  const handleUnhold = (row: TableRow) => {
+    // TODO: Implement unhold logic
+    console.log("Unhold reservation:", row.id);
+    toast.success(t("reservations.unholdSuccess"));
+  };
 
-  // Sub-type options for "مخصصات" (Allocations)
-  const allocationSubTypeOptions: SelectOption[] = [
-    { value: "مراكز التكلفة", label: "مراكز التكلفة" },
-    { value: "الموقع الجغرافي", label: "الموقع الجغرافي" },
-  ];
+  const handleTransferAction = (row: TableRow) => {
+    const originalTransfer = row.original as TransferItem;
+    setSelectedTransfer(originalTransfer);
+    
+    // Populate form with existing data (read-only for budget_control and time_period)
+    const budgetControl = originalTransfer.budget_control || "";
+    setBudgetControl(budgetControl);
+    
+    let transactionDate = originalTransfer.transaction_date || "";
+    if (
+      transactionDate &&
+      !accountOptions.some((option) => option.value === transactionDate)
+    ) {
+      try {
+        const date = new Date(transactionDate);
+        if (!isNaN(date.getTime())) {
+          const monthNames = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December",
+          ];
+          transactionDate = monthNames[date.getMonth()];
+        }
+      } catch {
+        transactionDate = "";
+      }
+    }
+    const isValidOption = accountOptions.some(
+      (option) => option.value === transactionDate
+    );
+    const finalDateValue = isValidOption ? transactionDate : "";
+    settime_period(finalDateValue);
+    
+    // Clear other fields for new transfer
+    setreason("");
+    
+    setIsTransferModalOpen(true);
+  };
 
   const handleChat = (row: TableRow) => {
     // Navigate to chat page with transaction/request ID
@@ -764,7 +796,9 @@ export default function Reservations() {
         isOpen={isCreateModalOpen}
         onClose={handleCloseModal}
         title={
-          isEditMode ? t("reservations.editReservation") : t("reservations.createReservation")
+          isEditMode
+            ? t("reservations.editReservation")
+            : t("reservations.createReservation")
         }
         size="md"
       >
@@ -787,53 +821,6 @@ export default function Reservations() {
               </p>
             )}
           </div>
-
-          <div>
-            <SharedSelect
-              key={`transfer-type-${
-                isEditMode ? selectedTransfer?.transaction_id : "create"
-              }`}
-              title={t("transfer.transferType")}
-              options={transferTypeOptions}
-              value={transfer_type}
-              onChange={(value) => {
-                setTransferType(String(value));
-                // Clear sub-type when transfer type changes
-                if (value !== "مخصصات") {
-                  setAllocationSubType("");
-                }
-              }}
-              placeholder={t("transfer.selectTransferType")}
-              required
-            />
-            {validationErrors.transfer_type && (
-              <p className="mt-1 text-sm text-red-600">
-                {validationErrors.transfer_type}
-              </p>
-            )}
-          </div>
-
-          {/* Show sub-type select when "مخصصات" is selected */}
-          {transfer_type === "مخصصات" && (
-            <div>
-              <SharedSelect
-                key={`allocation-sub-type-${
-                  isEditMode ? selectedTransfer?.transaction_id : "create"
-                }`}
-                title={t("transfer.allocationSubType")}
-                options={allocationSubTypeOptions}
-                value={allocation_sub_type}
-                onChange={(value) => setAllocationSubType(String(value))}
-                placeholder={t("transfer.selectAllocationSubType")}
-                required
-              />
-              {validationErrors.allocation_sub_type && (
-                <p className="mt-1 text-sm text-red-600">
-                  {validationErrors.allocation_sub_type}
-                </p>
-              )}
-            </div>
-          )}
 
           <div>
             <SharedSelect
@@ -886,10 +873,8 @@ export default function Reservations() {
                 isCreating ||
                 isUpdating ||
                 !budget_control.trim() ||
-                !transfer_type.trim() ||
                 !time_period.trim() ||
-                !reason.trim() ||
-                (transfer_type === "مخصصات" && !allocation_sub_type.trim())
+                !reason.trim()
               }
               className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#4E8476] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
@@ -1518,6 +1503,120 @@ export default function Reservations() {
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
               {t("common.close")}
+            </button>
+          </div>
+        </div>
+      </SharedModal>
+
+      {/* Transfer Modal (Create transfer from reservation) */}
+      <SharedModal
+        isOpen={isTransferModalOpen}
+        onClose={() => {
+          setIsTransferModalOpen(false);
+          setSelectedTransfer(null);
+          settime_period("");
+          setreason("");
+          setBudgetControl("");
+          setValidationErrors({});
+        }}
+        title={t("reservations.createTransfer")}
+        size="md"
+      >
+        <div className="p-4 space-y-4 overflow-y-auto max-h-[600px]">
+          {/* Budget Control - Read Only */}
+          <div>
+            <SharedSelect
+              key={`budget-control-transfer-${selectedTransfer?.transaction_id}`}
+              title={t("tableColumns.budgetControl")}
+              options={budgetControlOptions}
+              value={budget_control}
+              onChange={() => {}} // Read only
+              placeholder={t("transfer.selectBudgetControl")}
+              required
+              disabled={true}
+            />
+          </div>
+
+          {/* Transaction Date - Read Only */}
+          <div>
+            <SharedSelect
+              key={`transaction-date-transfer-${selectedTransfer?.transaction_id}`}
+              title={t("tableColumns.transactionDate")}
+              options={accountOptions}
+              value={time_period}
+              onChange={() => {}} // Read only
+              placeholder={t("transfer.selectTimePeriod")}
+              required
+              disabled={true}
+            />
+          </div>
+
+          {/* Notes - Editable */}
+          <div>
+            <label className="block text-xs font-bold text-[#282828] mb-2">
+              {t("common.notes")} *
+            </label>
+            <RichTextEditor
+              value={reason}
+              onChange={(value) => setreason(value)}
+              placeholder={t("transfer.enterReason")}
+              height={200}
+              className={validationErrors.reason ? "border-red-500" : ""}
+            />
+            {validationErrors.reason && (
+              <p className="mt-1 text-sm text-red-600">
+                {validationErrors.reason}
+              </p>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={() => {
+                setIsTransferModalOpen(false);
+                setSelectedTransfer(null);
+                settime_period("");
+                setreason("");
+                setBudgetControl("");
+                setValidationErrors({});
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              {t("common.cancel")}
+            </button>
+            <button
+              onClick={async () => {
+                // Validation
+                if (!reason.trim()) {
+                  setValidationErrors({ reason: t("validation.enterNotes") });
+                  return;
+                }
+
+                try {
+                  const transferData = {
+                    transaction_date: time_period,
+                    notes: reason,
+                    type: "FAR", // Convert reservation to transfer
+                    budget_control: budget_control,
+                    transfer_type: "", // No transfer type for this case
+                  };
+
+                  await createTransfer(transferData).unwrap();
+                  toast.success(t("reservations.createSuccess"));
+                  setIsTransferModalOpen(false);
+                  setSelectedTransfer(null);
+                  settime_period("");
+                  setreason("");
+                  setBudgetControl("");
+                } catch (error) {
+                  console.error("Error creating transfer:", error);
+                  toast.error(t("messages.createFailed"));
+                }
+              }}
+              disabled={!reason.trim()}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#3d6b5f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {t("common.create")}
             </button>
           </div>
         </div>

@@ -748,7 +748,11 @@
     "deleteConfirm": "هل أنت متأكد من حذف هذا الحجز؟",
     "cannotDelete": "لا يمكن حذف الحجز بهذه الحالة",
     "oracleStatus": "حالة Oracle ERP",
-    "statusPipeline": "مراحل حالة الحجز"
+    "statusPipeline": "مراحل حالة الحجز",
+    "unhold": "إلغاء التجميد",
+    "unholdSuccess": "تم إلغاء تجميد الحجز بنجاح",
+    "transfer": "تحويل",
+    "createTransfer": "إنشاء تحويل من الحجز"
   },
   "fundRequests": {
     "title": "طلبات التمويل",
