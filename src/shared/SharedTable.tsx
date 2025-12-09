@@ -1286,56 +1286,58 @@ export function SharedTable({
                                   <ChatIcon />
                                 </button>
                               )}
-                              {isHFR && row.status === "approved" && (
-                                <>
-                                  <button
-                                    onClick={() =>
-                                      handleUnhold(row, globalIndex)
-                                    }
-                                    className="p-1.5 hover:bg-blue-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-blue-700 transition-colors"
-                                    title="Unhold"
-                                  >
-                                    <svg
-                                      width="16"
-                                      height="16"
-                                      viewBox="0 0 16 16"
-                                      fill="none"
-                                      xmlns="http://www.w3.org/2000/svg"
+                              {isHFR &&
+                                // row.status === "approved" &&
+                                row.hfr_has_remaining === true && (
+                                  <>
+                                    <button
+                                      onClick={() =>
+                                        handleUnhold(row, globalIndex)
+                                      }
+                                      className="p-1.5 hover:bg-blue-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-blue-700 transition-colors"
+                                      title="Unhold"
                                     >
-                                      <path
-                                        d="M8 10.6667V8M8 5.33333H8.00667M14.6667 8C14.6667 11.6819 11.6819 14.6667 8 14.6667C4.3181 14.6667 1.33333 11.6819 1.33333 8C1.33333 4.3181 4.3181 1.33333 8 1.33333C11.6819 1.33333 14.6667 4.3181 14.6667 8Z"
-                                        stroke="currentColor"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                    </svg>
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleTransfer(row, globalIndex)
-                                    }
-                                    className="p-1.5 hover:bg-purple-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-purple-700 transition-colors"
-                                    title="Transfer"
-                                  >
-                                    <svg
-                                      width="16"
-                                      height="16"
-                                      viewBox="0 0 16 16"
-                                      fill="none"
-                                      xmlns="http://www.w3.org/2000/svg"
+                                      <svg
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 16 16"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          d="M8 10.6667V8M8 5.33333H8.00667M14.6667 8C14.6667 11.6819 11.6819 14.6667 8 14.6667C4.3181 14.6667 1.33333 11.6819 1.33333 8C1.33333 4.3181 4.3181 1.33333 8 1.33333C11.6819 1.33333 14.6667 4.3181 14.6667 8Z"
+                                          stroke="currentColor"
+                                          strokeWidth="1.5"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleTransfer(row, globalIndex)
+                                      }
+                                      className="p-1.5 hover:bg-purple-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-purple-700 transition-colors"
+                                      title="Transfer"
                                     >
-                                      <path
-                                        d="M10.6667 4.66667L13.3333 2M13.3333 2L10.6667 2M13.3333 2V4.66667M5.33333 11.3333L2.66667 14M2.66667 14H5.33333M2.66667 14V11.3333M13.3333 14L10.6667 11.3333M2.66667 2L5.33333 4.66667"
-                                        stroke="currentColor"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                    </svg>
-                                  </button>
-                                </>
-                              )}
+                                      <svg
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 16 16"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          d="M10.6667 4.66667L13.3333 2M13.3333 2L10.6667 2M13.3333 2V4.66667M5.33333 11.3333L2.66667 14M2.66667 14H5.33333M2.66667 14V11.3333M13.3333 14L10.6667 11.3333M2.66667 2L5.33333 4.66667"
+                                          stroke="currentColor"
+                                          strokeWidth="1.5"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                      </svg>
+                                    </button>
+                                  </>
+                                )}
                               {documents && (
                                 <button
                                   onClick={() => handleView(row, globalIndex)}
@@ -1362,11 +1364,54 @@ export function SharedTable({
                                   </svg>
                                 </button>
                               )}
-                              {!documents && (
+                              {!documents &&
+                                (!isHFR || row.hfr_has_remaining === true) && (
+                                  <button
+                                    onClick={() => handleEdit(row, globalIndex)}
+                                    className="p-1.5  hover:bg-blue-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-blue-700 transition-colors"
+                                    title="Edit"
+                                  >
+                                    <svg
+                                      width="16"
+                                      height="16"
+                                      viewBox="0 0 16 16"
+                                      fill="none"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                      <path
+                                        d="M9.03564 12.9827H13.3335"
+                                        stroke="#757575"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                      <path
+                                        fillRule="evenodd"
+                                        clipRule="evenodd"
+                                        d="M8.46206 3.11698C8.9217 2.56765 9.74798 2.4871 10.3087 2.93739C10.3397 2.96182 11.3358 3.73565 11.3358 3.73565C11.9518 4.10804 12.1432 4.89969 11.7624 5.50383C11.7422 5.53618 6.11062 12.5805 6.11062 12.5805C5.92326 12.8142 5.63885 12.9522 5.33489 12.9555L3.17822 12.9826L2.6923 10.9259C2.62423 10.6367 2.6923 10.333 2.87966 10.0992L8.46206 3.11698Z"
+                                        stroke="#757575"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                      <path
+                                        d="M7.41992 4.42432L10.6509 6.90558"
+                                        stroke="#757575"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                  </button>
+                                )}
+
+                              {(!isHFR || row.hfr_has_remaining === true) && (
                                 <button
-                                  onClick={() => handleEdit(row, globalIndex)}
-                                  className="p-1.5  hover:bg-blue-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-blue-700 transition-colors"
-                                  title="Edit"
+                                  onClick={() =>
+                                    handleDeleteClick(row, globalIndex)
+                                  }
+                                  className="p-1.5   hover:bg-red-200    border rounded-full border-[#EEEEEE] cursor-pointer  transition-colors"
+                                  title="Delete"
                                 >
                                   <svg
                                     width="16"
@@ -1376,69 +1421,29 @@ export function SharedTable({
                                     xmlns="http://www.w3.org/2000/svg"
                                   >
                                     <path
-                                      d="M9.03564 12.9827H13.3335"
+                                      d="M5.55108 2.99976C5.75661 2.53772 6.2149 2.23999 6.72061 2.23999H8.9585C9.46423 2.23999 9.92247 2.53772 10.128 2.99976L10.399 3.60891C10.5017 3.83993 10.7309 3.98879 10.9838 3.98879H12.1851C12.7376 3.98879 13.1854 4.43668 13.1854 4.98918C13.1854 5.54169 12.7376 5.98958 12.1851 5.98958H3.49405C2.94154 5.98958 2.49365 5.54169 2.49365 4.98918C2.49365 4.43668 2.94154 3.98879 3.49405 3.98879H4.69535C4.94821 3.98879 5.17735 3.83993 5.28011 3.60891L5.55108 2.99976Z"
                                       stroke="#757575"
-                                      strokeWidth="1.5"
+                                      strokeWidth="1.44"
                                       strokeLinecap="round"
                                       strokeLinejoin="round"
                                     />
                                     <path
-                                      fillRule="evenodd"
-                                      clipRule="evenodd"
-                                      d="M8.46206 3.11698C8.9217 2.56765 9.74798 2.4871 10.3087 2.93739C10.3397 2.96182 11.3358 3.73565 11.3358 3.73565C11.9518 4.10804 12.1432 4.89969 11.7624 5.50383C11.7422 5.53618 6.11062 12.5805 6.11062 12.5805C5.92326 12.8142 5.63885 12.9522 5.33489 12.9555L3.17822 12.9826L2.6923 10.9259C2.62423 10.6367 2.6923 10.333 2.87966 10.0992L8.46206 3.11698Z"
+                                      d="M9.34577 8.47485H6.33398"
                                       stroke="#757575"
-                                      strokeWidth="1.5"
+                                      strokeWidth="1.44"
                                       strokeLinecap="round"
                                       strokeLinejoin="round"
                                     />
                                     <path
-                                      d="M7.41992 4.42432L10.6509 6.90558"
+                                      d="M12.044 5.98999L11.5491 11.9981C11.4671 12.994 10.6349 13.7604 9.6356 13.7604H6.04313C5.04385 13.7604 4.21164 12.994 4.12961 11.9981L3.63477 5.98999"
                                       stroke="#757575"
-                                      strokeWidth="1.5"
+                                      strokeWidth="1.44"
                                       strokeLinecap="round"
                                       strokeLinejoin="round"
                                     />
                                   </svg>
                                 </button>
                               )}
-
-                              <button
-                                onClick={() =>
-                                  handleDeleteClick(row, globalIndex)
-                                }
-                                className="p-1.5   hover:bg-red-200    border rounded-full border-[#EEEEEE] cursor-pointer  transition-colors"
-                                title="Delete"
-                              >
-                                <svg
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 16 16"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M5.55108 2.99976C5.75661 2.53772 6.2149 2.23999 6.72061 2.23999H8.9585C9.46423 2.23999 9.92247 2.53772 10.128 2.99976L10.399 3.60891C10.5017 3.83993 10.7309 3.98879 10.9838 3.98879H12.1851C12.7376 3.98879 13.1854 4.43668 13.1854 4.98918C13.1854 5.54169 12.7376 5.98958 12.1851 5.98958H3.49405C2.94154 5.98958 2.49365 5.54169 2.49365 4.98918C2.49365 4.43668 2.94154 3.98879 3.49405 3.98879H4.69535C4.94821 3.98879 5.17735 3.83993 5.28011 3.60891L5.55108 2.99976Z"
-                                    stroke="#757575"
-                                    strokeWidth="1.44"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                  <path
-                                    d="M9.34577 8.47485H6.33398"
-                                    stroke="#757575"
-                                    strokeWidth="1.44"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                  <path
-                                    d="M12.044 5.98999L11.5491 11.9981C11.4671 12.994 10.6349 13.7604 9.6356 13.7604H6.04313C5.04385 13.7604 4.21164 12.994 4.12961 11.9981L3.63477 5.98999"
-                                    stroke="#757575"
-                                    strokeWidth="1.44"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              </button>
                             </div>
                           ) : (
                             // Pending mode: Approve, Reject, and Delete buttons

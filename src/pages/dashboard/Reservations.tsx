@@ -149,6 +149,13 @@ export default function Reservations() {
       status: safeValue(item.status, t("common.pending")),
       attachment: item.attachment,
       amount: item.amount || 0,
+      // HFR-specific properties
+      hfr_has_remaining: item.hfr_has_remaining,
+      hfr_original_hold: item.hfr_original_hold,
+      hfr_total_used: item.hfr_total_used,
+      hfr_remaining: item.hfr_remaining,
+      hfr_is_fully_used: item.hfr_is_fully_used,
+      hfr_linked_far_count: item.hfr_linked_far_count,
       // Include original item for detail view
       original: item,
     })) || [];

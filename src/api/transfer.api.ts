@@ -32,6 +32,13 @@ export interface TransferItem {
   approve_interface_id: number | null;
   report: string;
   type: string;
+  // HFR (Hold Fund Reservation) specific fields
+  hfr_original_hold?: number;
+  hfr_total_used?: number;
+  hfr_remaining?: number;
+  hfr_has_remaining?: boolean;
+  hfr_is_fully_used?: boolean;
+  hfr_linked_far_count?: number;
 }
 
 export interface TransferListResponse {
