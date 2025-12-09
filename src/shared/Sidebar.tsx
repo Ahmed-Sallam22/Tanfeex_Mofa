@@ -598,6 +598,13 @@ const getSections = (
           allowedRoles: ["superadmin"],
           allowedLevels: [1] as number[],
         },
+        {
+          to: "/app/pending-reservations",
+          label: t("pendingReservations.title"),
+          icon: PendingRequestsIcon,
+          allowedRoles: ["superadmin"],
+          allowedLevels: [2, 3, 4] as number[],
+        },
       ].filter((item) => {
         const hasRoleAccess =
           item.allowedRoles.length === 0 ||

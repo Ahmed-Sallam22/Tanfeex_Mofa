@@ -1779,6 +1779,218 @@ export default function ReservationsDetails() {
         )}
       </div>
 
+      {/* History Section */}
+      {apiData?.summary?.History && (
+        <div className="mt-6 bg-white rounded-2xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-4">
+            {t("reservationsDetails.historyTitle")}
+          </h2>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">
+                {t("reservationsDetails.originalHold")}
+              </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {formatNumber(apiData.summary.History.original_hold)}
+              </p>
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">
+                {t("reservationsDetails.totalUsed")}
+              </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {formatNumber(apiData.summary.History.total_used)}
+              </p>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">
+                {t("reservationsDetails.remainingInHold")}
+              </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {formatNumber(apiData.summary.History.remaining_in_hold)}
+              </p>
+            </div>
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-1">
+                {t("reservationsDetails.canUnhold")}
+              </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {apiData.summary.History.can_unhold_remaining
+                  ? t("common.yes")
+                  : t("common.no")}
+              </p>
+            </div>
+          </div>
+
+          {/* Suggestion Message */}
+          {apiData.summary.History.suggestion && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <svg
+                  className="flex-shrink-0 mt-0.5"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z"
+                    stroke="#3B82F6"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M10 14V10"
+                    stroke="#3B82F6"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <circle cx="10" cy="7" r="1" fill="#3B82F6" />
+                </svg>
+                <p className="text-sm text-blue-900">
+                  {apiData.summary.History.suggestion}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Segment Breakdown Table */}
+          <div>
+            <h3 className="text-md font-medium mb-3">
+              {t("reservationsDetails.segmentBreakdown")}
+            </h3>
+            <SharedTable
+              columns={[
+                {
+                  id: "transfer_line_id",
+                  header: t("reservationsDetails.transferLineId"),
+                  render: (_, row) => {
+                    const historyRow = row as any;
+                    return (
+                      <span className="text-sm text-gray-900">
+                        {historyRow.transfer_line_id}
+                      </span>
+                    );
+                  },
+                },
+                ...Object.keys(
+                  apiData.summary.History.segment_breakdown[0]?.segments || {}
+                ).map((segmentKey) => {
+                  const segmentData =
+                    apiData.summary.History.segment_breakdown[0].segments[
+                      segmentKey
+                    ];
+                  return {
+                    id: `segment_${segmentKey}`,
+                    header: segmentData.segment_name,
+                    render: (_: any, row: any) => {
+                      const segment = row.segments?.[segmentKey];
+                      if (!segment) return <span>-</span>;
+                      return (
+                        <div className="text-sm">
+                          <div className="font-medium text-gray-900">
+                            {segment.from_code || "-"}
+                          </div>
+                          <div className="text-gray-600 text-xs">
+                            {segment.from_alias || "-"}
+                          </div>
+                        </div>
+                      );
+                    },
+                  };
+                }),
+                {
+                  id: "original_hold",
+                  header: t("reservationsDetails.originalHold"),
+                  showSum: true,
+                  render: (_, row) => {
+                    const historyRow = row as any;
+                    return (
+                      <span className="text-sm text-gray-900">
+                        {formatNumber(historyRow.original_hold)}
+                      </span>
+                    );
+                  },
+                },
+                {
+                  id: "total_used",
+                  header: t("reservationsDetails.totalUsed"),
+                  showSum: true,
+                  render: (_, row) => {
+                    const historyRow = row as any;
+                    return (
+                      <span className="text-sm text-gray-900">
+                        {formatNumber(historyRow.total_used)}
+                      </span>
+                    );
+                  },
+                },
+                {
+                  id: "remaining",
+                  header: t("reservationsDetails.remaining"),
+                  showSum: true,
+                  render: (_, row) => {
+                    const historyRow = row as any;
+                    return (
+                      <span className="text-sm text-gray-900">
+                        {formatNumber(historyRow.remaining)}
+                      </span>
+                    );
+                  },
+                },
+                {
+                  id: "percentage_used",
+                  header: t("reservationsDetails.percentageUsed"),
+                  render: (_, row) => {
+                    const historyRow = row as any;
+                    return (
+                      <span className="text-sm text-gray-900">
+                        {historyRow.percentage_used.toFixed(2)}%
+                      </span>
+                    );
+                  },
+                },
+                {
+                  id: "can_unhold",
+                  header: t("reservationsDetails.canUnhold"),
+                  render: (_, row) => {
+                    const historyRow = row as any;
+                    return (
+                      <span
+                        className={`text-sm font-medium ${
+                          historyRow.can_unhold
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {historyRow.can_unhold
+                          ? t("common.yes")
+                          : t("common.no")}
+                      </span>
+                    );
+                  },
+                },
+              ]}
+              data={
+                apiData.summary.History
+                  .segment_breakdown as unknown as SharedTableRow[]
+              }
+              showFooter={true}
+              maxHeight="400px"
+              showPagination={
+                apiData.summary.History.segment_breakdown.length > 10
+              }
+              showColumnSelector={true}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons Section */}
       {!isSubmitted ? (
         <div className="bg-white rounded-2xl p-6 shadow-sm mt-6">

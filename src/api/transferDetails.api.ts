@@ -66,6 +66,27 @@ export interface TransferDetail {
   control_budgets_count?: number;
 }
 
+export interface HistorySegmentBreakdown {
+  transfer_line_id: number;
+  segments: Record<string, SegmentData>;
+  original_hold: number;
+  total_used: number;
+  remaining: number;
+  percentage_used: number;
+  far_usage: any[];
+  can_unhold: boolean;
+}
+
+export interface TransferHistory {
+  original_hold: number;
+  total_used: number;
+  remaining_in_hold: number;
+  can_unhold_remaining: boolean;
+  segment_breakdown: HistorySegmentBreakdown[];
+  total_segments: number;
+  suggestion: string;
+}
+
 export interface TransferDetailsSummary {
   transaction_id: string;
   code?: string;
@@ -79,6 +100,7 @@ export interface TransferDetailsSummary {
   balanced: boolean;
   status: string;
   period: string;
+  History?: TransferHistory;
 }
 
 export interface TransferDetailsStatus {

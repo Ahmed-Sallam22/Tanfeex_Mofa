@@ -15,6 +15,8 @@ import PendingTransfer from "@/pages/dashboard/PendingTransfer";
 import PendingTransferDetails from "@/pages/dashboard/PendingTransferDetails";
 import PendingAdjustments from "@/pages/dashboard/PendingAdjustments";
 import PendingAdjustmentsDetails from "@/pages/dashboard/PendingAdjustmentsDetails";
+import PendingReservations from "@/pages/dashboard/PendingReservations";
+import PendingReservationsDetails from "@/pages/dashboard/PendingReservationsDetails";
 import PendingRequests from "@/pages/dashboard/PendingRequests";
 import PendingRequestsDetails from "@/pages/dashboard/PendingRequestsDetails";
 // import ProjectsOverview from "@/pages/dashboard/ProjectsOverview";F
@@ -203,6 +205,28 @@ export default function AppRoutes() {
                 allowedLevels={[2, 3, 4]}
               >
                 <PendingAdjustmentsDetails />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="pending-reservations"
+            element={
+              <RoleProtectedRoute
+                allowedRoles={["superadmin"]}
+                allowedLevels={[2, 3, 4]}
+              >
+                <PendingReservations />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="pending-reservations/:id"
+            element={
+              <RoleProtectedRoute
+                allowedRoles={["superadmin"]}
+                allowedLevels={[2, 3, 4]}
+              >
+                <PendingReservationsDetails />
               </RoleProtectedRoute>
             }
           />
