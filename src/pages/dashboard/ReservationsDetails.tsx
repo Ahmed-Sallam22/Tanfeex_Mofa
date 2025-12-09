@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   SharedTable,
   type TableColumn,
@@ -13,6 +13,7 @@ import {
   useUploadExcelMutation,
   useReopenTransferMutation,
   transferDetailsApi,
+  type HistorySegmentBreakdown,
 } from "@/api/transferDetails.api";
 import {
   useGetSegmentTypesQuery,
@@ -113,6 +114,48 @@ export default function ReservationsDetails() {
   // State to track all edits locally (both existing and new rows)
   const [editedRows, setEditedRows] = useState<TransferTableRow[]>([]);
 
+  // Create a default row for when there's no data
+  const createDefaultRow = useCallback((): TransferTableRow => {
+    const defaultRow: TransferTableRow = {
+      id: "default-1",
+      to: 0,
+      from: 0,
+      encumbrance: 0,
+      availableBudget: 0,
+      actual: 0,
+      approvedBudget: 0,
+      other_ytd: 0,
+      period: "",
+      validation_errors: [], // Explicitly set as empty array (no errors)
+      commitments: "0",
+      obligations: "0",
+      other_consumption: "0",
+    };
+
+    // Add dynamic segment fields
+    requiredSegments.forEach((segment) => {
+      const segmentKey = `segment${segment.segment_type_oracle_number}`;
+      defaultRow[segmentKey] = "";
+      defaultRow[`${segmentKey}_name`] = "";
+    });
+
+    return defaultRow;
+  }, [requiredSegments]);
+
+  // Check if a row is non-empty
+  const isNonEmpty = useCallback(
+    (row: TransferTableRow) => {
+      // Check if any required segment has a value
+      const hasSegmentValue = requiredSegments.some((seg) => {
+        const segmentKey = `segment${seg.segment_type_oracle_number}`;
+        return row[segmentKey] !== "" && row[segmentKey] !== undefined;
+      });
+
+      return hasSegmentValue || row.to > 0 || row.from > 0;
+    },
+    [requiredSegments]
+  );
+
   // Initialize editedRows when API data loads
   useEffect(() => {
     if (apiData?.transfers && apiData.transfers.length > 0) {
@@ -207,7 +250,13 @@ export default function ReservationsDetails() {
       // Only set default row if we're not loading and there's truly no data
       setEditedRows([createDefaultRow()]);
     }
-  }, [apiData, requiredSegments, isLoading, isLoadingSegmentTypes]);
+  }, [
+    apiData,
+    requiredSegments,
+    isLoading,
+    isLoadingSegmentTypes,
+    createDefaultRow,
+  ]);
 
   // Combine edited API rows with local rows for display
   const rows = useMemo(
@@ -258,7 +307,7 @@ export default function ReservationsDetails() {
       cleanupEmptyRows();
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [localRows, transactionId]);
+  }, [localRows, transactionId, isNonEmpty]);
 
   type Option = { value: string; label: string; name: string };
 
@@ -341,34 +390,6 @@ export default function ReservationsDetails() {
       }));
   };
 
-  // Create a default row for when there's no data
-  const createDefaultRow = (): TransferTableRow => {
-    const defaultRow: TransferTableRow = {
-      id: "default-1",
-      to: 0,
-      from: 0,
-      encumbrance: 0,
-      availableBudget: 0,
-      actual: 0,
-      approvedBudget: 0,
-      other_ytd: 0,
-      period: "",
-      validation_errors: [], // Explicitly set as empty array (no errors)
-      commitments: "0",
-      obligations: "0",
-      other_consumption: "0",
-    };
-
-    // Add dynamic segment fields
-    requiredSegments.forEach((segment) => {
-      const segmentKey = `segment${segment.segment_type_oracle_number}`;
-      defaultRow[segmentKey] = "";
-      defaultRow[`${segmentKey}_name`] = "";
-    });
-
-    return defaultRow;
-  };
-
   // Set submission status based on API status
   useEffect(() => {
     const statusFromSummary = apiData?.summary?.status;
@@ -432,16 +453,6 @@ export default function ReservationsDetails() {
     []
   );
   const [awaitingSync, setAwaitingSync] = useState(false);
-
-  const isNonEmpty = (row: TransferTableRow) => {
-    // Check if any required segment has a value
-    const hasSegmentValue = requiredSegments.some((seg) => {
-      const segmentKey = `segment${seg.segment_type_oracle_number}`;
-      return row[segmentKey] !== "" && row[segmentKey] !== undefined;
-    });
-
-    return hasSegmentValue || row.to > 0 || row.from > 0;
-  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -1870,7 +1881,8 @@ export default function ReservationsDetails() {
                   id: "transfer_line_id",
                   header: t("reservationsDetails.transferLineId"),
                   render: (_, row) => {
-                    const historyRow = row as any;
+                    const historyRow = row as SharedTableRow &
+                      HistorySegmentBreakdown;
                     return (
                       <span className="text-sm text-gray-900">
                         {historyRow.transfer_line_id}
@@ -1879,17 +1891,19 @@ export default function ReservationsDetails() {
                   },
                 },
                 ...Object.keys(
-                  apiData.summary.History.segment_breakdown[0]?.segments || {}
+                  apiData.summary.History?.segment_breakdown[0]?.segments || {}
                 ).map((segmentKey) => {
                   const segmentData =
-                    apiData.summary.History.segment_breakdown[0].segments[
+                    apiData.summary.History?.segment_breakdown[0].segments[
                       segmentKey
                     ];
                   return {
                     id: `segment_${segmentKey}`,
-                    header: segmentData.segment_name,
-                    render: (_: any, row: any) => {
-                      const segment = row.segments?.[segmentKey];
+                    header: segmentData?.segment_name || "",
+                    render: (_: unknown, row: SharedTableRow) => {
+                      const historyRow = row as SharedTableRow &
+                        HistorySegmentBreakdown;
+                      const segment = historyRow.segments?.[segmentKey];
                       if (!segment) return <span>-</span>;
                       return (
                         <div className="text-sm">
@@ -1909,7 +1923,8 @@ export default function ReservationsDetails() {
                   header: t("reservationsDetails.originalHold"),
                   showSum: true,
                   render: (_, row) => {
-                    const historyRow = row as any;
+                    const historyRow = row as SharedTableRow &
+                      HistorySegmentBreakdown;
                     return (
                       <span className="text-sm text-gray-900">
                         {formatNumber(historyRow.original_hold)}
@@ -1922,7 +1937,8 @@ export default function ReservationsDetails() {
                   header: t("reservationsDetails.totalUsed"),
                   showSum: true,
                   render: (_, row) => {
-                    const historyRow = row as any;
+                    const historyRow = row as SharedTableRow &
+                      HistorySegmentBreakdown;
                     return (
                       <span className="text-sm text-gray-900">
                         {formatNumber(historyRow.total_used)}
@@ -1935,7 +1951,8 @@ export default function ReservationsDetails() {
                   header: t("reservationsDetails.remaining"),
                   showSum: true,
                   render: (_, row) => {
-                    const historyRow = row as any;
+                    const historyRow = row as SharedTableRow &
+                      HistorySegmentBreakdown;
                     return (
                       <span className="text-sm text-gray-900">
                         {formatNumber(historyRow.remaining)}
@@ -1947,7 +1964,8 @@ export default function ReservationsDetails() {
                   id: "percentage_used",
                   header: t("reservationsDetails.percentageUsed"),
                   render: (_, row) => {
-                    const historyRow = row as any;
+                    const historyRow = row as SharedTableRow &
+                      HistorySegmentBreakdown;
                     return (
                       <span className="text-sm text-gray-900">
                         {historyRow.percentage_used.toFixed(2)}%
@@ -1956,10 +1974,76 @@ export default function ReservationsDetails() {
                   },
                 },
                 {
+                  id: "far_usage",
+                  header: t("reservationsDetails.farUsage"),
+                  render: (_, row) => {
+                    const historyRow = row as SharedTableRow &
+                      HistorySegmentBreakdown;
+                    const farUsage = historyRow.far_usage || [];
+
+                    if (farUsage.length === 0) {
+                      return <span className="text-sm text-gray-400">-</span>;
+                    }
+
+                    return (
+                      <div className="space-y-2">
+                        {farUsage.map(
+                          (
+                            far: {
+                              far_id: number;
+                              far_code: string;
+                              amount_used: number;
+                              date: string;
+                              status: string;
+                            },
+                            index: number
+                          ) => (
+                            <div
+                              key={index}
+                              className="text-xs bg-gray-50 border border-gray-200 rounded p-2"
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-medium text-blue-600">
+                                  {far.far_code}
+                                </span>
+                                <span
+                                  className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                    far.status === "approved"
+                                      ? "bg-green-100 text-green-700"
+                                      : far.status === "pending"
+                                      ? "bg-yellow-100 text-yellow-700"
+                                      : far.status === "rejected"
+                                      ? "bg-red-100 text-red-700"
+                                      : "bg-gray-100 text-gray-700"
+                                  }`}
+                                >
+                                  {far.status}
+                                </span>
+                              </div>
+                              <div className="text-gray-600">
+                                <div>
+                                  {t("reservationsDetails.amount")}:{" "}
+                                  <span className="font-medium text-gray-900">
+                                    {formatNumber(far.amount_used)}
+                                  </span>
+                                </div>
+                                <div>
+                                  {t("reservationsDetails.date")}: {far.date}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    );
+                  },
+                },
+                {
                   id: "can_unhold",
                   header: t("reservationsDetails.canUnhold"),
                   render: (_, row) => {
-                    const historyRow = row as any;
+                    const historyRow = row as SharedTableRow &
+                      HistorySegmentBreakdown;
                     return (
                       <span
                         className={`text-sm font-medium ${
@@ -1978,12 +2062,12 @@ export default function ReservationsDetails() {
               ]}
               data={
                 apiData.summary.History
-                  .segment_breakdown as unknown as SharedTableRow[]
+                  ?.segment_breakdown as unknown as SharedTableRow[]
               }
               showFooter={true}
               maxHeight="400px"
               showPagination={
-                apiData.summary.History.segment_breakdown.length > 10
+                (apiData.summary.History?.segment_breakdown.length || 0) > 10
               }
               showColumnSelector={true}
             />

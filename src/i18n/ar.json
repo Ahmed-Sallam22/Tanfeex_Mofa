@@ -853,7 +853,10 @@
     "segmentBreakdown": "تفصيل القطاعات",
     "transferLineId": "معرف سطر التحويل",
     "remaining": "المتبقي",
-    "percentageUsed": "نسبة الاستخدام %"
+    "percentageUsed": "نسبة الاستخدام %",
+    "farUsage": "استخدام FAR",
+    "amount": "المبلغ",
+    "date": "التاريخ"
   },
   "fundRequests": {
     "title": "طلبات التمويل",
