@@ -30,6 +30,9 @@ export default function PendingTransfer() {
   const [selectedTransfers, setSelectedTransfers] = useState<Set<string>>(
     new Set()
   );
+  const [statusFilter, setStatusFilter] = useState<
+    "pending" | "history" | undefined
+  >("pending");
 
   // RTK Query hooks
   const {
@@ -40,6 +43,7 @@ export default function PendingTransfer() {
     page: currentPage,
     page_size: 10,
     code: "FAR",
+    status:statusFilter
   });
 
   const [bulkApproveRejectTransfer] = useBulkApproveRejectTransferMutation();
@@ -585,6 +589,12 @@ export default function PendingTransfer() {
             onChat={handleChat}
             showFooter={true}
             showColumnSelector={true}
+            showStatusFilter={true}
+            currentStatus={statusFilter}
+            onStatusChange={(status) => {
+              setStatusFilter(status);
+              // Update your API call here based on status
+            }}
           />
         )}
       </div>

@@ -5,6 +5,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import RoleProtectedRoute from "../components/RoleProtectedRoute";
 import Transfer from "@/pages/dashboard/Transfer";
 import TransferDetails from "@/pages/dashboard/TransferDetails";
+import TransferPDFView from "@/pages/dashboard/TransferPDFView";
 import Reservations from "@/pages/dashboard/Reservations";
 import ReservationsDetails from "@/pages/dashboard/ReservationsDetails";
 import FundRequests from "@/pages/dashboard/FundRequests";
@@ -96,6 +97,7 @@ export default function AppRoutes() {
               </RoleProtectedRoute>
             }
           />
+
           <Route
             path="reservations"
             element={
@@ -369,6 +371,21 @@ export default function AppRoutes() {
           {/* <Route path="profile" element={<Profile />} /> */}
           {/* <Route path="settings" element={<Settings />} /> */}
         </Route>
+
+        {/* PDF View Route - Outside AppLayout (no navbar/sidebar) */}
+        <Route
+          path="/app/transfer-pdf"
+          element={
+            <ProtectedRoute>
+              <RoleProtectedRoute
+                allowedRoles={["superadmin"]}
+                allowedLevels={[1]}
+              >
+                <TransferPDFView />
+              </RoleProtectedRoute>
+            </ProtectedRoute>
+          }
+        />
 
         {/* Default redirects */}
         <Route path="/" element={<Navigate to="/app" />} />

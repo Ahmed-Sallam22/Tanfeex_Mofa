@@ -49,11 +49,16 @@ export default function ProfileDropdown({
           "flex items-center gap-1 sm:gap-2 focus:outline-none min-w-0"
         )}
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={`User menu for ${userName}`}
       >
         <img
           src={avatarUrl}
-          alt={userName}
+          alt={`${userName}'s profile`}
           className="h-5 w-5 sm:h-8 sm:w-8 rounded-full object-cover flex-shrink-0"
+          width={32}
+          height={32}
         />
         <div
           className={cn(
@@ -108,7 +113,7 @@ export default function ProfileDropdown({
               )}
             >
               <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 flex-shrink-0" />
-              <span className="truncate">{t("signIn")}</span>
+              <span className="truncate">{t("logout")}</span>
             </button>
           </div>
         </div>

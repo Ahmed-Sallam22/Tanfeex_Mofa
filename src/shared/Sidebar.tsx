@@ -714,7 +714,7 @@ const getSections = (
       items: [
         {
           to: "/logout",
-          label: t("signIn"),
+          label: t("logout"),
           icon: LogoutIcon,
           allowedRoles: [] as string[],
           allowedLevels: [] as number[],
@@ -743,6 +743,8 @@ export default function Sidebar({
             src={Tanfeez}
             alt="Tanfeez"
             className="w-[100%] max-w-[130px] sm:max-w-none"
+            width={130}
+            height={40}
           />
         </div>
 
@@ -752,7 +754,10 @@ export default function Sidebar({
           onClick={onClose}
           aria-label="Close sidebar"
         >
-          <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
+          <X
+            className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600"
+            aria-hidden="true"
+          />
         </button>
 
         {/* Arrow (desktop) */}

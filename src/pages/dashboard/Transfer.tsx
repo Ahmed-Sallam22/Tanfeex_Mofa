@@ -54,6 +54,12 @@ export default function Transfer() {
     null
   );
 
+  // Selection state for export
+  const [selectedRows, setSelectedRows] = useState<Set<number | string>>(
+    new Set()
+  );
+  const [showExportUI, setShowExportUI] = useState(false);
+
   // Validation states
   const [validationErrors, setValidationErrors] = useState<{
     time_period?: string;
@@ -678,19 +684,52 @@ export default function Transfer() {
     navigate(`/app/chat/${row.id}`, { state: { txCode: row.code } });
   };
 
+  // Handle export to PDF
+  const handleExportToPdf = async (selectedIds: number[]) => {
+    if (selectedIds.length === 0) {
+      toast.error(t("messages.selectAtLeastOne"));
+      return;
+    }
+
+    // Navigate to PDF view page
+    const idsParam = selectedIds.join(",");
+    navigate(`/app/transfer-pdf?ids=${idsParam}`);
+
+    // Clear selection after navigation
+    setSelectedRows(new Set());
+  };
+
   return (
     <div>
-      {/* Header with Create Button */}
+      {/* Header with Create Button and Export Toggle */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold tracking-wide">
           {t("transfer.title")}
         </h1>
-        <button
-          onClick={handleCreateRequest}
-          className="px-4 py-2 bg-[#4E8476] hover:bg-[#3d6b5f] text-white rounded-md transition-colors font-medium"
-        >
-          {t("transfer.createTransfer")}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              setShowExportUI(!showExportUI);
+              if (showExportUI) {
+                // Clear selection when disabling export mode
+                setSelectedRows(new Set());
+              }
+            }}
+            className={`px-4 py-2 rounded-md transition-colors font-medium ${
+              showExportUI
+                ? "bg-red-500 hover:bg-red-600 text-white"
+                : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+            }`}
+          >
+            {showExportUI ? t("common.cancel") : t("common.exportPDF")}
+          </button>
+          <button
+            onClick={handleCreateRequest}
+            className="px-4 py-2 bg-[#4E8476] hover:bg-[#3d6b5f] text-white rounded-md transition-colors font-medium"
+          >
+            {t("transfer.createTransfer")}
+          </button>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -756,6 +795,12 @@ export default function Transfer() {
           onDelete={handleDelete}
           onFilter={handleFilter}
           filterLabel={t("common.filterLabel")}
+          showSelection={showExportUI}
+          selectedRows={selectedRows}
+          onSelectionChange={setSelectedRows}
+          onExport={handleExportToPdf}
+          showExportButton={showExportUI}
+          exportButtonText={t("common.exportPDF")}
         />
       )}
 

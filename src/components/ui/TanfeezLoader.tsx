@@ -9,10 +9,14 @@ export function TanfeezLoader() {
           <div className="relative">
             {/* Main logo circle with pulse animation */}
             <div className="w-[30%] h-[30%] mx-auto rounded-full flex items-center justify-center animate-pulse ">
-              <img src={Logo} alt="Tanfeez Logo" className="w-[100%] h-[80%] object-contain" />
+              <img
+                src={Logo}
+                alt="Tanfeez Logo"
+                className="w-[100%] h-[80%] object-contain"
+                width={120}
+                height={96}
+              />
             </div>
-
-         
           </div>
         </div>
         {/* Loading dots */}

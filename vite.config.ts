@@ -26,6 +26,29 @@ export default defineConfig(({ mode }) => {
           drop_debugger: isProduction,
         },
       },
+      // Code splitting for better caching and smaller bundle sizes
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Split vendor chunks for better caching
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-redux': ['react-redux', '@reduxjs/toolkit'],
+            'vendor-i18n': ['react-i18next', 'i18next'],
+          },
+        },
+      },
+      // Target modern browsers for smaller bundle
+      target: 'es2020',
+      // Enable CSS code splitting
+      cssCodeSplit: true,
+      // Chunk size warning limit
+      chunkSizeWarningLimit: 500,
+      // Enable source maps for production debugging (optional)
+      sourcemap: isProduction ? false : true,
+    },
+    // Optimize dependencies pre-bundling
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'react-router-dom', 'react-redux'],
     },
   }
 })

@@ -106,6 +106,75 @@ export interface OracleStatusResponse {
   action_groups: OracleActionGroup[];
 }
 
+export interface ExportPdfRequest {
+  transaction_ids: number[];
+}
+
+// Segment data structure for PDF export
+export interface PdfSegment {
+  segment_name: string;
+  segment_id: number;
+  from_code: string;
+  from_name: string;
+  to_code: string;
+  to_name: string;
+}
+
+// Budget control data for PDF export
+export interface PdfBudgetControl {
+  control_budget_name: string;
+  period_name: string;
+  budget: number;
+  encumbrance: number;
+  funds_available: number;
+  actual: number;
+  other: number;
+  created_at: string | null;
+}
+
+// Transfer item in PDF export
+export interface PdfTransfer {
+  transfer_id: number;
+  segments: {
+    [key: string]: PdfSegment;
+  };
+  from_center: number;
+  to_center: number;
+  reason: string;
+  budget_control: PdfBudgetControl;
+}
+
+// Summary data for PDF export
+export interface PdfSummary {
+  total_transfers: number;
+  total_from_center: number;
+  total_to_center: number;
+  balanced: boolean;
+  balance_difference: number;
+}
+
+// Single transaction report data
+export interface TransactionReportData {
+  transaction_id: number;
+  code: string;
+  budget_type: string;
+  requested_by: string;
+  request_date: string;
+  transaction_date: string;
+  transfer_type: string;
+  type: string;
+  control_budget: string;
+  status: string;
+  status_level: number;
+  notes: string;
+  linked_transfer_id: number | null;
+  summary: PdfSummary;
+  transfers: PdfTransfer[];
+}
+
+// Response can be a single transaction or array of transactions
+export type ExportPdfResponse = TransactionReportData | TransactionReportData[];
+
 export const transferApi = createApi({
   reducerPath: 'transferApi',
   baseQuery: customBaseQuery,
@@ -159,6 +228,13 @@ export const transferApi = createApi({
         method: 'GET',
       }),
     }),
+    exportToPdf: builder.mutation<ExportPdfResponse, ExportPdfRequest>({
+      query: (body) => ({
+        url: `/transfers/report/`,
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 
@@ -169,4 +245,5 @@ export const {
   useDeleteTransferMutation,
   useGetTransferStatusQuery,
   useGetOracleStatusQuery,
+  useExportToPdfMutation,
 } = transferApi;

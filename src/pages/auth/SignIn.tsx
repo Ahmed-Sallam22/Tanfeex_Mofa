@@ -89,7 +89,11 @@ export default function SignIn() {
         <img
           src={bgDesigne}
           alt="Background Design"
-          className="w-full h-full object-cover "
+          className="w-full h-full object-cover"
+          width={1920}
+          height={1080}
+          loading="eager"
+          fetchPriority="high"
         />
       </div>
 
@@ -104,6 +108,7 @@ export default function SignIn() {
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -116,7 +121,13 @@ export default function SignIn() {
       </button>
 
       <div className="relative z-10 flex flex-col 2xl:h-auto h-[80vh]  w-full max-w-2xl items-center gap-8 py-20 justify-center rounded-3xl bg-white px-4 sm:px-6 lg:px-8">
-        <img src={Logo} alt="" className="2xl:h-40 h-25" />
+        <img
+          src={Logo}
+          alt="Tanfeez Logo"
+          className="2xl:h-40 h-25"
+          width={160}
+          height={160}
+        />
 
         <div className=" w-[85%] mx-auto">
           <div className="text-center lg:text-start">

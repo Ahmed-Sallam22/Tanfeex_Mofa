@@ -236,6 +236,17 @@ export interface SharedTableProps {
   isHFR?: boolean; // Special mode for HFR (Reservations)
   onUnhold?: (row: TableRow, index: number) => void;
   onTransfer?: (row: TableRow, index: number) => void;
+  // Selection/Export props
+  showSelection?: boolean; // Enable row selection with checkboxes
+  selectedRows?: Set<number | string>; // Set of selected row IDs
+  onSelectionChange?: (selectedIds: Set<number | string>) => void; // Callback when selection changes
+  onExport?: (selectedIds: number[]) => void; // Callback for export action
+  showExportButton?: boolean; // Show export button
+  exportButtonText?: string; // Custom export button text
+  // Status filter props
+  showStatusFilter?: boolean; // Show status filter dropdown
+  currentStatus?: "pending" | "history"; // Current status filter
+  onStatusChange?: (status: "pending" | "history") => void; // Callback when status changes
 }
 
 export function SharedTable({
@@ -278,9 +289,24 @@ export function SharedTable({
   isHFR = false,
   onUnhold,
   onTransfer,
+  showSelection = false,
+  selectedRows: externalSelectedRows,
+  onSelectionChange,
+  onExport,
+  showExportButton = false,
+  exportButtonText = "Export to PDF",
+  showStatusFilter = false,
+  currentStatus = "pending",
+  onStatusChange,
 }: SharedTableProps) {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+
+  // Internal selection state (if not controlled externally)
+  const [internalSelectedRows, setInternalSelectedRows] = useState<
+    Set<number | string>
+  >(new Set());
+  const selectedRows = externalSelectedRows || internalSelectedRows;
 
   const [columnWidths, setColumnWidths] = useState<{ [key: string]: number }>(
     {}
@@ -292,12 +318,14 @@ export function SharedTable({
     index: number;
   } | null>(null);
   const [showColumnDropdown, setShowColumnDropdown] = useState<boolean>(false);
+  const [showStatusDropdown, setShowStatusDropdown] = useState<boolean>(false);
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
     () => new Set(columns.map((col) => col.id))
   );
   const previousColumnsRef = useRef<Set<string>>(
     new Set(columns.map((col) => col.id))
   );
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
 
   // Column filters state - initialize with parent's filters if provided
   const [columnFilters, setColumnFilters] = useState<{ [key: string]: string }>(
@@ -413,10 +441,15 @@ export function SharedTable({
     const column = columns.find((col) => col.id === columnId);
     if (column?.sortable === false) return; // Only skip sorting if explicitly set to false
 
-    let direction: "asc" | "desc" = "asc"; // Default to descending
+    let direction: "asc" | "desc" = "desc"; // Default to desc
 
-    if (sortConfig.key === columnId && sortConfig.direction === "desc") {
-      direction = "asc";
+    // Toggle: desc -> asc -> desc
+    if (sortConfig.key === columnId) {
+      if (sortConfig.direction === "desc") {
+        direction = "asc";
+      } else {
+        direction = "desc";
+      }
     }
 
     setSortConfig({ key: columnId, direction });
@@ -618,6 +651,26 @@ export function SharedTable({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showColumnDropdown]);
+
+  // Click outside handler for status dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowStatusDropdown(false);
+      }
+    };
+
+    if (showStatusDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showStatusDropdown]);
 
   // Initialize column widths
   useEffect(() => {
@@ -921,12 +974,45 @@ export function SharedTable({
                 </button>
               )}
 
+              {showExportButton && selectedRows.size > 0 && (
+                <button
+                  onClick={() => {
+                    if (onExport) {
+                      const ids = Array.from(selectedRows).map((id) =>
+                        Number(id)
+                      );
+                      onExport(ids);
+                    }
+                  }}
+                  disabled={selectedRows.size === 0}
+                  className="flex items-center gap-2 px-4 py-1.5 text-sm text-white bg-[#4E8476] hover:bg-[#3d6b5f] rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  {exportButtonText} ({selectedRows.size})
+                </button>
+              )}
+
               {showColumnSelector && (
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setShowColumnDropdown(!showColumnDropdown)}
                     className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-sm transition-colors"
                     title={t("common.columns")}
+                    aria-label={t("common.columns")}
+                    aria-expanded={showColumnDropdown}
+                    aria-haspopup="menu"
                   >
                     <ColumnsIcon className="w-4 h-4" />
                     {t("common.columns")}
@@ -983,15 +1069,93 @@ export function SharedTable({
                 </div>
               )}
 
-              {onFilter && (
+              {showStatusFilter ? (
+                <div className="relative" ref={statusDropdownRef}>
+                  <button
+                    onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-sm transition-colors"
+                    aria-label={t("common.filterByStatus")}
+                    aria-expanded={showStatusDropdown}
+                    aria-haspopup="listbox"
+                  >
+                    <FilterIcon className="w-4 h-4" />
+                    <span>
+                      {currentStatus === "pending"
+                        ? t("common.pending")
+                        : t("common.history")}
+                    </span>
+                    <svg
+                      className={cn(
+                        "w-4 h-4 transition-transform",
+                        showStatusDropdown && "rotate-180"
+                      )}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+
+                  {showStatusDropdown && (
+                    <div
+                      className={cn(
+                        "absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[150px]",
+                        isRTL ? "left-0" : "right-0"
+                      )}
+                    >
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            if (onStatusChange) {
+                              onStatusChange("pending");
+                            }
+                            setShowStatusDropdown(false);
+                          }}
+                          className={cn(
+                            "w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors",
+                            currentStatus === "pending" &&
+                              "bg-[#4E8476]/10 text-[#4E8476] font-medium",
+                            isRTL && "text-right"
+                          )}
+                        >
+                          {t("common.pending")}
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (onStatusChange) {
+                              onStatusChange("history");
+                            }
+                            setShowStatusDropdown(false);
+                          }}
+                          className={cn(
+                            "w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors",
+                            currentStatus === "history" &&
+                              "bg-[#4E8476]/10 text-[#4E8476] font-medium",
+                            isRTL && "text-right"
+                          )}
+                        >
+                          {t("common.history")}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : onFilter ? (
                 <button
                   onClick={onFilter}
                   className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-sm transition-colors"
+                  aria-label={filterLabel || t("common.filter")}
                 >
                   <FilterIcon className="w-4 h-4" />
                   {filterLabel}
                 </button>
-              )}
+              ) : null}
             </div>
           </div>
         )}
@@ -1006,6 +1170,37 @@ export function SharedTable({
             {/* Table Header */}
             <thead className="bg-[#F6F6F6] sticky  top-0 z-30   rounded-3xl">
               <tr>
+                {/* Selection checkbox column */}
+                {showSelection && (
+                  <th className="px-4 py-3 text-sm font-[300] text-[#595B5E] w-12">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedRows.size === currentData.length &&
+                        currentData.length > 0
+                      }
+                      onChange={(e) => {
+                        const newSelection = new Set<number | string>();
+                        if (e.target.checked) {
+                          currentData.forEach((row) => {
+                            const id = (row.id || row.transaction_id) as
+                              | number
+                              | string
+                              | undefined;
+                            if (id !== undefined)
+                              newSelection.add(id as number | string);
+                          });
+                        }
+                        if (onSelectionChange) {
+                          onSelectionChange(newSelection);
+                        } else {
+                          setInternalSelectedRows(newSelection);
+                        }
+                      }}
+                      className="w-4 h-4 rounded border-gray-300 text-[#4E8476] focus:ring-[#4E8476] cursor-pointer"
+                    />
+                  </th>
+                )}
                 {filteredColumns.map((column) => (
                   <th
                     key={column.id}
@@ -1089,7 +1284,7 @@ export function SharedTable({
                 ))}
 
                 {/* Actions column header */}
-                {showActions && (
+                {showActions && currentStatus !== "history" && (
                   <th
                     className={cn(
                       "px-4 py-3 text-sm font-[300] text-[#595B5E] relative select-none border-r border-r-transparent hover:border-r-blue-200",
@@ -1144,6 +1339,12 @@ export function SharedTable({
               {/* Column Filters Row */}
               {showColumnFilters && (
                 <tr className="bg-white border-b border-gray-200">
+                  {/* Empty cell for selection column */}
+                  {showSelection && (
+                    <th className="px-4 py-2 w-12">
+                      {/* Empty space for selection column */}
+                    </th>
+                  )}
                   {filteredColumns.map((column) => (
                     <th
                       key={`filter-${column.id}`}
@@ -1199,7 +1400,7 @@ export function SharedTable({
                   ))}
 
                   {/* Empty cell for actions column */}
-                  {showActions && (
+                  {showActions && currentStatus !== "history" && (
                     <th
                       className="px-4 py-2"
                       style={{
@@ -1239,6 +1440,42 @@ export function SharedTable({
                       key={globalIndex}
                       className="border-b border-[#EEEEEE] hover:bg-gray-50  transition-colors"
                     >
+                      {/* Selection checkbox */}
+                      {showSelection && (
+                        <td className="px-4 py-4 text-sm w-12">
+                          <input
+                            type="checkbox"
+                            checked={(() => {
+                              const id = (row.id || row.transaction_id) as
+                                | number
+                                | string
+                                | undefined;
+                              return id !== undefined && selectedRows.has(id);
+                            })()}
+                            onChange={(e) => {
+                              const id = (row.id || row.transaction_id) as
+                                | number
+                                | string
+                                | undefined;
+                              if (id === undefined) return;
+
+                              const newSelection = new Set(selectedRows);
+                              if (e.target.checked) {
+                                newSelection.add(id as number | string);
+                              } else {
+                                newSelection.delete(id as number | string);
+                              }
+
+                              if (onSelectionChange) {
+                                onSelectionChange(newSelection);
+                              } else {
+                                setInternalSelectedRows(newSelection);
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-gray-300 text-[#4E8476] focus:ring-[#4E8476] cursor-pointer"
+                          />
+                        </td>
+                      )}
                       {filteredColumns.map((column) => (
                         <td
                           key={column.id}
@@ -1259,7 +1496,7 @@ export function SharedTable({
                       ))}
 
                       {/* Actions cell */}
-                      {showActions && (
+                      {showActions && currentStatus !== "history" && (
                         <td
                           className={cn(
                             "px-4 py-3 text-sm text-[#282828]",
@@ -1282,6 +1519,7 @@ export function SharedTable({
                                   onClick={() => handleChat(row, globalIndex)}
                                   className="p-1.5   hover:bg-green-200    border rounded-full border-[#EEEEEE] cursor-pointer  transition-colors"
                                   title="Chat"
+                                  aria-label={t("common.chat")}
                                 >
                                   <ChatIcon />
                                 </button>
@@ -1296,6 +1534,7 @@ export function SharedTable({
                                       }
                                       className="p-1.5 hover:bg-blue-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-blue-700 transition-colors"
                                       title="Unhold"
+                                      aria-label={t("common.unhold")}
                                     >
                                       <svg
                                         width="16"
@@ -1319,6 +1558,7 @@ export function SharedTable({
                                       }
                                       className="p-1.5 hover:bg-purple-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-purple-700 transition-colors"
                                       title="Transfer"
+                                      aria-label={t("common.transfer")}
                                     >
                                       <svg
                                         width="16"
@@ -1343,6 +1583,7 @@ export function SharedTable({
                                   onClick={() => handleView(row, globalIndex)}
                                   className="p-1.5   hover:bg-green-200    border rounded-full border-[#EEEEEE] cursor-pointer  transition-colors"
                                   title="View"
+                                  aria-label={t("common.view")}
                                 >
                                   <svg
                                     width="16"
@@ -1354,12 +1595,12 @@ export function SharedTable({
                                     <path
                                       d="M2.18391 10.1965C1.61729 9.46033 1.33398 9.09227 1.33398 7.99935C1.33398 6.90643 1.61729 6.53837 2.18391 5.80224C3.31529 4.33239 5.21273 2.66602 8.00065 2.66602C10.7886 2.66602 12.686 4.33239 13.8174 5.80224C14.384 6.53837 14.6673 6.90643 14.6673 7.99935C14.6673 9.09227 14.384 9.46033 13.8174 10.1965C12.686 11.6663 10.7886 13.3327 8.00065 13.3327C5.21273 13.3327 3.31529 11.6663 2.18391 10.1965Z"
                                       stroke="#757575"
-                                      stroke-width="1.5"
+                                      strokeWidth="1.5"
                                     />
                                     <path
                                       d="M10 8C10 9.10457 9.10457 10 8 10C6.89543 10 6 9.10457 6 8C6 6.89543 6.89543 6 8 6C9.10457 6 10 6.89543 10 8Z"
                                       stroke="#757575"
-                                      stroke-width="1.5"
+                                      strokeWidth="1.5"
                                     />
                                   </svg>
                                 </button>
@@ -1370,6 +1611,7 @@ export function SharedTable({
                                     onClick={() => handleEdit(row, globalIndex)}
                                     className="p-1.5  hover:bg-blue-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-blue-700 transition-colors"
                                     title="Edit"
+                                    aria-label={t("common.edit")}
                                   >
                                     <svg
                                       width="16"
@@ -1412,6 +1654,7 @@ export function SharedTable({
                                   }
                                   className="p-1.5   hover:bg-red-200    border rounded-full border-[#EEEEEE] cursor-pointer  transition-colors"
                                   title="Delete"
+                                  aria-label={t("common.delete")}
                                 >
                                   <svg
                                     width="16"
@@ -1456,6 +1699,7 @@ export function SharedTable({
                                 onClick={() => handleView(row, globalIndex)}
                                 className="p-1.5 hover:bg-blue-300 border rounded-full border-[#EEEEEE] cursor-pointer transition-colors"
                                 title="View"
+                                aria-label={t("common.view")}
                               >
                                 <svg
                                   width="16"
@@ -1467,12 +1711,12 @@ export function SharedTable({
                                   <path
                                     d="M2.18342 10.1969C1.61681 9.46082 1.3335 9.09275 1.3335 7.99984C1.3335 6.90692 1.61681 6.53885 2.18342 5.80272C3.31481 4.33288 5.21224 2.6665 8.00016 2.6665C10.7881 2.6665 12.6855 4.33288 13.8169 5.80272C14.3835 6.53885 14.6668 6.90692 14.6668 7.99984C14.6668 9.09275 14.3835 9.46082 13.8169 10.1969C12.6855 11.6668 10.7881 13.3332 8.00016 13.3332C5.21224 13.3332 3.31481 11.6668 2.18342 10.1969Z"
                                     stroke="#757575"
-                                    stroke-width="1.5"
+                                    strokeWidth="1.5"
                                   />
                                   <path
                                     d="M10 8C10 9.10457 9.10457 10 8 10C6.89543 10 6 9.10457 6 8C6 6.89543 6.89543 6 8 6C9.10457 6 10 6.89543 10 8Z"
                                     stroke="#757575"
-                                    stroke-width="1.5"
+                                    strokeWidth="1.5"
                                   />
                                 </svg>
                               </button>
@@ -1482,6 +1726,7 @@ export function SharedTable({
                                   onClick={() => handleChat(row, globalIndex)}
                                   className="p-1.5   hover:bg-green-200    border rounded-full border-[#EEEEEE] cursor-pointer  transition-colors"
                                   title="Chat"
+                                  aria-label={t("common.chat")}
                                 >
                                   <ChatIcon />
                                 </button>
@@ -1490,6 +1735,7 @@ export function SharedTable({
                                 onClick={() => handleApprove(row, globalIndex)}
                                 className="p-1.5 hover:bg-green-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-green-700 transition-colors"
                                 title="Approve"
+                                aria-label={t("common.approve")}
                               >
                                 <svg
                                   width="13"
@@ -1508,6 +1754,7 @@ export function SharedTable({
                                 onClick={() => handleReject(row, globalIndex)}
                                 className="p-1.5 hover:bg-red-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-red-700 transition-colors"
                                 title="Reject"
+                                aria-label={t("common.reject")}
                               >
                                 <svg
                                   width="13"
@@ -1565,7 +1812,7 @@ export function SharedTable({
                   ))}
 
                   {/* Actions column footer */}
-                  {showActions && (
+                  {showActions && currentStatus !== "history" && (
                     <td
                       className="px-4 py-3 text-sm text-[#282828] font-semibold"
                       style={{
@@ -1619,11 +1866,14 @@ export function SharedTable({
             {showPagination && totalPages > 1 && (
               <div
                 className={cn("flex items-center justify-center gap-1  px-2")}
+                role="navigation"
+                aria-label={t("common.pagination")}
               >
                 {/* First button */}
                 <button
                   onClick={() => onPageChange?.(1)}
                   disabled={!canGoFirst}
+                  aria-label={t("common.first")}
                   className={cn(
                     "flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
                   )}
@@ -1638,6 +1888,7 @@ export function SharedTable({
                 <button
                   onClick={() => onPageChange?.(currentPage - 1)}
                   disabled={!canGoPrevious}
+                  aria-label={t("common.back")}
                   className={cn(
                     "flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
                   )}
@@ -1675,6 +1926,7 @@ export function SharedTable({
                 <button
                   onClick={() => onPageChange?.(currentPage + 1)}
                   disabled={!canGoNext}
+                  aria-label={t("common.next")}
                   className={cn(
                     "flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
                   )}
@@ -1689,6 +1941,7 @@ export function SharedTable({
                 <button
                   onClick={() => onPageChange?.(totalPages)}
                   disabled={!canGoLast}
+                  aria-label={t("common.last")}
                   className={cn(
                     "flex items-center gap-1 px-3 py-2 text-sm border border-[#EEEEEE] text-[#282828] rounded-sm hover:bg-[#4E8476] hover:border-[#4E8476] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#282828] disabled:hover:border-[#EEEEEE]"
                   )}
@@ -1728,9 +1981,11 @@ export function SharedTable({
               >
                 {t("common.confirmDeletion")}
               </h3>
-              <div
-                className="p-1 rounded-sm border border-[#E2E2E2] cursor-pointer"
+              <button
+                className="p-1 rounded-sm border border-[#E2E2E2] cursor-pointer hover:bg-gray-100 transition-colors"
                 onClick={handleDeleteCancel}
+                aria-label={t("common.closeModal")}
+                type="button"
               >
                 <svg
                   width="14"
@@ -1747,7 +2002,7 @@ export function SharedTable({
                     stroke-linejoin="round"
                   />
                 </svg>
-              </div>
+              </button>
             </div>
 
             <div className="border-t border-b border-gray-200 px-4 mb-3 ">
