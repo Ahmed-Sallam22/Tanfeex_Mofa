@@ -1111,6 +1111,8 @@ const ChatBot: React.FC<ChatBotProps> = ({
               src={iconUrl || chatIcon}
               alt="Chat Icon"
               className="w-[72px] h-[60px] object-cover rounded-sm relative z-[2] transition-transform"
+              width={72}
+              height={60}
             />
             {/* pulse ring */}
             {!isDragging && (

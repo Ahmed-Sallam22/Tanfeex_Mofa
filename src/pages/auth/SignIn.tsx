@@ -131,12 +131,10 @@ export default function SignIn() {
 
         <div className=" w-[85%] mx-auto">
           <div className="text-center lg:text-start">
-            <h2 className="text-2xl lg:text-3xl font-extrabold text-[gray-900]">
+            <h1 className="text-2xl lg:text-3xl font-extrabold text-gray-900">
               {t("signIn")}
-            </h2>
-            <p className="mt-2  text-sm text-[#757575]">
-              {t("signInSubtitle")}
-            </p>
+            </h1>
+            <p className="mt-2 text-sm text-gray-600">{t("signInSubtitle")}</p>
           </div>
 
           <form className="mt-8 space-y-6 " onSubmit={handleSubmit(onSubmit)}>

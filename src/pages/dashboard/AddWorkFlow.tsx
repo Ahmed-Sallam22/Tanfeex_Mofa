@@ -235,7 +235,7 @@ export default function AddWorkFlow() {
 
   function DotSeparated({ items }: { items: string[] }) {
     return (
-      <div className="flex items-center text-xs text-[#757575] [&>*+*]:before:content-['•'] [&>*+*]:before:mx-2">
+      <div className="flex items-center text-xs text-gray-600 [&>*+*]:before:content-['•'] [&>*+*]:before:mx-2">
         {items.map((t) => (
           <span key={t}>{t}</span>
         ))}
@@ -569,7 +569,7 @@ export default function AddWorkFlow() {
                           }`,
                         ]}
                       />
-                      <p className="text-xs text-[#757575]">
+                      <p className="text-xs text-gray-600">
                         {t("workflow.sla")}: {stage.sla_hours}
                         {t("workflow.hours")}
                       </p>

@@ -2,6 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
+import { ViteImageOptimizer } from 'vite-plugin-image-optimizer'
+import viteCompression from 'vite-plugin-compression'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -11,7 +13,41 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
-    ],
+      // Image optimization for production builds
+      isProduction && ViteImageOptimizer({
+        jpg: {
+          quality: 80,
+        },
+        jpeg: {
+          quality: 80,
+        },
+        png: {
+          quality: 80,
+        },
+        webp: {
+          lossless: false,
+          quality: 80,
+        },
+        svg: {
+          multipass: true,
+          plugins: [
+            { name: 'preset-default' },
+          ],
+        },
+      }),
+      // Gzip compression for assets
+      isProduction && viteCompression({
+        algorithm: 'gzip',
+        ext: '.gz',
+        threshold: 1024, // Only compress files > 1kb
+      }),
+      // Brotli compression (better than gzip)
+      isProduction && viteCompression({
+        algorithm: 'brotliCompress',
+        ext: '.br',
+        threshold: 1024,
+      }),
+    ].filter(Boolean),
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -24,16 +60,43 @@ export default defineConfig(({ mode }) => {
           // Remove console statements in production build
           drop_console: isProduction,
           drop_debugger: isProduction,
+          // Additional optimizations
+          passes: 2,
+        },
+        mangle: {
+          safari10: true,
+        },
+        format: {
+          comments: false,
         },
       },
       // Code splitting for better caching and smaller bundle sizes
       rollupOptions: {
         output: {
-          manualChunks: {
+          manualChunks: (id) => {
             // Split vendor chunks for better caching
-            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-            'vendor-redux': ['react-redux', '@reduxjs/toolkit'],
-            'vendor-i18n': ['react-i18next', 'i18next'],
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+                return 'vendor-react';
+              }
+              if (id.includes('redux') || id.includes('@reduxjs')) {
+                return 'vendor-redux';
+              }
+              if (id.includes('i18next') || id.includes('react-i18next')) {
+                return 'vendor-i18n';
+              }
+              if (id.includes('recharts') || id.includes('d3')) {
+                return 'vendor-charts';
+              }
+              if (id.includes('lucide') || id.includes('icons')) {
+                return 'vendor-icons';
+              }
+              if (id.includes('zod') || id.includes('react-hook-form')) {
+                return 'vendor-forms';
+              }
+              // Group remaining node_modules
+              return 'vendor-common';
+            }
           },
         },
       },
@@ -43,12 +106,19 @@ export default defineConfig(({ mode }) => {
       cssCodeSplit: true,
       // Chunk size warning limit
       chunkSizeWarningLimit: 500,
-      // Enable source maps for production debugging (optional)
+      // Disable source maps in production
       sourcemap: isProduction ? false : true,
     },
     // Optimize dependencies pre-bundling
     optimizeDeps: {
       include: ['react', 'react-dom', 'react-router-dom', 'react-redux'],
+      exclude: ['@vite/client', '@vite/env'],
+    },
+    // Enable gzip compression hints
+    server: {
+      headers: {
+        'Cache-Control': 'public, max-age=31536000',
+      },
     },
   }
 })

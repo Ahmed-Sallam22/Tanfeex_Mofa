@@ -137,7 +137,7 @@ export default function UploadInvoices() {
           >
             {t("invoice.allInvoices")}
           </button>
-          <span className="text-[#757575]">/</span>
+          <span className="text-gray-600">/</span>
           <span className="font-medium text-[#282828]">
             {t("invoice.uploadInvoice")}
           </span>
@@ -149,7 +149,7 @@ export default function UploadInvoices() {
         <h2 className="text-lg  text-[#282828]">
           {t("invoice.uploadInvoices")}
         </h2>
-        <p className="text-[13px] tracking-wider text-[#AFAFAF] mt-1">
+        <p className="text-[13px] tracking-wider text-gray-500 mt-1">
           {t("invoice.dragDropInstructions")}
         </p>
 
@@ -232,17 +232,17 @@ export default function UploadInvoices() {
                   </svg>
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-md text-[#545454] truncate">
+                  <p className="font-medium text-md text-gray-700 truncate">
                     #{f.name.toUpperCase()}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-5">
-                <span className="text-sm text-[#757575]">
+                <span className="text-sm text-gray-600">
                   {formatKB(f.size)}
                 </span>
-                <span className="text-sm text-[#757575]">
+                <span className="text-sm text-gray-600">
                   {formatDMY(today)}
                 </span>
 

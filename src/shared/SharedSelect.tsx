@@ -178,6 +178,9 @@ export function SharedSelect({
           type="button"
           onClick={handleToggle}
           disabled={disabled}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          aria-label={title || placeholder}
           className={cn(
             "relative w-full px-3 py-4 bg-white border border-[#E2E2E2] rounded-md cursor-pointer",
             "focus:outline-none focus:ring-2 focus:ring-[#4E8476] focus:border-transparent",
@@ -206,9 +209,13 @@ export function SharedSelect({
               <button
                 type="button"
                 onClick={handleClear}
+                aria-label="Clear selection"
                 className="p-1 hover:bg-gray-100 rounded-full transition-colors duration-200 pointer-events-auto"
               >
-                <XIcon className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                <XIcon
+                  className="w-4 h-4 text-gray-400 hover:text-gray-600"
+                  aria-hidden="true"
+                />
               </button>
             ) : (
               <ChevronDownIcon
@@ -216,6 +223,7 @@ export function SharedSelect({
                   "w-4 h-4 text-gray-400 transition-transform duration-200 pointer-events-none",
                   isOpen && "transform rotate-180"
                 )}
+                aria-hidden="true"
               />
             )}
           </span>

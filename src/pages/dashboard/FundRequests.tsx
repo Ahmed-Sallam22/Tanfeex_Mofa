@@ -903,7 +903,7 @@ export default function FundRequests() {
                   {t("fundRequests.browse")}
                 </button>
               </div>
-              <div className="text-xs text-[#757575] mb-2">
+              <div className="text-xs text-gray-600 mb-2">
                 {t("fundRequests.supportedFormats")}
               </div>
               <input
@@ -967,13 +967,13 @@ export default function FundRequests() {
                         />
                       </svg>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-[#545454] truncate">
+                        <div className="text-sm font-medium text-gray-700 truncate">
                           {attachment.file_name}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs text-[#545454]">
+                    <div className="flex items-center gap-3 text-xs text-gray-700">
                       <span>{(attachment.file_size / 1024).toFixed(1)} KB</span>
                       <span>
                         {new Date(attachment.upload_date).toLocaleDateString()}

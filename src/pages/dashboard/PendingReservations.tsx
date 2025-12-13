@@ -604,7 +604,7 @@ export default function PendingReservations() {
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
+              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-gray-500"
               placeholder={t("pendingReservations.addComments")}
             />
           </div>
@@ -656,7 +656,7 @@ export default function PendingReservations() {
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
+              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-gray-500"
               placeholder={t("pendingReservations.describeReason")}
             />
           </div>
@@ -961,7 +961,7 @@ export default function PendingReservations() {
                 rows={5}
                 value={delegateReason}
                 onChange={(e) => setDelegateReason(e.target.value)}
-                className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
+                className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-gray-500"
                 placeholder={t("pendingReservations.provideDelegateReason")}
               />
             </div>

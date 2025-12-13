@@ -992,7 +992,7 @@ export default function Reservations() {
                   {t("common.browse")}
                 </button>
               </div>
-              <div className="text-xs text-[#757575] mb-2">
+              <div className="text-xs text-gray-600 mb-2">
                 {t("validation.supportedFormats")}
               </div>
               <input
@@ -1054,13 +1054,13 @@ export default function Reservations() {
                         />
                       </svg>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-[#545454] truncate">
+                        <div className="text-sm font-medium text-gray-700 truncate">
                           {attachment.file_name}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs text-[#545454]">
+                    <div className="flex items-center gap-3 text-xs text-gray-700">
                       <span>{(attachment.file_size / 1024).toFixed(1)} KB</span>
                       <span>
                         {new Date(attachment.upload_date).toLocaleDateString()}
@@ -1586,7 +1586,7 @@ export default function Reservations() {
               rows={7}
               value={unholdReason}
               onChange={(e) => setUnholdReason(e.target.value)}
-              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
+              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-gray-500"
               placeholder={t("reservations.describeUnholdReason")}
             />
           </div>

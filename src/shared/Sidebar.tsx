@@ -781,24 +781,29 @@ export default function Sidebar({
         {sections.map((sec, i) => (
           <div key={i} className="sm:mb-1">
             {!desktopHidden && sec.title && (
-              <div className="px-2 sm:px-3 pb-1 sm:pb-2 text-[11px] sm:text-[12px] font-medium tracking-wider text-[#AFAFAF] uppercase">
+              <div className="px-2 sm:px-3 pb-1 sm:pb-2 text-[11px] sm:text-[12px] font-medium tracking-wider text-gray-500 uppercase">
                 {sec.title}
               </div>
             )}
-            <ul className="space-y-0.5 sm:space-y-1">
+            <ul className="space-y-0.5 sm:space-y-1" role="menu">
               {sec.items.map(({ to, label, icon: Icon }) => (
-                <li key={to}>
+                <li key={to} role="none">
                   {to === "/logout" ? (
                     <button
                       onClick={() => {
                         logout();
                         onClose?.();
                       }}
+                      aria-label={label}
+                      role="menuitem"
                       className={`flex items-center ${
                         desktopHidden ? "justify-center" : "gap-2 sm:gap-3"
-                      } px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg text-[13px] sm:text-[14px] font-medium transition-colors text-[#545454] hover:bg-[#4E8476]/10 hover:text-[#4E8476] w-full text-left`}
+                      } px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg text-[13px] sm:text-[14px] font-medium transition-colors text-gray-700 hover:bg-[#4E8476]/10 hover:text-[#4E8476] w-full text-left`}
                     >
-                      <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                      <Icon
+                        className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0"
+                        aria-hidden="true"
+                      />
                       {/* hide label when collapsed */}
                       {!desktopHidden && (
                         <span className="truncate min-w-0">{label}</span>
@@ -807,6 +812,8 @@ export default function Sidebar({
                   ) : (
                     <NavLink
                       to={to}
+                      aria-label={label}
+                      role="menuitem"
                       className={({ isActive }) => {
                         let finalIsActive = false;
 
@@ -834,12 +841,15 @@ export default function Sidebar({
                           ${
                             finalIsActive
                               ? "bg-[#4E8476]/10 text-[#4E8476] border-r-2 sm:border-r-4 border-[#4E8476]"
-                              : "text-[#545454] hover:bg-[#4E8476]/10 hover:text-[#4E8476]"
+                              : "text-gray-700 hover:bg-[#4E8476]/10 hover:text-[#4E8476]"
                           }`;
                       }}
                       onClick={onClose}
                     >
-                      <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                      <Icon
+                        className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0"
+                        aria-hidden="true"
+                      />
                       {/* hide label when collapsed */}
                       {!desktopHidden && (
                         <span className="truncate min-w-0">{label}</span>
