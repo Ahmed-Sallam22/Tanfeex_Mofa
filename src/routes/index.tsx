@@ -38,6 +38,7 @@ import AnalyticalReport from "@/pages/reports/AnalyticalReport";
 import Assumption from "@/pages/dashboard/Assumption";
 import AssumptionBuilder from "@/pages/dashboard/AssumptionBuilder";
 import AppLayout from "@/components/layout/AppLayout";
+import AccessDenied from "@/pages/AccessDenied";
 
 const SignIn = lazy(() => import("../pages/auth/SignIn"));
 const Home = lazy(() => import("../pages/dashboard/Home"));
@@ -49,6 +50,9 @@ export default function AppRoutes() {
   return (
     <Suspense fallback={<TanfeezLoader />}>
       <Routes>
+        {/* Access Denied Route */}
+        <Route path="/access-denied" element={<AccessDenied />} />
+
         <Route
           path="/auth/sign-in"
           element={

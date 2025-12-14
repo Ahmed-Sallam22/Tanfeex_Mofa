@@ -2,7 +2,7 @@ import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 // import { toast } from 'react-hot-toast';
 import type { RootState } from '../app/store';
-import { showSessionExpired, setCredentials } from '../features/auth/authSlice';
+import { clearAuth, setCredentials } from '../features/auth/authSlice';
 
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -14,8 +14,33 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
+// Helper function to handle logout and redirect
+const handleUnauthorized = (api: { dispatch: (action: unknown) => void }) => {
+  // Clear all auth data from localStorage
+  localStorage.removeItem('auth');
+  localStorage.clear();
+  
+  // Clear auth state in Redux
+  api.dispatch(clearAuth());
+  
+  // Redirect to login page
+  window.location.href = '/auth/sign-in';
+};
+
+// Helper function to handle access denied
+const handleAccessDenied = () => {
+  // Redirect to access denied page
+  window.location.href = '/access-denied';
+};
+
 export const customBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
+  
+  // Handle 403 Forbidden - Access Denied
+  if (result.error && result.error.status === 403) {
+    handleAccessDenied();
+    return result;
+  }
   
   if (result.error && result.error.status === 401) {
     const state = api.getState() as RootState;
@@ -55,13 +80,13 @@ export const customBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBase
           result = await baseQuery(args, api, extraOptions);
         }
       } else {
-        // Refresh failed, show session expired modal
-        api.dispatch(showSessionExpired());
+        // Refresh failed - clear auth and redirect to login
+        handleUnauthorized(api);
       }
     } else {
-      // No refresh token available, show session expired modal
+      // No refresh token available or not authenticated - redirect to login
       if (state.auth.isAuthenticated) {
-        api.dispatch(showSessionExpired());
+        handleUnauthorized(api);
       }
     }
   }

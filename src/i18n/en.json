@@ -1720,5 +1720,13 @@
     "page": "Page",
     "of": "of",
     "rowsPerPage": "Rows per page"
+  },
+  "accessDenied": {
+    "title": "Access Denied",
+    "description": "Sorry, you don't have permission to access this page. Please contact your administrator if you believe this is an error.",
+    "goBack": "Go Back",
+    "goHome": "Go Home",
+    "needHelp": "Need help?",
+    "contactSupport": "Contact Support"
   }
 }
