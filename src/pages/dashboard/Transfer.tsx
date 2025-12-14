@@ -1002,7 +1002,7 @@ export default function Transfer() {
                   {t("common.browse")}
                 </button>
               </div>
-              <div className="text-xs text-gray-600 mb-2">
+              <div className="text-xs text-[#757575] mb-2">
                 {t("validation.supportedFormats")}
               </div>
               <input
@@ -1064,13 +1064,13 @@ export default function Transfer() {
                         />
                       </svg>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-700 truncate">
+                        <div className="text-sm font-medium text-[#545454] truncate">
                           {attachment.file_name}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs text-gray-700">
+                    <div className="flex items-center gap-3 text-xs text-[#545454]">
                       <span>{(attachment.file_size / 1024).toFixed(1)} KB</span>
                       <span>
                         {new Date(attachment.upload_date).toLocaleDateString()}
@@ -1580,34 +1580,64 @@ export default function Transfer() {
       >
         <div className="p-6">
           {isLoadingStatus ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600">
-                {t("messages.loadingStatus")}
-              </span>
-            </div>
-          ) : statusError ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="text-center">
-                <div className="text-red-500 text-lg mb-2">⚠️</div>
-                <p className="text-gray-600">
-                  {t("messages.errorLoadingStatus")}
-                </p>
+            <>
+              {console.log('[MODAL] Rendering LOADING state')}
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-2 text-gray-600">
+                  {t("messages.loadingStatus")}
+                </span>
               </div>
-            </div>
+            </>
+          ) : statusError ? (
+            <>
+              {console.log('[MODAL] Rendering ERROR state:', statusError)}
+              <div className="flex justify-center items-center py-12">
+                <div className="text-center">
+                  <div className="text-red-500 text-lg mb-2">⚠️</div>
+                  <p className="text-gray-600">
+                    {t("messages.errorLoadingStatus")}
+                  </p>
+                </div>
+              </div>
+            </>
           ) : statusData ? (
             <div className="space-y-6">
-              {/* Approval Stages Pipeline */}
-              <div className="space-y-4">
-                <h4 className="text-md font-semibold text-gray-800 mb-4">
-                  {t("status.approvalStages")}
-                </h4>
+              {/* Overall Status */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-600">Transfer Status:</span>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    statusData.transfer_status === 'approved' ? 'bg-green-100 text-green-800' :
+                    statusData.transfer_status === 'rejected' ? 'bg-red-100 text-red-800' :
+                    'bg-blue-100 text-blue-800'
+                  }`}>
+                    {statusData.transfer_status}
+                  </span>
+                </div>
+              </div>
 
-                <div className="relative">
-                  {/* Timeline line */}
-                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+              {/* Workflows */}
+              {statusData.workflows?.map((workflow) => (
+                <div key={workflow.execution_order} className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-md font-semibold text-gray-800">
+                      {workflow.workflow_name}
+                    </h4>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      workflow.workflow_status === 'approved' ? 'bg-green-100 text-green-800' :
+                      workflow.workflow_status === 'rejected' ? 'bg-red-100 text-red-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>
+                      {workflow.workflow_status}
+                    </span>
+                  </div>
 
-                  {statusData.stages?.map((stage) => (
+                  <div className="relative">
+                    {/* Timeline line */}
+                    <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+
+                    {workflow.stages?.map((stage) => (
                     <div
                       key={stage.order_index}
                       className="relative flex items-start space-x-4 pb-8 last:pb-0"
@@ -1778,9 +1808,9 @@ export default function Transfer() {
                       </div>
                     </div>
                   ))}
+                  </div>
                 </div>
-              </div>
-            </div>
+              ))}            </div>
           ) : (
             <div className="text-center py-12 text-gray-500">
               <div className="text-gray-400 text-2xl mb-2">📋</div>

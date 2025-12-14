@@ -509,40 +509,82 @@ export default function PendingTransfer() {
             </span>
           </div>
         ) : error ? (
-          <div className="flex justify-center items-center h-64 bg-gradient-to-br from-red-50 to-rose-100 rounded-2xl border border-red-100 shadow-sm">
-            <div className="text-center max-w-md px-6">
-              <div className="mb-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-                  <svg
-                    className="w-8 h-8 text-red-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+          (() => {
+            // Check if it's an access denied error
+            const errorData = (error as any)?.data;
+            const isAccessDenied = errorData?.error === "ACCESS_DENIED" || (error as any)?.status === 403;
+            
+            if (isAccessDenied) {
+              // Access Denied UI
+              return (
+                <div className="flex justify-center items-center h-64 bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl border border-amber-200 shadow-sm">
+                  <div className="text-center max-w-md px-6">
+                    <div className="mb-4">
+                      <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
+                        <svg
+                          className="w-8 h-8 text-amber-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <h3 className="text-amber-800 font-bold text-xl">
+                        {t("pendingTransfer.accessDenied") || "Access Denied"}
+                      </h3>
+                      <p className="text-amber-700 text-sm leading-relaxed">
+                        {errorData?.message || t("pendingTransfer.noApprovalPermissions") || "You do not have approval permissions. Please contact your administrator."}
+                      </p>
+                      {errorData?.details && (
+                        <p className="text-amber-600 text-xs mt-2">
+                          {errorData.details}
+                        </p>
+                      )}
+                      <div className="flex flex-col sm:flex-row gap-2 justify-center mt-6">
+                        <button
+                          className="px-6 py-3 bg-amber-600 text-white rounded-xl font-medium hover:bg-amber-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+                          onClick={() => navigate('/app/dashboard')}
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                              />
+                            </svg>
+                            {t("pendingTransfer.goToDashboard") || "Go to Dashboard"}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-3">
-                <h3 className="text-red-800 font-bold text-xl">
-                  {t("pendingTransfer.unableToLoad")}
-                </h3>
-                <p className="text-red-600 text-sm leading-relaxed">
-                  {t("pendingTransfer.connectionTrouble")}
-                </p>
-                <div className="flex flex-col sm:flex-row gap-2 justify-center mt-6">
-                  <button
-                    className="px-6 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
-                    onClick={() => window.location.reload()}
-                  >
-                    <span className="flex items-center justify-center gap-2">
+              );
+            }
+            
+            // Generic Error UI (for other errors)
+            return (
+              <div className="flex justify-center items-center h-64 bg-gradient-to-br from-red-50 to-rose-100 rounded-2xl border border-red-100 shadow-sm">
+                <div className="text-center max-w-md px-6">
+                  <div className="mb-4">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
                       <svg
-                        className="w-4 h-4"
+                        className="w-8 h-8 text-red-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -551,22 +593,52 @@ export default function PendingTransfer() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      {t("pendingTransfer.tryAgain")}
-                    </span>
-                  </button>
-                  <button
-                    className="px-6 py-3 bg-white text-red-600 border-2 border-red-200 rounded-xl font-medium hover:bg-red-50 transform hover:scale-105 transition-all duration-200"
-                    onClick={() => setCurrentPage(1)}
-                  >
-                    {t("pendingTransfer.resetFilters")}
-                  </button>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-red-800 font-bold text-xl">
+                      {t("pendingTransfer.unableToLoad")}
+                    </h3>
+                    <p className="text-red-600 text-sm leading-relaxed">
+                      {t("pendingTransfer.connectionTrouble")}
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-2 justify-center mt-6">
+                      <button
+                        className="px-6 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+                        onClick={() => window.location.reload()}
+                      >
+                        <span className="flex items-center justify-center gap-2">
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                          </svg>
+                          {t("pendingTransfer.tryAgain")}
+                        </span>
+                      </button>
+                      <button
+                        className="px-6 py-3 bg-white text-red-600 border-2 border-red-200 rounded-xl font-medium hover:bg-red-50 transform hover:scale-105 transition-all duration-200"
+                        onClick={() => setCurrentPage(1)}
+                      >
+                        {t("pendingTransfer.resetFilters")}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            );
+          })()
         ) : (
           <SharedTable
             title={t("pendingTransfer.recentPendingTransfers")}
@@ -625,7 +697,7 @@ export default function PendingTransfer() {
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-gray-500"
+              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
               placeholder={t("pendingTransfer.addComments")}
             />
           </div>
@@ -677,7 +749,7 @@ export default function PendingTransfer() {
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-gray-500"
+              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
               placeholder={t("pendingTransfer.describeReason")}
             />
           </div>
@@ -736,17 +808,41 @@ export default function PendingTransfer() {
             </div>
           ) : statusData ? (
             <div className="space-y-6">
-              {/* Approval Stages Pipeline */}
-              <div className="space-y-4">
-                <h4 className="text-md font-semibold text-gray-800 mb-4">
-                  {t("pendingTransfer.approvalStages")}
-                </h4>
+              {/* Overall Status */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-600">Transfer Status:</span>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    statusData.transfer_status === 'approved' ? 'bg-green-100 text-green-800' :
+                    statusData.transfer_status === 'rejected' ? 'bg-red-100 text-red-800' :
+                    'bg-blue-100 text-blue-800'
+                  }`}>
+                    {statusData.transfer_status}
+                  </span>
+                </div>
+              </div>
 
-                <div className="relative">
-                  {/* Timeline line */}
-                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+              {/* Workflows */}
+              {statusData.workflows?.map((workflow) => (
+                <div key={workflow.execution_order} className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-md font-semibold text-gray-800">
+                      {workflow.workflow_name}
+                    </h4>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      workflow.workflow_status === 'approved' ? 'bg-green-100 text-green-800' :
+                      workflow.workflow_status === 'rejected' ? 'bg-red-100 text-red-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>
+                      {workflow.workflow_status}
+                    </span>
+                  </div>
 
-                  {statusData.stages?.map((stage) => (
+                  <div className="relative">
+                      {/* Timeline line */}
+                      <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+
+                      {workflow.stages?.map((stage) => (
                     <div
                       key={stage.order_index}
                       className="relative flex items-start space-x-4 pb-8 last:pb-0"
@@ -917,8 +1013,9 @@ export default function PendingTransfer() {
                       </div>
                     </div>
                   ))}
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
           ) : (
             <div className="text-center py-12 text-gray-500">
@@ -988,7 +1085,7 @@ export default function PendingTransfer() {
                 rows={5}
                 value={delegateReason}
                 onChange={(e) => setDelegateReason(e.target.value)}
-                className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-gray-500"
+                className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
                 placeholder={t("pendingTransfer.provideDelegateReason")}
               />
             </div>

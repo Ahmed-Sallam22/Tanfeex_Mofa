@@ -5,13 +5,14 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  useGetUserLevelsQuery,
+  useGetSecurityGroupRolesQuery,
   useCreateWorkflowTemplateMutation,
   useUpdateWorkflowTemplateMutation,
   useGetWorkflowTemplateQuery,
   type WorkflowStage,
   type CreateWorkflowRequest,
 } from "@/api/workflow.api";
+import { useGetSecurityGroupsQuery } from "@/api/securityGroups.api";
 
 export default function AddWorkFlow() {
   const navigate = useNavigate();
@@ -20,7 +21,8 @@ export default function AddWorkFlow() {
   const { t } = useTranslation();
 
   // API hooks
-  const { data: userLevelsData } = useGetUserLevelsQuery();
+  const { data: securityGroupRolesData } = useGetSecurityGroupRolesQuery();
+  const { data: securityGroupsData } = useGetSecurityGroupsQuery();
   const [createWorkflowTemplate, { isLoading: isCreating }] =
     useCreateWorkflowTemplateMutation();
   const [updateWorkflowTemplate, { isLoading: isUpdating }] =
@@ -51,7 +53,7 @@ export default function AddWorkFlow() {
     decisionPolicy: "ALL" as "ALL" | "ANY" | "QUORUM",
     allowReject: true,
     slaHours: undefined as number | undefined,
-    requiredUserLevel: undefined as number | undefined,
+    requiredRole: undefined as number | undefined,
     isActive: true,
   });
 
@@ -87,7 +89,8 @@ export default function AddWorkFlow() {
             decision_policy: stage.decision_policy,
             allow_reject: stage.allow_reject,
             sla_hours: stage.sla_hours,
-            required_user_level: stage.required_user_level,
+            security_group: stage.security_group,
+            security_group_name: stage.security_group_name,
             // Map additional fields if needed
             allow_delegate: stage.allow_delegate,
             quorum_count: stage.quorum_count,
@@ -130,11 +133,18 @@ export default function AddWorkFlow() {
     { value: "QUORUM", label: "QUORUM" },
   ];
 
-  // User level options from API
-  const userLevelOptions: SelectOption[] =
-    userLevelsData?.map((level) => ({
-      value: level.id.toString(),
-      label: `${level.name}`,
+  // Role options from security group roles (group-specific role assignments)
+  const roleOptions: SelectOption[] =
+    securityGroupRolesData?.roles?.filter(role => role.is_active).map((role) => ({
+      value: role.id.toString(), // XX_SecurityGroupRole.id
+      label: role.display_name, // "Group Name - Role Name"
+    })) || [];
+
+  // Security group options from API
+  const securityGroupOptions: SelectOption[] =
+    securityGroupsData?.groups?.filter(group => group.is_active).map((group) => ({
+      value: group.id.toString(),
+      label: group.group_name,
     })) || [];
 
   const handleSelectChange = (value: string | number) => {
@@ -152,7 +162,7 @@ export default function AddWorkFlow() {
         decision_policy: stageForm.decisionPolicy,
         allow_reject: stageForm.allowReject,
         sla_hours: stageForm.slaHours || 24,
-        required_user_level: stageForm.requiredUserLevel || 1,
+        required_role: stageForm.requiredRole || null,
       };
       setStages(updatedStages);
       setIsStageEditMode(false);
@@ -165,7 +175,7 @@ export default function AddWorkFlow() {
         decision_policy: stageForm.decisionPolicy,
         allow_reject: stageForm.allowReject,
         sla_hours: stageForm.slaHours || 24,
-        required_user_level: stageForm.requiredUserLevel || 1,
+        required_role: stageForm.requiredRole || null,
       };
       setStages((prev) => [...prev, newStage]);
     }
@@ -178,7 +188,7 @@ export default function AddWorkFlow() {
       decisionPolicy: "ALL",
       allowReject: true,
       slaHours: undefined,
-      requiredUserLevel: undefined,
+      requiredRole: undefined,
       isActive: true,
     });
   };
@@ -200,8 +210,8 @@ export default function AddWorkFlow() {
       decisionPolicy: stage.decision_policy,
       allowReject: stage.allow_reject,
       slaHours: stage.sla_hours,
-      requiredUserLevel: stage.required_user_level,
-      isActive: true, // Default to true since stages don't have this field yet
+      requiredRole: stage.required_role || undefined,
+      isActive: true,
     });
     setEditingStageIndex(index);
     setIsStageEditMode(true);
@@ -235,7 +245,7 @@ export default function AddWorkFlow() {
 
   function DotSeparated({ items }: { items: string[] }) {
     return (
-      <div className="flex items-center text-xs text-gray-600 [&>*+*]:before:content-['•'] [&>*+*]:before:mx-2">
+      <div className="flex items-center text-xs text-[#757575] [&>*+*]:before:content-['•'] [&>*+*]:before:mx-2">
         {items.map((t) => (
           <span key={t}>{t}</span>
         ))}
@@ -252,7 +262,7 @@ export default function AddWorkFlow() {
       decisionPolicy: "ALL",
       allowReject: true,
       slaHours: undefined,
-      requiredUserLevel: undefined,
+      requiredRole: undefined,
       isActive: true,
     });
     setIsStageEditMode(false);
@@ -272,7 +282,7 @@ export default function AddWorkFlow() {
       decisionPolicy: "ALL",
       allowReject: true,
       slaHours: undefined,
-      requiredUserLevel: undefined,
+      requiredRole: undefined,
       isActive: true,
     });
   };
@@ -327,17 +337,17 @@ export default function AddWorkFlow() {
             />
 
             <SharedSelect
-              title={t("workflow.requiredUserLevel")}
+              title={t("workflow.requiredRole")}
               size="text-sm"
-              options={userLevelOptions}
-              value={stageForm.requiredUserLevel?.toString() || ""}
+              options={roleOptions}
+              value={stageForm.requiredRole?.toString() || ""}
               onChange={(value) =>
                 setStageForm((prev) => ({
                   ...prev,
-                  requiredUserLevel: value ? Number(value) : undefined,
+                  requiredRole: value ? Number(value) : undefined,
                 }))
               }
-              placeholder={t("workflow.selectUserLevel")}
+              placeholder={t("workflow.selectRole")}
             />
 
             <Input
@@ -380,7 +390,6 @@ export default function AddWorkFlow() {
               onClick={handleCreateStage}
               disabled={
                 !stageForm.name ||
-                !stageForm.requiredUserLevel ||
                 !stageForm.slaHours
               }
               className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#4E8476] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -564,12 +573,10 @@ export default function AddWorkFlow() {
                               ? t("workflow.yes")
                               : t("workflow.no")
                           }`,
-                          `${t("workflow.userLevel")}: ${
-                            stage.required_user_level
-                          }`,
+                          ...(stage.required_role_name ? [`${t("workflow.requiredRole")}: ${stage.required_role_name}`] : []),
                         ]}
                       />
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-[#757575]">
                         {t("workflow.sla")}: {stage.sla_hours}
                         {t("workflow.hours")}
                       </p>

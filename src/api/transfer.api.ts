@@ -74,12 +74,24 @@ export interface TransferResponse {
 
 export interface TransferStatusResponse {
   transaction_id: number;
-  workflow_status: string;
-  stages: {
-    order_index: number;
-    name: string;
-    decision_policy: string;
-    status: string;
+  transfer_status: string;
+  workflows: {
+    execution_order: number;
+    workflow_code: string;
+    workflow_name: string;
+    workflow_status: string;
+    stages: {
+      order_index: number;
+      name: string;
+      decision_policy: string;
+      status: string;
+      acted_by?: {
+        id: number;
+        username: string;
+        action_at: string;
+      };
+      comment?: string;
+    }[];
   }[];
 }
 

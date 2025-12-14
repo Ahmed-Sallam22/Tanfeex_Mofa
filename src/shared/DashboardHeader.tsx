@@ -65,18 +65,18 @@ export default function DashboardHeader() {
     <header className={cn("flex items-start justify-between gap-4")}>
       {/* Left: greeting */}
       <div className="flex flex-col gap-1">
-        <h1
+        <h2
           className={cn(
             "text-xl sm:text-3xl font-semibold text-[#4E8476]",
             isRTL ? "text-right" : "text-left"
           )}
         >
           {greeting}, {userName}
-        </h1>
+        </h2>
         <div className="flex flex-col gap-0.5">
           <p
             className={cn(
-              "text-gray-600 text-sm",
+              "text-[#757575] text-sm",
               isRTL ? "text-right" : "text-left"
             )}
           >
@@ -84,7 +84,7 @@ export default function DashboardHeader() {
           </p>
           <p
             className={cn(
-              "text-gray-600 text-xs",
+              "text-[#757575] text-xs",
               isRTL ? "text-right" : "text-left"
             )}
           >

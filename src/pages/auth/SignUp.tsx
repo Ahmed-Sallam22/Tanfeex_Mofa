@@ -82,10 +82,10 @@ export default function SignUp() {
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center lg:text-start">
-            <h1 className="mt-6 text-2xl lg:text-3xl font-extrabold text-gray-900">
+            <h2 className="mt-6  text-2xl lg:text-3xl font-extrabold text-[gray-900]">
               {t("signUp")}
-            </h1>
-            <p className="mt-2 text-sm text-gray-600">
+            </h2>
+            <p className="mt-2  text-sm text-[#757575]">
               {t("signUpSubtitle") || "Create your account"}
             </p>
           </div>

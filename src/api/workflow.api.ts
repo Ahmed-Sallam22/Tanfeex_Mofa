@@ -19,14 +19,20 @@ export interface WorkflowStage {
   name: string;
   decision_policy: 'ALL' | 'ANY' | 'QUORUM';
   quorum_count?: number | null;
-  required_role?: string | null;
+  required_role?: number | null; // FK to XX_SecurityGroupRole ID
+  required_role_name?: string; // Display name from backend
   dynamic_filter_json?: Record<string, unknown> | null;
   allow_reject: boolean;
   allow_delegate?: boolean;
   sla_hours: number;
   parallel_group?: string | null;
-  required_user_level: number;
+  /** @deprecated Use required_role instead */
+  required_user_level?: number;
   required_user_level_name?: string;
+  /** @deprecated Phase 6: Security groups are now assigned to entire workflows, not individual stages */
+  security_group?: number | null;
+  /** @deprecated Phase 6: Security groups are now assigned to entire workflows, not individual stages */
+  security_group_name?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -54,6 +60,25 @@ export interface UserLevel {
 
 export type UserLevelResponse = UserLevel[];
 
+export interface SecurityGroupRole {
+  id: number; // XX_SecurityGroupRole ID (this is what required_role needs)
+  security_group_id: number;
+  security_group_name: string;
+  role_id: number; // xx_UserLevel ID
+  role_name: string;
+  role_description: string;
+  level_order: number;
+  is_active: boolean;
+  default_abilities: string[];
+  display_name: string; // "Group Name - Role Name"
+}
+
+export interface SecurityGroupRolesResponse {
+  success: boolean;
+  count: number;
+  roles: SecurityGroupRole[];
+}
+
 export interface WorkflowTemplateListResponse {
   results: WorkflowTemplate[];
   count: number;
@@ -79,6 +104,20 @@ export const workflowApi = createApi({
         method: 'GET',
       }),
       providesTags: ['UserLevel'],
+    }),
+    getSecurityGroupRoles: builder.query<SecurityGroupRolesResponse, { securityGroupId?: number; isActive?: boolean } | void>({
+      query: (params) => {
+        const searchParams = new URLSearchParams();
+        if (params?.securityGroupId) searchParams.append('security_group_id', params.securityGroupId.toString());
+        if (params?.isActive !== undefined) searchParams.append('is_active', params.isActive.toString());
+        
+        const queryString = searchParams.toString();
+        return {
+          url: `/auth/security-group-roles/all/${queryString ? `?${queryString}` : ''}`,
+          method: 'GET',
+        };
+      },
+      providesTags: ['UserLevel'], // Reuse UserLevel tag for cache invalidation
     }),
     createWorkflowTemplate: builder.mutation<WorkflowTemplate, CreateWorkflowRequest>({
       query: (body) => ({
@@ -116,6 +155,7 @@ export const workflowApi = createApi({
 export const {
   useGetWorkflowTemplatesQuery,
   useGetUserLevelsQuery,
+  useGetSecurityGroupRolesQuery,
   useCreateWorkflowTemplateMutation,
   useUpdateWorkflowTemplateMutation,
   useDeleteWorkflowTemplateMutation,

@@ -184,27 +184,40 @@ export default function WorkFlow() {
           {t("workflow.workflows")}
         </h1>
 
-        <button
-          onClick={handleCreateNewWorkflow}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-[#4E8476] text-white text-sm font-medium rounded-lg hover:bg-[#3d6b5f] transition-colors"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/app/WorkflowAssignments")}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#4E8476] border border-[#4E8476] text-sm font-medium rounded-lg hover:bg-[#f0f9f6] transition-colors"
           >
-            <path
-              d="M8 1V15M1 8H15"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          {t("workflow.createNewWorkflow")}
-        </button>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <polyline points="17 11 19 13 23 9"></polyline>
+            </svg>
+            {t("workflow.manageAssignments")}
+          </button>
+          <button
+            onClick={handleCreateNewWorkflow}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#4E8476] text-white text-sm font-medium rounded-lg hover:bg-[#3d6b5f] transition-colors"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M8 1V15M1 8H15"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            {t("workflow.createNewWorkflow")}
+          </button>
+        </div>
       </div>
 
       {/* Workflows List Table */}

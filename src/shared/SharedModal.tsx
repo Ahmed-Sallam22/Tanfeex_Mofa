@@ -101,7 +101,7 @@ export function SharedModal({
                 className="p-1.5 rounded-md border border-[#E2E2E2] hover:bg-gray-100 transition-colors flex-shrink-0"
                 aria-label="Close modal"
               >
-                <CloseIcon className="w-3 cursor-pointer h-3 text-gray-700" />
+                <CloseIcon className="w-3 cursor-pointer h-3 text-[#545454]" />
               </button>
             )}
           </div>

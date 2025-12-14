@@ -12,6 +12,7 @@ import { balanceReportApi } from '../api/balanceReport.api';
 import { dashboardApi } from '../api/dashboard.api';
 import { adjdTransfersApi } from '../api/adjdTransfers.api';
 import { workflowApi } from '@/api/workflow.api';
+import { workflowAssignmentApi } from '@/api/workflowAssignment.api';
 import { envelopeApi } from '../api/envelope.api';
 import { userApi } from '@/api/user.api';
 import { levelApi } from '@/api/level.api';
@@ -20,6 +21,7 @@ import { invoiceApi } from '@/api/invoice.api';
 import { chatbotApi } from '@/api/chatbot.api';
 import { segmentConfigurationApi } from '@/api/segmentConfiguration.api';
 import { analyticalReportApi } from '@/api/analyticalReport.api';
+import { securityGroupsApi } from '@/api/securityGroups.api';
 
 export const store = configureStore({
   reducer: {
@@ -36,6 +38,7 @@ export const store = configureStore({
     [dashboardApi.reducerPath]: dashboardApi.reducer,
     [adjdTransfersApi.reducerPath]: adjdTransfersApi.reducer,
     [workflowApi.reducerPath]: workflowApi.reducer,
+    [workflowAssignmentApi.reducerPath]: workflowAssignmentApi.reducer,
     [envelopeApi.reducerPath]: envelopeApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
     [levelApi.reducerPath]: levelApi.reducer,
@@ -44,6 +47,7 @@ export const store = configureStore({
     [chatbotApi.reducerPath]: chatbotApi.reducer,
     [segmentConfigurationApi.reducerPath]: segmentConfigurationApi.reducer,
     [analyticalReportApi.reducerPath]: analyticalReportApi.reducer,
+    [securityGroupsApi.reducerPath]: securityGroupsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -59,6 +63,7 @@ export const store = configureStore({
       dashboardApi.middleware,
       adjdTransfersApi.middleware,
       workflowApi.middleware,
+      workflowAssignmentApi.middleware,
       envelopeApi.middleware,
       userApi.middleware,
       levelApi.middleware,
@@ -67,6 +72,7 @@ export const store = configureStore({
       chatbotApi.middleware,
       segmentConfigurationApi.middleware,
       analyticalReportApi.middleware,
+      securityGroupsApi.middleware,
     ),
 });
 

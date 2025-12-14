@@ -635,7 +635,7 @@ export default function PendingAdjustmentsDetails() {
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-gray-500"
+              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
               placeholder={t("pendingRequestsDetails.addComments")}
             />
           </div>
@@ -687,7 +687,7 @@ export default function PendingAdjustmentsDetails() {
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-gray-500"
+              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
               placeholder={t("pendingRequestsDetails.describeReason")}
             />
           </div>

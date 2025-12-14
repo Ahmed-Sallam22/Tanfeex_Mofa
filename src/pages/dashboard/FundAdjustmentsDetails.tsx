@@ -1445,7 +1445,7 @@ export default function TransferDetails() {
             onChange={(e) =>
               updateRow(transferRow.id, "from", Number(e.target.value) || 0)
             }
-            className={`w-full px-3 py-2 border rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-gray-500 `}
+            className={`w-full px-3 py-2 border rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-[#AFAFAF] `}
             placeholder={t("fundAdjustmentsDetails.columns.from")}
           />
         );
@@ -1470,7 +1470,7 @@ export default function TransferDetails() {
     //         onChange={(e) =>
     //           updateRow(transferRow.id, "to", Number(e.target.value) || 0)
     //         }
-    //         className={`w-full px-3 py-2 border rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-gray-500 `}
+    //         className={`w-full px-3 py-2 border rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-[#AFAFAF] `}
     //         placeholder={t("fundAdjustmentsDetails.columns.to")}
     //       />
     //     );
@@ -2043,7 +2043,7 @@ export default function TransferDetails() {
                 </>
               )}
             </div>
-            <div className="text-xs text-gray-600 mb-2">
+            <div className="text-xs text-[#757575] mb-2">
               {t("fundAdjustmentsDetails.supportedFormats")}
             </div>
             <input
@@ -2109,7 +2109,7 @@ export default function TransferDetails() {
 
             <div className="grid grid-cols-3 gap-4 justify-between items-center">
               <div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-[#757575]">
                   {t("fundAdjustmentsDetails.transactionId")}:
                 </p>
                 <p className="text-sm  text-[#282828]">
@@ -2117,7 +2117,7 @@ export default function TransferDetails() {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-[#757575]">
                   {t("fundAdjustmentsDetails.totalTransfers")}:{" "}
                 </p>
                 <p className="text-sm  text-[#282828]">
@@ -2125,7 +2125,7 @@ export default function TransferDetails() {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-[#757575]">
                   {t("fundAdjustmentsDetails.totalFrom")}:
                 </p>
                 <p className="text-sm  text-[#282828]">
@@ -2134,7 +2134,7 @@ export default function TransferDetails() {
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-[#757575]">
                   {t("fundAdjustmentsDetails.totalTo")}:{" "}
                 </p>
                 <p className="text-sm  text-[#282828]">

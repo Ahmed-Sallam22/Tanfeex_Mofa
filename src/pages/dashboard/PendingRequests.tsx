@@ -601,7 +601,7 @@ export default function PendingTransfer() {
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-gray-500"
+              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
               placeholder={t("pendingRequests.addComments")}
             />
           </div>
@@ -653,7 +653,7 @@ export default function PendingTransfer() {
               rows={7}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-gray-500"
+              className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
               placeholder={t("pendingRequests.describeReason")}
             />
           </div>
@@ -703,17 +703,41 @@ export default function PendingTransfer() {
             </div>
           ) : statusData ? (
             <div className="space-y-6">
-              {/* Approval Stages Pipeline */}
-              <div className="space-y-4">
-                <h4 className="text-md font-semibold text-gray-800 mb-4">
-                  {t("pendingRequests.approvalStages")}
-                </h4>
+              {/* Overall Status */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-600">Transfer Status:</span>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    statusData.transfer_status === 'approved' ? 'bg-green-100 text-green-800' :
+                    statusData.transfer_status === 'rejected' ? 'bg-red-100 text-red-800' :
+                    'bg-blue-100 text-blue-800'
+                  }`}>
+                    {statusData.transfer_status}
+                  </span>
+                </div>
+              </div>
 
-                <div className="relative">
-                  {/* Timeline line */}
-                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+              {/* Workflows */}
+              {statusData.workflows?.map((workflow) => (
+                <div key={workflow.execution_order} className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-md font-semibold text-gray-800">
+                      {workflow.workflow_name}
+                    </h4>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      workflow.workflow_status === 'approved' ? 'bg-green-100 text-green-800' :
+                      workflow.workflow_status === 'rejected' ? 'bg-red-100 text-red-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>
+                      {workflow.workflow_status}
+                    </span>
+                  </div>
 
-                  {statusData.stages?.map((stage) => (
+                  <div className="relative">
+                      {/* Timeline line */}
+                      <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+
+                      {workflow.stages?.map((stage) => (
                     <div
                       key={stage.order_index}
                       className="relative flex items-start space-x-4 pb-8 last:pb-0"
@@ -878,8 +902,9 @@ export default function PendingTransfer() {
                       </div>
                     </div>
                   ))}
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
           ) : (
             <div className="text-center py-12 text-gray-500">
@@ -946,7 +971,7 @@ export default function PendingTransfer() {
                 rows={5}
                 value={delegateReason}
                 onChange={(e) => setDelegateReason(e.target.value)}
-                className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-gray-500"
+                className="w-full px-3 text-sm resize-none py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-sm placeholder:text-[#AFAFAF]"
                 placeholder={t("pendingRequests.provideDelegateReason")}
               />
             </div>

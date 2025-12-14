@@ -1,33 +1,32 @@
-import { useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { useAppDispatch } from "./features/auth/hooks";
-import { hydrate } from "./features/auth/authSlice";
-import AppRoutes from "./routes";
-import SessionExpiredModal from "./components/SessionExpiredModal";
-import TokenRefreshManager from "./components/TokenRefreshManager";
-import ErrorBoundary from "./components/ErrorBoundary";
+import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useAppDispatch } from './features/auth/hooks'
+import { hydrate } from './features/auth/authSlice'
+import AppRoutes from './routes'
+import SessionExpiredModal from './components/SessionExpiredModal'
+import TokenRefreshManager from './components/TokenRefreshManager'
 
 function App() {
-  const { i18n } = useTranslation();
-  const dispatch = useAppDispatch();
+  const { i18n } = useTranslation()
+  const dispatch = useAppDispatch()
 
   useEffect(() => {
     // Hydrate auth state from localStorage
-    dispatch(hydrate());
-  }, [dispatch]);
+    dispatch(hydrate())
+  }, [dispatch])
 
   useEffect(() => {
     // Set HTML direction based on language
-    document.documentElement.dir = i18n.language === "ar" ? "rtl" : "ltr";
-  }, [i18n.language]);
+    document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr'
+  }, [i18n.language])
 
   return (
-    <ErrorBoundary>
+    <>
       <AppRoutes />
       <SessionExpiredModal />
       <TokenRefreshManager />
-    </ErrorBoundary>
-  );
+    </>
+  )
 }
 
-export default App;
+export default App

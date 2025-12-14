@@ -328,6 +328,72 @@ const PendingAdjustmentsIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const AssumptionIcon = ({ className }: { className?: string }) => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 20 20"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path
+      d="M10 2.5V4.16667"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+    <path
+      d="M10 15.8333V17.5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+    <path
+      d="M4.16667 10H2.5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+    <path
+      d="M17.5 10H15.8333"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+    <circle
+      cx="10"
+      cy="10"
+      r="4.16667"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    />
+    <path
+      d="M5.83333 5.83333L4.58333 4.58333"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+    <path
+      d="M15.4167 15.4167L14.1667 14.1667"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+    <path
+      d="M14.1667 5.83333L15.4167 4.58333"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+    <path
+      d="M4.58333 15.4167L5.83333 14.1667"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+  </svg>
+);
 const PendingRequestsIcon = ({ className }: { className?: string }) => (
   <svg
     width="20"
@@ -497,6 +563,39 @@ const SegmentConfigIcon = ({ className }: { className?: string }) => (
         <rect width="20" height="20" fill="white" />
       </clipPath>
     </defs>
+  </svg>
+);
+
+const SecurityGroupsIcon = ({ className }: { className?: string }) => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 20 20"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path
+      d="M10 1.66602L3.33333 4.16602V9.16602C3.33333 13.041 6.06667 16.6743 10 17.4993C13.9333 16.6743 16.6667 13.041 16.6667 9.16602V4.16602L10 1.66602Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M10 10.8327C11.3807 10.8327 12.5 9.71339 12.5 8.33268C12.5 6.95197 11.3807 5.83268 10 5.83268C8.61929 5.83268 7.5 6.95197 7.5 8.33268C7.5 9.71339 8.61929 10.8327 10 10.8327Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6.25 14.166C6.75 13.3327 7.91667 12.916 10 12.916C12.0833 12.916 13.25 13.3327 13.75 14.166"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -700,10 +799,24 @@ const getSections = (
           allowedRoles: ["superadmin"],
           allowedLevels: [] as number[],
         },
+         {
+          to: "/app/Assumption",
+          label: "Assumption",
+          icon: AssumptionIcon,
+          allowedRoles: ["superadmin"],
+          allowedLevels: [] as number[],
+        },
         {
           to: "/app/segment-configuration",
           label: t("segmentConfiguration.title"),
           icon: SegmentConfigIcon,
+          allowedRoles: ["superadmin"],
+          allowedLevels: [] as number[],
+        },
+        {
+          to: "/app/security-groups",
+          label: t("securityGroups.title"),
+          icon: SecurityGroupsIcon,
           allowedRoles: ["superadmin"],
           allowedLevels: [] as number[],
         },
@@ -781,29 +894,24 @@ export default function Sidebar({
         {sections.map((sec, i) => (
           <div key={i} className="sm:mb-1">
             {!desktopHidden && sec.title && (
-              <div className="px-2 sm:px-3 pb-1 sm:pb-2 text-[11px] sm:text-[12px] font-medium tracking-wider text-gray-500 uppercase">
+              <div className="px-2 sm:px-3 pb-1 sm:pb-2 text-[11px] sm:text-[12px] font-medium tracking-wider text-[#AFAFAF] uppercase">
                 {sec.title}
               </div>
             )}
-            <ul className="space-y-0.5 sm:space-y-1" role="menu">
+            <ul className="space-y-0.5 sm:space-y-1">
               {sec.items.map(({ to, label, icon: Icon }) => (
-                <li key={to} role="none">
+                <li key={to}>
                   {to === "/logout" ? (
                     <button
                       onClick={() => {
                         logout();
                         onClose?.();
                       }}
-                      aria-label={label}
-                      role="menuitem"
                       className={`flex items-center ${
                         desktopHidden ? "justify-center" : "gap-2 sm:gap-3"
-                      } px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg text-[13px] sm:text-[14px] font-medium transition-colors text-gray-700 hover:bg-[#4E8476]/10 hover:text-[#4E8476] w-full text-left`}
+                      } px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg text-[13px] sm:text-[14px] font-medium transition-colors text-[#545454] hover:bg-[#4E8476]/10 hover:text-[#4E8476] w-full text-left`}
                     >
-                      <Icon
-                        className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0"
-                        aria-hidden="true"
-                      />
+                      <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                       {/* hide label when collapsed */}
                       {!desktopHidden && (
                         <span className="truncate min-w-0">{label}</span>
@@ -812,8 +920,6 @@ export default function Sidebar({
                   ) : (
                     <NavLink
                       to={to}
-                      aria-label={label}
-                      role="menuitem"
                       className={({ isActive }) => {
                         let finalIsActive = false;
 
@@ -841,15 +947,12 @@ export default function Sidebar({
                           ${
                             finalIsActive
                               ? "bg-[#4E8476]/10 text-[#4E8476] border-r-2 sm:border-r-4 border-[#4E8476]"
-                              : "text-gray-700 hover:bg-[#4E8476]/10 hover:text-[#4E8476]"
+                              : "text-[#545454] hover:bg-[#4E8476]/10 hover:text-[#4E8476]"
                           }`;
                       }}
                       onClick={onClose}
                     >
-                      <Icon
-                        className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0"
-                        aria-hidden="true"
-                      />
+                      <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                       {/* hide label when collapsed */}
                       {!desktopHidden && (
                         <span className="truncate min-w-0">{label}</span>

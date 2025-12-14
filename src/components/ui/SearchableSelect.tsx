@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, useEffect } from "react";
+import  { useMemo, useRef, useState, useEffect } from "react";
 
 type SearchableSelectProps = {
   value: string;
@@ -44,9 +44,7 @@ export default function SearchableSelect({
   // ensure highlighted item stays in view
   useEffect(() => {
     if (!open || !listRef.current) return;
-    const el = listRef.current.querySelectorAll("li")[highlight] as
-      | HTMLElement
-      | undefined;
+    const el = listRef.current.querySelectorAll("li")[highlight] as HTMLElement | undefined;
     el?.scrollIntoView({ block: "nearest" });
   }, [highlight, open]);
 
@@ -62,28 +60,13 @@ export default function SearchableSelect({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-label={placeholder}
         className="w-full px-3 py-2 border border-[#E2E2E2] rounded text-left text-sm flex items-center justify-between"
       >
-        <span className={value ? "text-black" : "text-gray-500"}>
+        <span className={value ? "text-black" : "text-[#AFAFAF]"}>
           {value || placeholder}
         </span>
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 20 20"
-          className="shrink-0"
-          aria-hidden="true"
-        >
-          <path
-            d="M5 7l5 5 5-5"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            fill="none"
-            strokeLinecap="round"
-          />
+        <svg width="18" height="18" viewBox="0 0 20 20" className="shrink-0">
+          <path d="M5 7l5 5 5-5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
         </svg>
       </button>
 
@@ -95,23 +78,12 @@ export default function SearchableSelect({
             <input
               autoFocus
               value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setHighlight(0);
-              }}
+              onChange={(e) => { setQuery(e.target.value); setHighlight(0); }}
               onKeyDown={(e) => {
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  setHighlight((i) => Math.min(i + 1, filtered.length - 1));
-                } else if (e.key === "ArrowUp") {
-                  e.preventDefault();
-                  setHighlight((i) => Math.max(i - 1, 0));
-                } else if (e.key === "Enter") {
-                  e.preventDefault();
-                  if (filtered[highlight]) selectValue(filtered[highlight]);
-                } else if (e.key === "Escape") {
-                  setOpen(false);
-                }
+                if (e.key === "ArrowDown") { e.preventDefault(); setHighlight((i) => Math.min(i + 1, filtered.length - 1)); }
+                else if (e.key === "ArrowUp") { e.preventDefault(); setHighlight((i) => Math.max(i - 1, 0)); }
+                else if (e.key === "Enter") { e.preventDefault(); if (filtered[highlight]) selectValue(filtered[highlight]); }
+                else if (e.key === "Escape") { setOpen(false); }
               }}
               placeholder="Search…"
               className="w-full px-3 py-2 border border-transparent rounded text-sm focus:outline-none focus:ring-0"
@@ -130,9 +102,7 @@ export default function SearchableSelect({
               aria-selected={value === ""}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => selectValue("")}
-              className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${
-                value === "" ? "bg-gray-50" : ""
-              }`}
+              className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${value === "" ? "bg-gray-50" : ""}`}
             >
               {placeholder}
             </li>
@@ -158,9 +128,7 @@ export default function SearchableSelect({
             })}
 
             {filtered.length === 0 && (
-              <li className="px-3 py-2 text-sm text-gray-500 select-none">
-                No matches
-              </li>
+              <li className="px-3 py-2 text-sm text-gray-500 select-none">No matches</li>
             )}
           </ul>
         </div>
