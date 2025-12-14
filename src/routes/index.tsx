@@ -387,7 +387,7 @@ export default function AppRoutes() {
               </RoleProtectedRoute>
             }
           />
-                  <Route
+          <Route
             path="Assumption"
             element={
               <RoleProtectedRoute allowedRoles={["superadmin"]}>
