@@ -1,19 +1,24 @@
-// Dummy type definition
-export type AssumptionTemplate = {
+// Types for Validation Workflow
+export interface ValidationWorkflow {
   id: number;
-  code: string;
   name: string;
-  transfer_type: string;
   description: string;
-  version: number;
-  is_active: boolean;
-};
+  execution_point: string;
+  status: 'draft' | 'active' | 'inactive';
+  is_default: boolean;
+  created_by: number;
+  created_by_username: string;
+  created_at: string;
+  updated_at: string;
+}
 
-export type AssumptionFormData = {
-  code: string;
+export interface ValidationWorkflowFormData {
   name: string;
-  transferType: string;
   description: string;
-  version: number;
-  isActive: boolean;
-};
+  executionPoint: string;
+  status: 'draft' | 'active' | 'inactive';
+}
+
+// Keep old types for backward compatibility (can be removed later)
+export type AssumptionTemplate = ValidationWorkflow;
+export type AssumptionFormData = ValidationWorkflowFormData;

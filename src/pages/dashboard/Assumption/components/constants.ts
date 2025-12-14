@@ -1,61 +1,37 @@
-import type { AssumptionTemplate } from "./types";
+import type { ValidationWorkflow } from "./types";
 
-// Dummy data
-export const dummyAssumptions: AssumptionTemplate[] = [
+// Execution point options
+export const executionPointOptions = [
+  { value: "general", label: "General" },
+  { value: "on_transfer_submit", label: "On Transfer Submit" },
+  { value: "on_transfer_approve", label: "On Transfer Approve" },
+  { value: "on_fund_request", label: "On Fund Request" },
+  { value: "on_adjustment", label: "On Adjustment" },
+];
+
+// Status options
+export const statusOptions = [
+  { value: "draft", label: "Draft" },
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+];
+
+// Dummy data for fallback (will be replaced by API data)
+export const dummyValidationWorkflows: ValidationWorkflow[] = [
   {
     id: 1,
-    code: "ASM-001",
-    name: "Budget Transfer Assumption",
-    transfer_type: "Internal",
-    description:
-      "This assumption validates budget transfers between internal departments ensuring proper authorization and fund availability.",
-    version: 1,
-    is_active: true,
-  },
-  {
-    id: 2,
-    code: "ASM-002",
-    name: "External Payment Assumption",
-    transfer_type: "External",
-    description:
-      "Validates external payment transfers including vendor payments, contractor fees, and external obligations.",
-    version: 2,
-    is_active: true,
-  },
-  {
-    id: 3,
-    code: "ASM-003",
-    name: "Fund Adjustment Assumption",
-    transfer_type: "Adjustment",
-    description: "Handles fund adjustments for corrections, reallocations, and budget modifications.",
-    version: 1,
-    is_active: false,
-  },
-  {
-    id: 4,
-    code: "ASM-004",
-    name: "Project Transfer Assumption",
-    transfer_type: "Project",
-    description: "Manages transfers between different projects ensuring compliance with project budgets and timelines.",
-    version: 3,
-    is_active: true,
-  },
-  {
-    id: 5,
-    code: "ASM-005",
-    name: "Emergency Transfer Assumption",
-    transfer_type: "Emergency",
-    description: "Expedited transfer process for emergency situations with relaxed approval requirements.",
-    version: 1,
-    is_active: true,
+    name: "Transfer Balance",
+    description: "Check Total From is equals to total To",
+    execution_point: "general",
+    status: "inactive",
+    is_default: true,
+    created_by: 24,
+    created_by_username: "ahmed",
+    created_at: "2025-12-13T16:24:24.728254Z",
+    updated_at: "2025-12-13T16:53:45.300324Z",
   },
 ];
 
-// Transfer type options
-export const transferTypeOptions = [
-  { value: "Internal", label: "Internal" },
-  { value: "External", label: "External" },
-  { value: "Adjustment", label: "Adjustment" },
-  { value: "Project", label: "Project" },
-  { value: "Emergency", label: "Emergency" },
-];
+// Keep old exports for backward compatibility
+export const dummyAssumptions = dummyValidationWorkflows;
+export const transferTypeOptions = executionPointOptions;

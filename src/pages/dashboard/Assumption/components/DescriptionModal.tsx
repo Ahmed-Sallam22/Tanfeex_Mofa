@@ -1,22 +1,34 @@
 import SharedModal from "@/shared/SharedModal";
-import type { AssumptionTemplate } from "./types";
+import type { ValidationWorkflow } from "./types";
 
 interface DescriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  assumption: AssumptionTemplate | null;
+  workflow: ValidationWorkflow | null;
 }
 
-export const DescriptionModal = ({ isOpen, onClose, assumption }: DescriptionModalProps) => {
+export const DescriptionModal = ({
+  isOpen,
+  onClose,
+  workflow,
+}: DescriptionModalProps) => {
   return (
-    <SharedModal isOpen={isOpen} onClose={onClose} title="Assumption Description" size="md">
+    <SharedModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Workflow Description"
+      size="md"
+    >
       <div className="p-4">
-        {assumption && (
+        {workflow && (
           <div className="space-y-4">
             <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-2">
+                {workflow.name}
+              </h4>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-900 leading-relaxed">
-                  {assumption.description || "No description available"}
+                  {workflow.description || "No description available"}
                 </p>
               </div>
             </div>
@@ -26,7 +38,8 @@ export const DescriptionModal = ({ isOpen, onClose, assumption }: DescriptionMod
         <div className="flex justify-end mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors">
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+          >
             Close
           </button>
         </div>

@@ -22,6 +22,7 @@ import { chatbotApi } from '@/api/chatbot.api';
 import { segmentConfigurationApi } from '@/api/segmentConfiguration.api';
 import { analyticalReportApi } from '@/api/analyticalReport.api';
 import { securityGroupsApi } from '@/api/securityGroups.api';
+import { validationWorkflowApi } from '@/api/validationWorkflow.api';
 
 export const store = configureStore({
   reducer: {
@@ -48,6 +49,7 @@ export const store = configureStore({
     [segmentConfigurationApi.reducerPath]: segmentConfigurationApi.reducer,
     [analyticalReportApi.reducerPath]: analyticalReportApi.reducer,
     [securityGroupsApi.reducerPath]: securityGroupsApi.reducer,
+    [validationWorkflowApi.reducerPath]: validationWorkflowApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -73,6 +75,7 @@ export const store = configureStore({
       segmentConfigurationApi.middleware,
       analyticalReportApi.middleware,
       securityGroupsApi.middleware,
+      validationWorkflowApi.middleware,
     ),
 });
 

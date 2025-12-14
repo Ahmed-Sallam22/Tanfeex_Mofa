@@ -1,35 +1,41 @@
-import { SharedTable, type TableRow as SharedTableRow } from "@/shared/SharedTable";
-import type { AssumptionTemplate } from "./types";
-import { getAssumptionColumns } from "./tableColumns";
+import {
+  SharedTable,
+  type TableRow as SharedTableRow,
+} from "@/shared/SharedTable";
+import type { ValidationWorkflow } from "./types";
+import { getValidationWorkflowColumns } from "./tableColumns";
 
-interface AssumptionsTableProps {
-  assumptions: AssumptionTemplate[];
+interface ValidationWorkflowsTableProps {
+  workflows: ValidationWorkflow[];
   onEdit: (row: SharedTableRow) => void;
   onDelete: (row: SharedTableRow) => void;
-  onDescriptionClick: (assumption: AssumptionTemplate) => void;
+  onDescriptionClick: (workflow: ValidationWorkflow) => void;
   currentPage: number;
   onPageChange: (page: number) => void;
   itemsPerPage: number;
+  totalCount?: number;
 }
 
 export const AssumptionsTable = ({
-  assumptions,
+  workflows,
   onEdit,
   onDelete,
   onDescriptionClick,
   currentPage,
   onPageChange,
   itemsPerPage,
-}: AssumptionsTableProps) => {
-  const columns = getAssumptionColumns(onDescriptionClick);
-  const shouldShowPagination = assumptions.length > itemsPerPage;
+  totalCount,
+}: ValidationWorkflowsTableProps) => {
+  const columns = getValidationWorkflowColumns(onDescriptionClick);
+  const total = totalCount ?? workflows.length;
+  const shouldShowPagination = total > itemsPerPage;
 
   return (
     <div className="bg-white rounded-lg shadow-sm">
       <SharedTable
-        title="Assumptions List"
+        title="Validation Workflows List"
         columns={columns}
-        data={assumptions as unknown as SharedTableRow[]}
+        data={workflows as unknown as SharedTableRow[]}
         showFooter={false}
         maxHeight="600px"
         showActions={true}
@@ -43,3 +49,6 @@ export const AssumptionsTable = ({
     </div>
   );
 };
+
+// Alias for backward compatibility
+export const ValidationWorkflowsTable = AssumptionsTable;

@@ -1,18 +1,19 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { type TableRow as SharedTableRow } from "@/shared/SharedTable";
-// import {
-//   useGetAssumptionTemplatesQuery,
-//   useDeleteAssumptionTemplateMutation,
-// } from "@/api/assumption.api";
+import {
+  useGetValidationWorkflowsQuery,
+  useCreateValidationWorkflowMutation,
+  useUpdateValidationWorkflowMutation,
+  useDeleteValidationWorkflowMutation,
+} from "@/api/validationWorkflow.api";
 import toast from "react-hot-toast";
 import {
   AssumptionHeader,
   AssumptionsTable,
   AssumptionModal,
   DescriptionModal,
-  dummyAssumptions,
-  type AssumptionTemplate,
+  type ValidationWorkflow,
 } from "./components";
 
 export default function Assumption() {
@@ -20,131 +21,143 @@ export default function Assumption() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
-  const [isAssumptionModalOpen, setIsAssumptionModalOpen] = useState(false);
+  const [isWorkflowModalOpen, setIsWorkflowModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [selectedAssumption, setSelectedAssumption] = useState<AssumptionTemplate | null>(null);
-  const [assumptions, setAssumptions] = useState<AssumptionTemplate[]>(dummyAssumptions);
+  const [selectedWorkflow, setSelectedWorkflow] =
+    useState<ValidationWorkflow | null>(null);
 
-  // Assumption form state
-  const [code, setCode] = useState("");
+  // Workflow form state
   const [name, setName] = useState("");
-  const [transferType, setTransferType] = useState("");
   const [description, setDescription] = useState("");
-  const [version, setVersion] = useState(1);
-  const [isActive, setIsActive] = useState(true);
+  const [executionPoint, setExecutionPoint] = useState("");
+  const [status, setStatus] = useState<"draft" | "active" | "inactive">(
+    "draft"
+  );
 
-  // Fetch assumption templates data - COMMENTED OUT
-  // const { data: assumptionData, error, isLoading } = useGetAssumptionTemplatesQuery();
+  // API hooks
+  const {
+    data: workflowsData,
+    isLoading,
+    error,
+  } = useGetValidationWorkflowsQuery();
+  const [createWorkflow, { isLoading: isCreating }] =
+    useCreateValidationWorkflowMutation();
+  const [updateWorkflow, { isLoading: isUpdating }] =
+    useUpdateValidationWorkflowMutation();
+  const [deleteWorkflow] = useDeleteValidationWorkflowMutation();
 
-  // Delete assumption mutation - COMMENTED OUT
-  // const [deleteAssumptionTemplate] = useDeleteAssumptionTemplateMutation();
+  const workflows = workflowsData?.results || [];
 
-  // Mock loading and error states
-  const isLoading = false;
-  const error = null;
-
-  const handleCreateNewAssumption = () => {
+  const handleCreateNewWorkflow = () => {
     setModalMode("create");
     resetForm();
-    setIsAssumptionModalOpen(true);
+    setIsWorkflowModalOpen(true);
   };
 
   const resetForm = () => {
-    setCode("");
     setName("");
-    setTransferType("");
     setDescription("");
-    setVersion(1);
-    setIsActive(true);
+    setExecutionPoint("");
+    setStatus("draft");
   };
 
-  const handleSaveAssumption = () => {
-    if (!code.trim()) {
-      toast.error("Please enter a code");
-      return;
-    }
+  const handleSaveWorkflow = async () => {
     if (!name.trim()) {
-      toast.error("Please enter an assumption name");
+      toast.error("Please enter a workflow name");
       return;
     }
-    if (!transferType) {
-      toast.error("Please select a transfer type");
+    if (!executionPoint) {
+      toast.error("Please select an execution point");
+      return;
+    }
+    if (!status) {
+      toast.error("Please select a status");
       return;
     }
 
-    if (modalMode === "create") {
-      // Navigate to AssumptionBuilder with assumption data
-      navigate("/app/AssumptionBuilder", {
-        state: {
-          code,
-          name,
-          transferType,
-          description,
-          version,
-          isActive,
-        },
-      });
-    } else {
-      // Edit mode - update the assumption in local state
-      if (selectedAssumption) {
-        setAssumptions((prev) =>
-          prev.map((item) =>
-            item.id === selectedAssumption.id
-              ? {
-                  ...item,
-                  code,
-                  name,
-                  transfer_type: transferType,
-                  description,
-                  version,
-                  is_active: isActive,
-                }
-              : item
-          )
-        );
-        toast.success("Assumption updated successfully");
+    try {
+      if (modalMode === "create") {
+        await createWorkflow({
+          name: name.trim(),
+          description: description.trim(),
+          execution_point: executionPoint,
+          status,
+          step_ids: [], // Empty - no steps when creating
+        }).unwrap();
+        toast.success("Validation workflow created successfully");
+
+        // Navigate to AssumptionBuilder with workflow data
+        navigate("/app/AssumptionBuilder", {
+          state: {
+            name,
+            description,
+            executionPoint,
+            status,
+          },
+        });
+      } else if (selectedWorkflow) {
+        // Build update payload with only changed fields
+        const updatePayload: Record<string, unknown> = {};
+        if (name.trim() !== selectedWorkflow.name)
+          updatePayload.name = name.trim();
+        if (description.trim() !== selectedWorkflow.description)
+          updatePayload.description = description.trim();
+        if (executionPoint !== selectedWorkflow.execution_point)
+          updatePayload.execution_point = executionPoint;
+        if (status !== selectedWorkflow.status) updatePayload.status = status;
+
+        if (Object.keys(updatePayload).length > 0) {
+          await updateWorkflow({
+            id: selectedWorkflow.id,
+            body: updatePayload,
+          }).unwrap();
+          toast.success("Validation workflow updated successfully");
+        } else {
+          toast("No changes to save", { icon: "ℹ️" });
+        }
       }
-    }
 
-    resetForm();
-    setIsAssumptionModalOpen(false);
-    setSelectedAssumption(null);
+      resetForm();
+      setIsWorkflowModalOpen(false);
+      setSelectedWorkflow(null);
+    } catch (err) {
+      console.error("Failed to save workflow:", err);
+      toast.error(
+        modalMode === "create"
+          ? "Failed to create workflow"
+          : "Failed to update workflow"
+      );
+    }
   };
 
-  const handleCloseAssumptionModal = () => {
-    setIsAssumptionModalOpen(false);
+  const handleCloseWorkflowModal = () => {
+    setIsWorkflowModalOpen(false);
     resetForm();
-    setSelectedAssumption(null);
+    setSelectedWorkflow(null);
   };
 
   const handleEdit = (row: SharedTableRow) => {
-    const assumption = row as unknown as AssumptionTemplate;
-    setSelectedAssumption(assumption);
+    const workflow = row as unknown as ValidationWorkflow;
+    setSelectedWorkflow(workflow);
     setModalMode("edit");
 
     // Populate form with existing data
-    setCode(assumption.code);
-    setName(assumption.name);
-    setTransferType(assumption.transfer_type);
-    setDescription(assumption.description);
-    setVersion(assumption.version);
-    setIsActive(assumption.is_active);
+    setName(workflow.name);
+    setDescription(workflow.description);
+    setExecutionPoint(workflow.execution_point);
+    setStatus(workflow.status);
 
-    setIsAssumptionModalOpen(true);
+    setIsWorkflowModalOpen(true);
   };
 
   const handleDelete = async (row: SharedTableRow) => {
-    const assumption = row as unknown as AssumptionTemplate;
+    const workflow = row as unknown as ValidationWorkflow;
     try {
-      // API call commented out
-      // await deleteAssumptionTemplate(assumption.id).unwrap();
-
-      // Dummy delete - remove from local state
-      setAssumptions((prev) => prev.filter((item) => item.id !== assumption.id));
-      toast.success("Assumption template deleted successfully");
-    } catch (error) {
-      console.error("Failed to delete assumption template:", error);
-      toast.error("Failed to delete assumption template");
+      await deleteWorkflow(workflow.id).unwrap();
+      toast.success("Validation workflow deleted successfully");
+    } catch (err) {
+      console.error("Failed to delete workflow:", err);
+      toast.error("Failed to delete validation workflow");
     }
   };
 
@@ -152,8 +165,8 @@ export default function Assumption() {
     setCurrentPage(page);
   };
 
-  const handleDescriptionClick = (assumption: AssumptionTemplate) => {
-    setSelectedAssumption(assumption);
+  const handleDescriptionClick = (workflow: ValidationWorkflow) => {
+    setSelectedWorkflow(workflow);
     setIsDescriptionModalOpen(true);
   };
 
@@ -162,7 +175,9 @@ export default function Assumption() {
     return (
       <div className="flex justify-center items-center h-64 bg-white rounded-lg">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Loading assumptions...</span>
+        <span className="ml-2 text-gray-600">
+          Loading validation workflows...
+        </span>
       </div>
     );
   }
@@ -171,48 +186,50 @@ export default function Assumption() {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg text-red-600">Error: Failed to load assumptions</div>
+        <div className="text-lg text-red-600">
+          Error: Failed to load validation workflows
+        </div>
       </div>
     );
   }
 
   return (
     <div>
-      <AssumptionHeader onCreateNew={handleCreateNewAssumption} />
+      <AssumptionHeader onCreateNew={handleCreateNewWorkflow} />
 
       <AssumptionsTable
-        assumptions={assumptions}
+        workflows={workflows}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onDescriptionClick={handleDescriptionClick}
         currentPage={currentPage}
         onPageChange={handlePageChange}
         itemsPerPage={itemsPerPage}
+        totalCount={workflowsData?.count}
       />
 
       <DescriptionModal
         isOpen={isDescriptionModalOpen}
         onClose={() => setIsDescriptionModalOpen(false)}
-        assumption={selectedAssumption}
+        workflow={selectedWorkflow}
       />
 
       <AssumptionModal
-        isOpen={isAssumptionModalOpen}
-        onClose={handleCloseAssumptionModal}
-        onSave={handleSaveAssumption}
+        isOpen={isWorkflowModalOpen}
+        onClose={handleCloseWorkflowModal}
+        onSave={handleSaveWorkflow}
         mode={modalMode}
-        code={code}
-        setCode={setCode}
         name={name}
         setName={setName}
-        transferType={transferType}
-        setTransferType={setTransferType}
         description={description}
         setDescription={setDescription}
-        version={version}
-        setVersion={setVersion}
-        isActive={isActive}
-        setIsActive={setIsActive}
+        executionPoint={executionPoint}
+        setExecutionPoint={setExecutionPoint}
+        status={status}
+        setStatus={(value) =>
+          setStatus(value as "draft" | "active" | "inactive")
+        }
+        isLoading={isCreating || isUpdating}
       />
     </div>
   );
