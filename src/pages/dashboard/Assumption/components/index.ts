@@ -5,9 +5,7 @@ export { DescriptionModal } from "./DescriptionModal";
 export { 
   dummyValidationWorkflows, 
   dummyAssumptions, 
-  executionPointOptions, 
   statusOptions, 
-  transferTypeOptions 
 } from "./constants";
 export type { 
   ValidationWorkflow, 
