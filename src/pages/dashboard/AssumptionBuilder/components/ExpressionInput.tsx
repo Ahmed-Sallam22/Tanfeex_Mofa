@@ -34,31 +34,34 @@ export const ExpressionInput = ({
   );
 
   // Check if we should show dropdown (when user types {{)
-  const checkForTrigger = useCallback((inputValue: string, position: number) => {
-    // Look for {{ before cursor position
-    const textBeforeCursor = inputValue.slice(0, position);
-    const lastOpenBrackets = textBeforeCursor.lastIndexOf("{{");
-    const lastCloseBrackets = textBeforeCursor.lastIndexOf("}}");
+  const checkForTrigger = useCallback(
+    (inputValue: string, position: number) => {
+      // Look for {{ before cursor position
+      const textBeforeCursor = inputValue.slice(0, position);
+      const lastOpenBrackets = textBeforeCursor.lastIndexOf("{{");
+      const lastCloseBrackets = textBeforeCursor.lastIndexOf("}}");
 
-    // If we have {{ and it's not closed yet
-    if (lastOpenBrackets !== -1 && lastOpenBrackets > lastCloseBrackets) {
-      const searchText = textBeforeCursor.slice(lastOpenBrackets + 2);
-      setSearchTerm(searchText);
-      setShowDropdown(true);
+      // If we have {{ and it's not closed yet
+      if (lastOpenBrackets !== -1 && lastOpenBrackets > lastCloseBrackets) {
+        const searchText = textBeforeCursor.slice(lastOpenBrackets + 2);
+        setSearchTerm(searchText);
+        setShowDropdown(true);
 
-      // Calculate dropdown position
-      if (inputRef.current) {
-        const rect = inputRef.current.getBoundingClientRect();
-        setDropdownPosition({
-          top: rect.height + 4,
-          left: 0,
-        });
+        // Calculate dropdown position
+        if (inputRef.current) {
+          const rect = inputRef.current.getBoundingClientRect();
+          setDropdownPosition({
+            top: rect.height + 4,
+            left: 0,
+          });
+        }
+      } else {
+        setShowDropdown(false);
+        setSearchTerm("");
       }
-    } else {
-      setShowDropdown(false);
-      setSearchTerm("");
-    }
-  }, []);
+    },
+    []
+  );
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,7 +69,11 @@ export const ExpressionInput = ({
     const newPosition = e.target.selectionStart || 0;
 
     // Allow the input if it matches the pattern or contains datasource syntax
-    if (ALLOWED_PATTERN.test(newValue) || newValue.includes("{{") || newValue.includes("}}")) {
+    if (
+      ALLOWED_PATTERN.test(newValue) ||
+      newValue.includes("{{") ||
+      newValue.includes("}}")
+    ) {
       onChange(newValue);
       setCursorPosition(newPosition);
       checkForTrigger(newValue, newPosition);
@@ -89,17 +96,17 @@ export const ExpressionInput = ({
   const selectDatasource = (datasource: Datasource) => {
     const textBeforeCursor = value.slice(0, cursorPosition);
     const textAfterCursor = value.slice(cursorPosition);
-    
+
     // Find the position of {{ before cursor
     const lastOpenBrackets = textBeforeCursor.lastIndexOf("{{");
-    
+
     if (lastOpenBrackets !== -1) {
       // Replace from {{ to cursor with the datasource
-      const newValue = 
-        textBeforeCursor.slice(0, lastOpenBrackets) + 
-        `{{${datasource.name}}}` + 
+      const newValue =
+        textBeforeCursor.slice(0, lastOpenBrackets) +
+        `{{${datasource.name}}}` +
         textAfterCursor;
-      
+
       onChange(newValue);
       setShowDropdown(false);
       setSearchTerm("");
@@ -149,10 +156,14 @@ export const ExpressionInput = ({
                 </span>
               );
             }
-            return <span key={index} className="text-gray-900">{part}</span>;
+            return (
+              <span key={index} className="text-gray-900">
+                {part}
+              </span>
+            );
           })}
         </div>
-        
+
         {/* Actual input */}
         <input
           ref={inputRef}
@@ -160,7 +171,11 @@ export const ExpressionInput = ({
           value={value}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          onSelect={(e) => setCursorPosition((e.target as HTMLInputElement).selectionStart || 0)}
+          onSelect={(e) =>
+            setCursorPosition(
+              (e.target as HTMLInputElement).selectionStart || 0
+            )
+          }
           placeholder={placeholder}
           className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#00B7AD] focus:border-transparent bg-transparent text-transparent caret-gray-900"
           style={{ caretColor: "#111827" }}
@@ -175,9 +190,13 @@ export const ExpressionInput = ({
           style={{ top: dropdownPosition.top }}
         >
           {isLoading ? (
-            <div className="px-4 py-3 text-sm text-gray-500">Loading datasources...</div>
+            <div className="px-4 py-3 text-sm text-gray-500">
+              Loading datasources...
+            </div>
           ) : filteredDatasources.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-gray-500">No datasources found</div>
+            <div className="px-4 py-3 text-sm text-gray-500">
+              No datasources found
+            </div>
           ) : (
             filteredDatasources.map((datasource) => (
               <button
@@ -204,8 +223,8 @@ export const ExpressionInput = ({
 
       {/* Helper text */}
       <p className="text-xs text-gray-400 mt-1">
-        Type <code className="bg-gray-100 px-1 rounded">{"{{"}</code> to insert a datasource. 
-        Allowed: numbers, +, -, *, /, %, (, )
+        Type <code className="bg-gray-100 px-1 rounded">{"{{"}</code> to insert
+        a datasource. Allowed: numbers, +, -, *, /, %, (, )
       </p>
     </div>
   );

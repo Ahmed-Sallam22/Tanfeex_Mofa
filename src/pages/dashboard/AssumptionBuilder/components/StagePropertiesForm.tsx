@@ -40,7 +40,9 @@ export const StagePropertiesForm = ({
   return (
     <div className="space-y-5">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Stage Name</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Stage Name
+        </label>
         <Input
           placeholder="Enter Stage name"
           value={stageData.name}
@@ -56,7 +58,9 @@ export const StagePropertiesForm = ({
       {selectedNode.type === "condition" && (
         <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Left Hand Side (LHS)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Left Hand Side (LHS)
+            </label>
             <ExpressionInput
               value={stageData.leftSide}
               onChange={(value) =>
@@ -72,7 +76,9 @@ export const StagePropertiesForm = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Operation</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Operation
+            </label>
             <SharedSelect
               options={operatorOptions}
               value={stageData.operator}
@@ -87,7 +93,9 @@ export const StagePropertiesForm = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Right Hand Side (RHS)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Right Hand Side (RHS)
+            </label>
             <ExpressionInput
               value={stageData.rightSide}
               onChange={(value) =>
@@ -107,12 +115,14 @@ export const StagePropertiesForm = ({
       <div className="flex gap-2 pt-4">
         <button
           onClick={updateSelectedNode}
-          className="flex-1 px-4 py-2.5 bg-[#00B7AD] text-white rounded-xl text-sm font-medium hover:bg-[#009B92] transition-colors">
+          className="flex-1 px-4 py-2.5 bg-[#00B7AD] text-white rounded-xl text-sm font-medium hover:bg-[#009B92] transition-colors"
+        >
           Update Stage
         </button>
         <button
           onClick={deleteSelectedNode}
-          className="px-4 py-2.5 bg-red-50 text-red-500 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors">
+          className="px-4 py-2.5 bg-red-50 text-red-500 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
+        >
           Delete
         </button>
       </div>

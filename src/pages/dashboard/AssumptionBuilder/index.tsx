@@ -52,12 +52,10 @@ export default function AssumptionBuilder() {
   });
 
   // Fetch datasources based on execution point
-  const { data: datasourcesData, isLoading: isDatasourcesLoading } = useGetDatasourcesQuery(
-    workflowData.executionPoint,
-    {
+  const { data: datasourcesData, isLoading: isDatasourcesLoading } =
+    useGetDatasourcesQuery(workflowData.executionPoint, {
       skip: !workflowData.executionPoint, // Skip if no execution point selected
-    }
-  );
+    });
 
   // Load workflow data from navigation state if available
   useEffect(() => {
