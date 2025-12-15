@@ -1738,5 +1738,28 @@
     "tipDescription": "If you believe this is an error, try refreshing the page or contact support.",
     "needHelp": "Need help?",
     "contactSupport": "Contact Support"
+  },
+  "assumptionBuilder": {
+    "selectStage": "Select a stage to edit its properties",
+    "stageName": "Stage Name",
+    "leftHandSide": "Left Hand Side (LHS)",
+    "rightHandSide": "Right Hand Side (RHS)",
+    "operation": "Operation",
+    "selectOperator": "Select Operator",
+    "ifTrue": "If True (Condition Met)",
+    "ifFalse": "If False (Condition Not Met)",
+    "action": "Action",
+    "selectAction": "Select Action",
+    "successMessage": "Success Message",
+    "errorMessage": "Error Message",
+    "enterSuccessMessage": "Enter success message",
+    "enterErrorMessage": "Enter error message",
+    "failureMessage": "Failure Message (Optional)",
+    "enterFailureMessage": "Enter failure message for this step",
+    "updateStage": "Update Stage",
+    "delete": "Delete",
+    "proceedToStep": "Proceed to Next Step",
+    "completeSuccess": "Complete Success",
+    "completeFailure": "Complete Failure"
   }
 }

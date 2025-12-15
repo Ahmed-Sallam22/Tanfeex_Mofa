@@ -26,6 +26,11 @@ export interface ConditionNodeData extends Record<string, unknown> {
   rightSide?: string;
   leftDataType?: string;
   rightDataType?: string;
+  ifTrueAction?: string;
+  ifTrueActionData?: Record<string, unknown>;
+  ifFalseAction?: string;
+  ifFalseActionData?: Record<string, unknown>;
+  failureMessage?: string;
 }
 
 export interface ActionNodeData extends Record<string, unknown> {
@@ -48,4 +53,9 @@ export interface StageData {
   operator: string;
   rightSide: string;
   rightDataType: string;
+  ifTrueAction: string;
+  ifTrueActionData: Record<string, unknown>;
+  ifFalseAction: string;
+  ifFalseActionData: Record<string, unknown>;
+  failureMessage?: string;
 }

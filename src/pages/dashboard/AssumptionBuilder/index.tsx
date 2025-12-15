@@ -201,6 +201,11 @@ export default function AssumptionBuilder() {
     operator: "==",
     rightSide: "",
     rightDataType: "text",
+    ifTrueAction: "complete_success",
+    ifTrueActionData: { message: "" },
+    ifFalseAction: "complete_failure",
+    ifFalseActionData: { error: "" },
+    failureMessage: "",
   });
 
   const onConnect = useCallback(
@@ -251,6 +256,18 @@ export default function AssumptionBuilder() {
         operator: (node.data.operator as string) || "==",
         rightSide: (node.data.rightSide as string) || "",
         rightDataType: (node.data.rightDataType as string) || "text",
+        ifTrueAction: (node.data.ifTrueAction as string) || "complete_success",
+        ifTrueActionData: (node.data.ifTrueActionData as Record<
+          string,
+          unknown
+        >) || { message: "" },
+        ifFalseAction:
+          (node.data.ifFalseAction as string) || "complete_failure",
+        ifFalseActionData: (node.data.ifFalseActionData as Record<
+          string,
+          unknown
+        >) || { error: "" },
+        failureMessage: (node.data.failureMessage as string) || "",
       });
     }
   }, []);
@@ -291,6 +308,11 @@ export default function AssumptionBuilder() {
           rightSide: "",
           leftDataType: "text",
           rightDataType: "text",
+          ifTrueAction: "complete_success",
+          ifTrueActionData: { message: "" },
+          ifFalseAction: "complete_failure",
+          ifFalseActionData: { error: "" },
+          failureMessage: "",
         },
       };
 
@@ -326,6 +348,11 @@ export default function AssumptionBuilder() {
               operator: stageData.operator,
               rightSide: stageData.rightSide,
               rightDataType: stageData.rightDataType,
+              ifTrueAction: stageData.ifTrueAction,
+              ifTrueActionData: stageData.ifTrueActionData,
+              ifFalseAction: stageData.ifFalseAction,
+              ifFalseActionData: stageData.ifFalseActionData,
+              failureMessage: stageData.failureMessage,
             },
           };
         }
