@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import {
   addEdge,
@@ -18,9 +18,24 @@ import type { WorkflowData, StageData } from "./components/types";
 import {
   useBulkCreateStepsMutation,
   useBulkUpdateStepsMutation,
+  useDeleteValidationStepMutation,
   useGetDatasourcesQuery,
   useGetValidationWorkflowQuery,
 } from "../../../api/validationWorkflow.api";
+
+// Type for original node data (from API)
+interface OriginalNodeData {
+  id: number;
+  label: string;
+  leftSide: string;
+  operator: string;
+  rightSide: string;
+  ifTrueAction: string;
+  ifTrueActionData: Record<string, unknown>;
+  ifFalseAction: string;
+  ifFalseActionData: Record<string, unknown>;
+  failureMessage: string;
+}
 
 // Initial nodes and edges
 const initialNodes: Node[] = [];
@@ -39,11 +54,16 @@ export default function AssumptionBuilder() {
   const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Track original node data from API (to detect changes)
+  const originalNodesDataRef = useRef<Map<string, OriginalNodeData>>(new Map());
+
   // API Mutations
   const [bulkCreateSteps, { isLoading: isCreating }] =
     useBulkCreateStepsMutation();
   const [bulkUpdateSteps, { isLoading: isUpdating }] =
     useBulkUpdateStepsMutation();
+  const [deleteValidationStep, { isLoading: isDeleting }] =
+    useDeleteValidationStepMutation();
 
   // Workflow settings
   const [workflowData, setWorkflowData] = useState<WorkflowData>({
@@ -62,10 +82,13 @@ export default function AssumptionBuilder() {
     : workflowIdFromState;
 
   // Fetch workflow data if we have a workflow ID
-  const { data: workflowApiData, isLoading: isWorkflowLoading } =
-    useGetValidationWorkflowQuery(currentWorkflowId!, {
-      skip: !currentWorkflowId,
-    });
+  const {
+    data: workflowApiData,
+    isLoading: isWorkflowLoading,
+    refetch,
+  } = useGetValidationWorkflowQuery(currentWorkflowId!, {
+    skip: !currentWorkflowId,
+  });
 
   // Fetch datasources based on execution point
   const { data: datasourcesData, isLoading: isDatasourcesLoading } =
@@ -75,6 +98,15 @@ export default function AssumptionBuilder() {
 
   // Show loading state while fetching workflow
   const isLoadingWorkflow = isWorkflowLoading && currentWorkflowId;
+
+  // Reset initialization when workflow ID changes or component mounts
+  useEffect(() => {
+    if (currentWorkflowId) {
+      setIsInitialized(false);
+      // Refetch the workflow data when the page loads or ID changes
+      refetch();
+    }
+  }, [currentWorkflowId, refetch]);
 
   // Load workflow data from API response
   useEffect(() => {
@@ -91,39 +123,305 @@ export default function AssumptionBuilder() {
 
       // Convert steps to nodes
       if (workflowApiData.steps && workflowApiData.steps.length > 0) {
-        const stepNodes: Node[] = workflowApiData.steps.map((step, index) => ({
-          id: `condition-${step.id}`,
-          type: "condition",
-          position: {
-            x: 250,
-            y: 100 + index * 180, // Stack nodes vertically
-          },
-          data: {
+        const allNodes: Node[] = [];
+        const allEdges: Edge[] = [];
+
+        // Track which steps connect to which (for layout calculation)
+        const stepConnections = new Map<
+          number,
+          { trueTarget?: number; falseTarget?: number }
+        >();
+
+        // Track which steps have action nodes (not proceed_to_step)
+        const stepHasActionNodes = new Map<
+          number,
+          { hasTrue: boolean; hasFalse: boolean }
+        >();
+
+        // First pass: build connection map and check for action nodes
+        workflowApiData.steps.forEach((step) => {
+          const connections: { trueTarget?: number; falseTarget?: number } = {};
+          const hasActions = { hasTrue: false, hasFalse: false };
+
+          if (
+            step.if_true_action === "proceed_to_step" ||
+            step.if_true_action === "proceed_to_step_by_id"
+          ) {
+            connections.trueTarget = (
+              step.if_true_action_data as { next_step_id?: number }
+            )?.next_step_id;
+          } else if (
+            step.if_true_action === "complete_success" ||
+            step.if_true_action === "complete_failure"
+          ) {
+            hasActions.hasTrue = true;
+          }
+
+          if (
+            step.if_false_action === "proceed_to_step" ||
+            step.if_false_action === "proceed_to_step_by_id"
+          ) {
+            connections.falseTarget = (
+              step.if_false_action_data as { next_step_id?: number }
+            )?.next_step_id;
+          } else if (
+            step.if_false_action === "complete_success" ||
+            step.if_false_action === "complete_failure"
+          ) {
+            hasActions.hasFalse = true;
+          }
+
+          stepConnections.set(step.id, connections);
+          stepHasActionNodes.set(step.id, hasActions);
+        });
+
+        // Calculate positions based on flow - use tree layout
+        const nodePositions = new Map<
+          number,
+          { x: number; y: number; level: number }
+        >();
+        const processedSteps = new Set<number>();
+
+        // Find root step (initial_step or first step)
+        const initialStepId =
+          workflowApiData.initial_step || workflowApiData.steps[0]?.id;
+
+        // Layout constants - significantly increased spacing
+        const CONDITION_NODE_HEIGHT = 0; // Approximate height of condition node
+        const ACTION_NODE_HEIGHT = 180; // Approximate height of action node
+        const ACTION_NODE_OFFSET_Y = 220; // Vertical offset for action nodes from condition
+        const ACTION_NODE_OFFSET_X = 220; // Horizontal offset for action nodes from condition
+        const MIN_VERTICAL_GAP = 0; // Minimum gap between nodes
+
+        // Calculate vertical spacing: if previous node has action children, add extra space
+        const getVerticalSpacing = (prevStepId: number | null) => {
+          if (!prevStepId) return 0;
+          const prevActions = stepHasActionNodes.get(prevStepId);
+          if (prevActions && (prevActions.hasTrue || prevActions.hasFalse)) {
+            // Previous node has action children, need more space
+            return (
+              CONDITION_NODE_HEIGHT +
+              ACTION_NODE_OFFSET_Y +
+              ACTION_NODE_HEIGHT +
+              MIN_VERTICAL_GAP
+            );
+          }
+          // No action children, just normal spacing
+          return CONDITION_NODE_HEIGHT + MIN_VERTICAL_GAP;
+        };
+
+        // BFS to assign levels and positions - track cumulative Y position
+        const queue: Array<{
+          stepId: number;
+          level: number;
+          xOffset: number;
+          prevStepId: number | null;
+        }> = [];
+        if (initialStepId) {
+          queue.push({
+            stepId: initialStepId,
+            level: 0,
+            xOffset: 0,
+            prevStepId: null,
+          });
+        }
+
+        let maxLevel = 0;
+        const levelYPositions = new Map<number, number>(); // Track Y position for each level
+        levelYPositions.set(0, 80); // Starting Y position
+
+        while (queue.length > 0) {
+          const { stepId, level, xOffset, prevStepId } = queue.shift()!;
+
+          if (processedSteps.has(stepId)) continue;
+          processedSteps.add(stepId);
+
+          maxLevel = Math.max(maxLevel, level);
+
+          // Calculate Y position based on previous level
+          let currentY = levelYPositions.get(level);
+          if (currentY === undefined) {
+            // Calculate based on previous level's position and spacing
+            const prevLevelY = levelYPositions.get(level - 1) || 80;
+            const spacing = getVerticalSpacing(prevStepId);
+            currentY = prevLevelY + spacing;
+            levelYPositions.set(level, currentY);
+          }
+
+          // Calculate position
+          const x = 400 + xOffset;
+          const y = currentY;
+
+          nodePositions.set(stepId, { x, y, level });
+
+          // Add connected steps to queue
+          const connections = stepConnections.get(stepId);
+          if (connections) {
+            if (
+              connections.trueTarget &&
+              !processedSteps.has(connections.trueTarget)
+            ) {
+              queue.push({
+                stepId: connections.trueTarget,
+                level: level + 1,
+                xOffset: xOffset - 100,
+                prevStepId: stepId,
+              });
+            }
+            if (
+              connections.falseTarget &&
+              !processedSteps.has(connections.falseTarget)
+            ) {
+              queue.push({
+                stepId: connections.falseTarget,
+                level: level + 1,
+                xOffset: xOffset + 100,
+                prevStepId: stepId,
+              });
+            }
+          }
+        }
+
+        // Process any unprocessed steps (disconnected nodes)
+        let lastY = Math.max(...Array.from(levelYPositions.values())) || 80;
+        workflowApiData.steps.forEach((step) => {
+          if (!processedSteps.has(step.id)) {
+            lastY +=
+              CONDITION_NODE_HEIGHT +
+              ACTION_NODE_OFFSET_Y +
+              ACTION_NODE_HEIGHT +
+              MIN_VERTICAL_GAP;
+            nodePositions.set(step.id, {
+              x: 400,
+              y: lastY,
+              level: maxLevel + 1,
+            });
+          }
+        });
+
+        // Second pass: create nodes and edges
+        workflowApiData.steps.forEach((step) => {
+          const conditionNodeId = `condition-${step.id}`;
+          const position = nodePositions.get(step.id) || {
+            x: 400,
+            y: 100,
+            level: 0,
+          };
+
+          // Store original data for tracking changes
+          originalNodesDataRef.current.set(conditionNodeId, {
             id: step.id,
             label: step.name,
             leftSide: step.left_expression,
             operator: step.operation,
             rightSide: step.right_expression,
-            leftDataType: "text",
-            rightDataType: "text",
             ifTrueAction: step.if_true_action,
-            ifTrueActionData: step.if_true_action_data,
+            ifTrueActionData: step.if_true_action_data as Record<
+              string,
+              unknown
+            >,
             ifFalseAction: step.if_false_action,
-            ifFalseActionData: step.if_false_action_data,
-            failureMessage: step.failure_message,
-            isActive: step.is_active,
-          },
-        }));
+            ifFalseActionData: step.if_false_action_data as Record<
+              string,
+              unknown
+            >,
+            failureMessage: step.failure_message || "",
+          });
 
-        setNodes(stepNodes);
+          // Create condition node
+          const conditionNode: Node = {
+            id: conditionNodeId,
+            type: "condition",
+            position: {
+              x: position.x,
+              y: position.y,
+            },
+            data: {
+              id: step.id,
+              label: step.name,
+              leftSide: step.left_expression,
+              operator: step.operation,
+              rightSide: step.right_expression,
+              leftDataType: "text",
+              rightDataType: "text",
+              ifTrueAction: step.if_true_action,
+              ifTrueActionData: step.if_true_action_data,
+              ifFalseAction: step.if_false_action,
+              ifFalseActionData: step.if_false_action_data,
+              failureMessage: step.failure_message,
+              isActive: step.is_active,
+            },
+          };
+          allNodes.push(conditionNode);
 
-        // Create edges based on step actions
-        const stepEdges: Edge[] = [];
-        workflowApiData.steps.forEach((step) => {
-          const sourceNodeId = `condition-${step.id}`;
+          // Handle if_true_action
+          if (step.if_true_action === "complete_success") {
+            const message =
+              (step.if_true_action_data as { message?: string })?.message || "";
+            const successNodeId = `success-${step.id}-true`;
 
-          // Check if true action points to another step
-          if (
+            // Create success node - position to the left and below
+            const successNode: Node = {
+              id: successNodeId,
+              type: "success",
+              position: {
+                x: position.x - ACTION_NODE_OFFSET_X,
+                y: position.y + ACTION_NODE_OFFSET_Y,
+              },
+              data: {
+                label: "Action: Success",
+                message: message,
+                actionType: "complete_success",
+              },
+            };
+            allNodes.push(successNode);
+
+            // Create edge from condition to success
+            allEdges.push({
+              id: `edge-${step.id}-true-success`,
+              source: conditionNodeId,
+              target: successNodeId,
+              sourceHandle: "true",
+              type: "smoothstep",
+              style: { stroke: "#22C55E", strokeWidth: 2 },
+              label: "True",
+              labelStyle: { fill: "#22C55E", fontWeight: 500 },
+              markerEnd: { type: MarkerType.ArrowClosed, color: "#22C55E" },
+            });
+          } else if (step.if_true_action === "complete_failure") {
+            const error =
+              (step.if_true_action_data as { error?: string })?.error || "";
+            const failNodeId = `fail-${step.id}-true`;
+
+            // Create fail node for true action - position to the left and below
+            const failNode: Node = {
+              id: failNodeId,
+              type: "fail",
+              position: {
+                x: position.x - ACTION_NODE_OFFSET_X,
+                y: position.y + ACTION_NODE_OFFSET_Y,
+              },
+              data: {
+                label: "Action: Fail",
+                error: error,
+                actionType: "complete_failure",
+              },
+            };
+            allNodes.push(failNode);
+
+            // Create edge from condition to fail
+            allEdges.push({
+              id: `edge-${step.id}-true-fail`,
+              source: conditionNodeId,
+              target: failNodeId,
+              sourceHandle: "true",
+              type: "smoothstep",
+              style: { stroke: "#22C55E", strokeWidth: 2 },
+              label: "True",
+              labelStyle: { fill: "#22C55E", fontWeight: 500 },
+              markerEnd: { type: MarkerType.ArrowClosed, color: "#22C55E" },
+            });
+          } else if (
             step.if_true_action === "proceed_to_step" ||
             step.if_true_action === "proceed_to_step_by_id"
           ) {
@@ -131,9 +429,9 @@ export default function AssumptionBuilder() {
               step.if_true_action_data as { next_step_id?: number }
             )?.next_step_id;
             if (nextStepId) {
-              stepEdges.push({
+              allEdges.push({
                 id: `edge-${step.id}-true-${nextStepId}`,
-                source: sourceNodeId,
+                source: conditionNodeId,
                 target: `condition-${nextStepId}`,
                 sourceHandle: "true",
                 type: "smoothstep",
@@ -145,8 +443,75 @@ export default function AssumptionBuilder() {
             }
           }
 
-          // Check if false action points to another step
-          if (
+          // Handle if_false_action
+          if (step.if_false_action === "complete_failure") {
+            const error =
+              (step.if_false_action_data as { error?: string })?.error || "";
+            const failNodeId = `fail-${step.id}-false`;
+
+            // Create fail node - position to the right and below
+            const failNode: Node = {
+              id: failNodeId,
+              type: "fail",
+              position: {
+                x: position.x + ACTION_NODE_OFFSET_X,
+                y: position.y + ACTION_NODE_OFFSET_Y,
+              },
+              data: {
+                label: "Action: Fail",
+                error: error,
+                actionType: "complete_failure",
+              },
+            };
+            allNodes.push(failNode);
+
+            // Create edge from condition to fail
+            allEdges.push({
+              id: `edge-${step.id}-false-fail`,
+              source: conditionNodeId,
+              target: failNodeId,
+              sourceHandle: "false",
+              type: "smoothstep",
+              style: { stroke: "#EF4444", strokeWidth: 2 },
+              label: "False",
+              labelStyle: { fill: "#EF4444", fontWeight: 500 },
+              markerEnd: { type: MarkerType.ArrowClosed, color: "#EF4444" },
+            });
+          } else if (step.if_false_action === "complete_success") {
+            const message =
+              (step.if_false_action_data as { message?: string })?.message ||
+              "";
+            const successNodeId = `success-${step.id}-false`;
+
+            // Create success node for false action - position to the right and below
+            const successNode: Node = {
+              id: successNodeId,
+              type: "success",
+              position: {
+                x: position.x + ACTION_NODE_OFFSET_X,
+                y: position.y + ACTION_NODE_OFFSET_Y,
+              },
+              data: {
+                label: "Action: Success",
+                message: message,
+                actionType: "complete_success",
+              },
+            };
+            allNodes.push(successNode);
+
+            // Create edge from condition to success
+            allEdges.push({
+              id: `edge-${step.id}-false-success`,
+              source: conditionNodeId,
+              target: successNodeId,
+              sourceHandle: "false",
+              type: "smoothstep",
+              style: { stroke: "#EF4444", strokeWidth: 2 },
+              label: "False",
+              labelStyle: { fill: "#EF4444", fontWeight: 500 },
+              markerEnd: { type: MarkerType.ArrowClosed, color: "#EF4444" },
+            });
+          } else if (
             step.if_false_action === "proceed_to_step" ||
             step.if_false_action === "proceed_to_step_by_id"
           ) {
@@ -154,22 +519,23 @@ export default function AssumptionBuilder() {
               step.if_false_action_data as { next_step_id?: number }
             )?.next_step_id;
             if (nextStepId) {
-              stepEdges.push({
+              allEdges.push({
                 id: `edge-${step.id}-false-${nextStepId}`,
-                source: sourceNodeId,
+                source: conditionNodeId,
                 target: `condition-${nextStepId}`,
                 sourceHandle: "false",
                 type: "smoothstep",
-                style: { stroke: "#9CA3AF", strokeWidth: 2 },
+                style: { stroke: "#EF4444", strokeWidth: 2 },
                 label: "False",
-                labelStyle: { fill: "#9CA3AF", fontWeight: 500 },
-                markerEnd: { type: MarkerType.ArrowClosed, color: "#9CA3AF" },
+                labelStyle: { fill: "#EF4444", fontWeight: 500 },
+                markerEnd: { type: MarkerType.ArrowClosed, color: "#EF4444" },
               });
             }
           }
         });
 
-        setEdges(stepEdges);
+        setNodes(allNodes);
+        setEdges(allEdges);
       }
 
       setIsInitialized(true);
@@ -208,6 +574,36 @@ export default function AssumptionBuilder() {
     failureMessage: "",
   });
 
+  // Auto-update node when stageData changes (Feature 1)
+  useEffect(() => {
+    if (!selectedNode) return;
+
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === selectedNode.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              label: stageData.name,
+              leftSide: stageData.leftSide,
+              leftDataType: stageData.leftDataType,
+              operator: stageData.operator,
+              rightSide: stageData.rightSide,
+              rightDataType: stageData.rightDataType,
+              ifTrueAction: stageData.ifTrueAction,
+              ifTrueActionData: stageData.ifTrueActionData,
+              ifFalseAction: stageData.ifFalseAction,
+              ifFalseActionData: stageData.ifFalseActionData,
+              failureMessage: stageData.failureMessage,
+            },
+          };
+        }
+        return node;
+      })
+    );
+  }, [stageData, selectedNode, setNodes]);
+
   const onConnect = useCallback(
     (params: Connection) => {
       const sourceHandle = params.sourceHandle;
@@ -218,7 +614,7 @@ export default function AssumptionBuilder() {
         edgeStyle = { stroke: "#22C55E", strokeWidth: 2 };
         labelText = "True";
       } else if (sourceHandle === "false") {
-        edgeStyle = { stroke: "#9CA3AF", strokeWidth: 2 };
+        edgeStyle = { stroke: "#EF4444", strokeWidth: 2 };
         labelText = "False";
       }
 
@@ -230,12 +626,12 @@ export default function AssumptionBuilder() {
             style: edgeStyle,
             label: labelText,
             labelStyle: {
-              fill: sourceHandle === "true" ? "#22C55E" : "#9CA3AF",
+              fill: sourceHandle === "true" ? "#22C55E" : "#EF4444",
               fontWeight: 500,
             },
             markerEnd: {
               type: MarkerType.ArrowClosed,
-              color: sourceHandle === "true" ? "#22C55E" : "#9CA3AF",
+              color: sourceHandle === "true" ? "#22C55E" : "#EF4444",
             },
           },
           eds
@@ -284,18 +680,13 @@ export default function AssumptionBuilder() {
   }, []);
 
   const onDrop = useCallback(
-    (event: React.DragEvent) => {
+    (event: React.DragEvent, position: { x: number; y: number }) => {
       event.preventDefault();
 
       const type = event.dataTransfer.getData("application/reactflow");
       const label = event.dataTransfer.getData("application/label");
 
       if (!type) return;
-
-      const position = {
-        x: event.clientX - 400,
-        y: event.clientY - 100,
-      };
 
       const newNode: Node = {
         id: `${type}-${Date.now()}`,
@@ -331,48 +722,82 @@ export default function AssumptionBuilder() {
     event.dataTransfer.effectAllowed = "move";
   };
 
-  // Update selected node data
-  const updateSelectedNode = useCallback(() => {
+  // Delete selected node (and associated action nodes if it's a condition)
+  const deleteSelectedNode = useCallback(async () => {
     if (!selectedNode) return;
 
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === selectedNode.id) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              label: stageData.name,
-              leftSide: stageData.leftSide,
-              leftDataType: stageData.leftDataType,
-              operator: stageData.operator,
-              rightSide: stageData.rightSide,
-              rightDataType: stageData.rightDataType,
-              ifTrueAction: stageData.ifTrueAction,
-              ifTrueActionData: stageData.ifTrueActionData,
-              ifFalseAction: stageData.ifFalseAction,
-              ifFalseActionData: stageData.ifFalseActionData,
-              failureMessage: stageData.failureMessage,
-            },
-          };
-        }
-        return node;
-      })
-    );
-  }, [selectedNode, stageData, setNodes]);
+    // Get the node ID to delete
+    const nodeIdToDelete = selectedNode.id;
+    const nodeData = selectedNode.data as { id?: number };
 
-  // Delete selected node
-  const deleteSelectedNode = useCallback(() => {
-    if (!selectedNode) return;
-    setNodes((nds) => nds.filter((node) => node.id !== selectedNode.id));
+    // Start with the selected node
+    let nodeIdsToDelete = [nodeIdToDelete];
+
+    if (selectedNode.type === "condition") {
+      // Extract the step ID from condition node ID (format: "condition-{stepId}")
+      const stepIdMatch = nodeIdToDelete.match(/^condition-(\d+)$/);
+      if (stepIdMatch) {
+        const stepId = stepIdMatch[1];
+        // Add associated action nodes to delete list
+        nodeIdsToDelete = [
+          nodeIdToDelete,
+          `success-${stepId}-true`,
+          `success-${stepId}-false`,
+          `fail-${stepId}-true`,
+          `fail-${stepId}-false`,
+        ];
+      } else {
+        // For manually created condition nodes (without step ID pattern)
+        // Find all nodes connected to this condition via edges
+        const connectedNodeIds = edges
+          .filter((edge) => edge.source === nodeIdToDelete)
+          .map((edge) => edge.target);
+
+        nodeIdsToDelete = [nodeIdToDelete, ...connectedNodeIds];
+      }
+    } else {
+      // For non-condition nodes (success/fail nodes)
+      // Also delete any nodes connected to this one
+      const connectedNodeIds = edges
+        .filter(
+          (edge) =>
+            edge.source === nodeIdToDelete || edge.target === nodeIdToDelete
+        )
+        .flatMap((edge) => [edge.source, edge.target])
+        .filter((id) => id !== nodeIdToDelete);
+
+      nodeIdsToDelete = [nodeIdToDelete, ...connectedNodeIds];
+    }
+
+    // If the node has an ID (saved in database), call the delete API
+    if (nodeData.id && selectedNode.type === "condition") {
+      try {
+        await deleteValidationStep(nodeData.id).unwrap();
+        toast.success("Step deleted successfully");
+
+        // Remove from original data ref
+        originalNodesDataRef.current.delete(nodeIdToDelete);
+      } catch (error) {
+        console.error("Error deleting step:", error);
+        toast.error("Failed to delete step. Please try again.");
+        return; // Don't remove from UI if API call fails
+      }
+    }
+
+    // Filter out nodes to delete
+    setNodes((nds) => nds.filter((node) => !nodeIdsToDelete.includes(node.id)));
+
+    // Filter out edges connected to any of the deleted nodes
     setEdges((eds) =>
       eds.filter(
         (edge) =>
-          edge.source !== selectedNode.id && edge.target !== selectedNode.id
+          !nodeIdsToDelete.includes(edge.source) &&
+          !nodeIdsToDelete.includes(edge.target)
       )
     );
+
     setSelectedNode(null);
-  }, [selectedNode, setNodes, setEdges]);
+  }, [selectedNode, edges, setNodes, setEdges, deleteValidationStep]);
 
   // Build workflow JSON and save to API
   const buildWorkflowJSON = useCallback(async () => {
@@ -381,142 +806,286 @@ export default function AssumptionBuilder() {
       return;
     }
 
-    // Map nodes to validation steps
-    const steps = nodes.map((node, index) => {
+    // Filter only condition nodes (not success/fail nodes)
+    const conditionNodes = nodes.filter((node) => node.type === "condition");
+
+    // Separate new steps (no id) from existing steps (has id)
+    const newSteps: Array<{
+      name: string;
+      description: string;
+      order: number;
+      left_expression: string;
+      operation: string;
+      right_expression: string;
+      if_true_action: string;
+      if_true_action_data: Record<string, unknown>;
+      if_false_action: string;
+      if_false_action_data: Record<string, unknown>;
+      failure_message: string;
+      is_active: boolean;
+    }> = [];
+
+    const existingStepsUpdates: Array<{
+      step_id: number;
+      [key: string]: unknown;
+    }> = [];
+
+    conditionNodes.forEach((node, index) => {
       const nodeData = node.data as {
         id?: number;
         label?: string;
         leftSide?: string;
         operator?: string;
         rightSide?: string;
-        leftDataType?: string;
-        rightDataType?: string;
+        ifTrueAction?: string;
+        ifTrueActionData?: Record<string, unknown>;
+        ifFalseAction?: string;
+        ifFalseActionData?: Record<string, unknown>;
+        failureMessage?: string;
       };
 
-      // Find connections for this node
-      const trueEdge = edges.find(
-        (e) => e.source === node.id && e.sourceHandle === "true"
-      );
-      const falseEdge = edges.find(
-        (e) => e.source === node.id && e.sourceHandle === "false"
-      );
+      // Get actions from node data (set in properties panel)
+      const ifTrueAction = nodeData.ifTrueAction || "complete_success";
+      const ifTrueActionData = nodeData.ifTrueActionData || { message: "" };
+      const ifFalseAction = nodeData.ifFalseAction || "complete_failure";
+      const ifFalseActionData = nodeData.ifFalseActionData || { error: "" };
+      const failureMessage =
+        nodeData.failureMessage ||
+        `${nodeData.label || "Step"} validation failed`;
 
-      // Determine actions based on connections
-      let ifTrueAction = "complete_success";
-      let ifTrueActionData: Record<string, unknown> = {
-        message: "Step completed successfully",
-      };
-      let ifFalseAction = "complete_failure";
-      let ifFalseActionData: Record<string, unknown> = {
-        error: "Validation failed",
-      };
+      if (nodeData.id) {
+        // Existing step - only send changed fields
+        const originalData = originalNodesDataRef.current.get(node.id);
+        const changes: { step_id: number; [key: string]: unknown } = {
+          step_id: nodeData.id,
+        };
 
-      if (trueEdge) {
-        const targetNode = nodes.find((n) => n.id === trueEdge.target);
-        if (targetNode && (targetNode.data as { id?: number }).id) {
-          ifTrueAction = "proceed_to_step_by_id";
-          ifTrueActionData = {
-            next_step_id: (targetNode.data as { id?: number }).id,
-            note: `Proceed to ${
-              (targetNode.data as { label?: string }).label || "next step"
-            }`,
-          };
+        // Compare each field and only add if changed
+        if (originalData) {
+          if (nodeData.label !== originalData.label) {
+            changes.name = nodeData.label;
+          }
+          if (nodeData.leftSide !== originalData.leftSide) {
+            changes.left_expression = nodeData.leftSide;
+          }
+          if (nodeData.operator !== originalData.operator) {
+            changes.operation = nodeData.operator;
+          }
+          if (nodeData.rightSide !== originalData.rightSide) {
+            changes.right_expression = nodeData.rightSide;
+          }
+          if (ifTrueAction !== originalData.ifTrueAction) {
+            changes.if_true_action = ifTrueAction;
+          }
+          if (
+            JSON.stringify(ifTrueActionData) !==
+            JSON.stringify(originalData.ifTrueActionData)
+          ) {
+            changes.if_true_action_data = ifTrueActionData;
+          }
+          if (ifFalseAction !== originalData.ifFalseAction) {
+            changes.if_false_action = ifFalseAction;
+          }
+          if (
+            JSON.stringify(ifFalseActionData) !==
+            JSON.stringify(originalData.ifFalseActionData)
+          ) {
+            changes.if_false_action_data = ifFalseActionData;
+          }
+          if (failureMessage !== originalData.failureMessage) {
+            changes.failure_message = failureMessage;
+          }
+
+          // Only add to updates if there are actual changes (more than just step_id)
+          if (Object.keys(changes).length > 1) {
+            existingStepsUpdates.push(changes);
+          }
+        } else {
+          // No original data found, send all fields
+          existingStepsUpdates.push({
+            step_id: nodeData.id,
+            name: nodeData.label || `Step ${index + 1}`,
+            left_expression: nodeData.leftSide || "",
+            operation: nodeData.operator || "==",
+            right_expression: nodeData.rightSide || "",
+            if_true_action: ifTrueAction,
+            if_true_action_data: ifTrueActionData,
+            if_false_action: ifFalseAction,
+            if_false_action_data: ifFalseActionData,
+            failure_message: failureMessage,
+          });
         }
+      } else {
+        // New step - include all fields
+        newSteps.push({
+          name: nodeData.label || `Step ${index + 1}`,
+          description: `Validation step: ${nodeData.label || ""}`,
+          order: index + 1,
+          left_expression: nodeData.leftSide || "",
+          operation: nodeData.operator || "==",
+          right_expression: nodeData.rightSide || "",
+          if_true_action: ifTrueAction,
+          if_true_action_data: ifTrueActionData,
+          if_false_action: ifFalseAction,
+          if_false_action_data: ifFalseActionData,
+          failure_message: failureMessage,
+          is_active: true,
+        });
       }
-
-      if (falseEdge) {
-        const targetNode = nodes.find((n) => n.id === falseEdge.target);
-        if (targetNode && (targetNode.data as { id?: number }).id) {
-          ifFalseAction = "proceed_to_step_by_id";
-          ifFalseActionData = {
-            next_step_id: (targetNode.data as { id?: number }).id,
-            note: `Proceed to ${
-              (targetNode.data as { label?: string }).label || "next step"
-            }`,
-          };
-        }
-      }
-
-      return {
-        id: nodeData.id,
-        name: (nodeData.label as string) || `Step ${index + 1}`,
-        description: `Validation step: ${nodeData.label || ""}`,
-        order: index + 1,
-        left_expression: (nodeData.leftSide as string) || "",
-        operation: (nodeData.operator as string) || "==",
-        right_expression: (nodeData.rightSide as string) || "",
-        if_true_action: ifTrueAction,
-        if_true_action_data: ifTrueActionData,
-        if_false_action: ifFalseAction,
-        if_false_action_data: ifFalseActionData,
-        failure_message: `${nodeData.label || "Step"} validation failed`,
-        is_active: true,
-      };
     });
 
     try {
-      // Check if we're creating new steps or updating existing ones
-      const hasExistingSteps = steps.some((step) => step.id);
+      const promises: Promise<unknown>[] = [];
 
-      if (hasExistingSteps) {
-        // Bulk update existing steps
-        const updates = steps
-          .filter((step) => step.id)
-          .map((step) => ({
-            step_id: step.id,
-            name: step.name,
-            description: step.description,
-            order: step.order,
-            left_expression: step.left_expression,
-            operation: step.operation,
-            right_expression: step.right_expression,
-            if_true_action: step.if_true_action,
-            if_true_action_data: step.if_true_action_data,
-            if_false_action: step.if_false_action,
-            if_false_action_data: step.if_false_action_data,
-            failure_message: step.failure_message,
-            is_active: step.is_active,
-          }));
+      // Create new steps if any
+      if (newSteps.length > 0) {
+        const createPromise = bulkCreateSteps({
+          workflow_id: workflowData.workflowId!,
+          steps: newSteps,
+        })
+          .unwrap()
+          .then((result) => {
+            // Handle both `created_steps` and `steps` response formats
+            const createdSteps = result.created_steps || result.steps || [];
+            const stepCount = result.created_count || createdSteps.length;
 
-        const result = await bulkUpdateSteps({ updates }).unwrap();
-        toast.success(
-          `Successfully updated ${result.updated_steps.length} steps`
-        );
-        console.log("Updated steps:", result);
-      } else {
-        // Bulk create new steps - remove id field for creation
-        const stepsForCreation = steps.map((step) => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { id, ...stepWithoutId } = step;
-          return stepWithoutId;
-        });
+            toast.success(`Successfully created ${stepCount} steps`);
+            console.log("Created steps:", result);
 
-        const result = await bulkCreateSteps({
-          workflow_id: workflowData.workflowId,
-          steps: stepsForCreation,
-        }).unwrap();
+            // Update nodes with the returned IDs and store original data
+            const newStepNodes = conditionNodes.filter(
+              (node) => !(node.data as { id?: number }).id
+            );
+            setNodes((nds) =>
+              nds.map((node) => {
+                const newStepIndex = newStepNodes.findIndex(
+                  (n) => n.id === node.id
+                );
+                if (newStepIndex !== -1 && createdSteps[newStepIndex]) {
+                  const createdStep = createdSteps[newStepIndex];
+                  const nodeData = node.data as Record<string, unknown>;
 
-        toast.success(
-          `Successfully created ${result.created_steps.length} steps`
-        );
-        console.log("Created steps:", result);
+                  // Store original data for future change detection
+                  if (createdStep.id !== undefined) {
+                    originalNodesDataRef.current.set(node.id, {
+                      id: createdStep.id,
+                      label: (nodeData.label as string) || "",
+                      leftSide: (nodeData.leftSide as string) || "",
+                      operator: (nodeData.operator as string) || "==",
+                      rightSide: (nodeData.rightSide as string) || "",
+                      ifTrueAction:
+                        (nodeData.ifTrueAction as string) || "complete_success",
+                      ifTrueActionData:
+                        (nodeData.ifTrueActionData as Record<
+                          string,
+                          unknown
+                        >) || {},
+                      ifFalseAction:
+                        (nodeData.ifFalseAction as string) ||
+                        "complete_failure",
+                      ifFalseActionData:
+                        (nodeData.ifFalseActionData as Record<
+                          string,
+                          unknown
+                        >) || {},
+                      failureMessage: (nodeData.failureMessage as string) || "",
+                    });
+                  }
 
-        // Update nodes with the returned IDs
-        setNodes((nds) =>
-          nds.map((node, index) => ({
-            ...node,
-            data: {
-              ...node.data,
-              id: result.created_steps[index]?.id,
-            },
-          }))
-        );
+                  return {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      id: createdStep.id,
+                    },
+                  };
+                }
+                return node;
+              })
+            );
+          });
+        promises.push(createPromise);
       }
+
+      // Update existing steps if any have changes
+      if (existingStepsUpdates.length > 0) {
+        const updatePromise = bulkUpdateSteps({ updates: existingStepsUpdates })
+          .unwrap()
+          .then((result) => {
+            toast.success(
+              `Successfully updated ${
+                result.updated_count ||
+                result.steps?.length ||
+                existingStepsUpdates.length
+              } steps`
+            );
+            console.log("Updated steps:", result);
+
+            // Update original data ref with new values
+            existingStepsUpdates.forEach((update) => {
+              const node = conditionNodes.find(
+                (n) => (n.data as { id?: number }).id === update.step_id
+              );
+              if (node) {
+                const currentOriginal = originalNodesDataRef.current.get(
+                  node.id
+                );
+                if (currentOriginal) {
+                  // Merge updates into original data
+                  originalNodesDataRef.current.set(node.id, {
+                    ...currentOriginal,
+                    ...(update.name !== undefined && {
+                      label: update.name as string,
+                    }),
+                    ...(update.left_expression !== undefined && {
+                      leftSide: update.left_expression as string,
+                    }),
+                    ...(update.operation !== undefined && {
+                      operator: update.operation as string,
+                    }),
+                    ...(update.right_expression !== undefined && {
+                      rightSide: update.right_expression as string,
+                    }),
+                    ...(update.if_true_action !== undefined && {
+                      ifTrueAction: update.if_true_action as string,
+                    }),
+                    ...(update.if_true_action_data !== undefined && {
+                      ifTrueActionData: update.if_true_action_data as Record<
+                        string,
+                        unknown
+                      >,
+                    }),
+                    ...(update.if_false_action !== undefined && {
+                      ifFalseAction: update.if_false_action as string,
+                    }),
+                    ...(update.if_false_action_data !== undefined && {
+                      ifFalseActionData: update.if_false_action_data as Record<
+                        string,
+                        unknown
+                      >,
+                    }),
+                    ...(update.failure_message !== undefined && {
+                      failureMessage: update.failure_message as string,
+                    }),
+                  });
+                }
+              }
+            });
+          });
+        promises.push(updatePromise);
+      }
+
+      if (promises.length === 0) {
+        toast.success("No changes to save");
+        return;
+      }
+
+      await Promise.all(promises);
     } catch (error) {
       console.error("Error saving workflow steps:", error);
       toast.error("Failed to save workflow steps. Please try again.");
     }
-  }, [workflowData, nodes, edges, bulkCreateSteps, bulkUpdateSteps, setNodes]);
+  }, [workflowData, nodes, bulkCreateSteps, bulkUpdateSteps, setNodes]);
 
   // Show loading overlay while fetching workflow
   if (isLoadingWorkflow) {
@@ -580,14 +1149,13 @@ export default function AssumptionBuilder() {
           setStageData={setStageData}
           workflowData={workflowData}
           setWorkflowData={setWorkflowData}
-          updateSelectedNode={updateSelectedNode}
           deleteSelectedNode={deleteSelectedNode}
           buildWorkflowJSON={buildWorkflowJSON}
           isCollapsed={isRightSidebarCollapsed}
           onToggleCollapse={() =>
             setIsRightSidebarCollapsed(!isRightSidebarCollapsed)
           }
-          isSaving={isCreating || isUpdating}
+          isSaving={isCreating || isUpdating || isDeleting}
           datasources={datasourcesData?.datasources || []}
           isDatasourcesLoading={isDatasourcesLoading}
         />

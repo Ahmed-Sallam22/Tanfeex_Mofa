@@ -35,6 +35,9 @@ export interface ConditionNodeData extends Record<string, unknown> {
 
 export interface ActionNodeData extends Record<string, unknown> {
   label?: string;
+  message?: string;
+  error?: string;
+  actionType?: string; // 'complete_success' | 'complete_failure'
 }
 
 // Draggable block items

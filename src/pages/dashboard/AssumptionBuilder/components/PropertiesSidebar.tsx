@@ -13,7 +13,6 @@ interface PropertiesSidebarProps {
   setStageData: React.Dispatch<React.SetStateAction<StageData>>;
   workflowData: WorkflowData;
   setWorkflowData: React.Dispatch<React.SetStateAction<WorkflowData>>;
-  updateSelectedNode: () => void;
   deleteSelectedNode: () => void;
   buildWorkflowJSON: () => void;
   isCollapsed: boolean;
@@ -31,7 +30,6 @@ export const PropertiesSidebar = ({
   setStageData,
   workflowData,
   setWorkflowData,
-  updateSelectedNode,
   deleteSelectedNode,
   buildWorkflowJSON,
   isCollapsed,
@@ -101,7 +99,6 @@ export const PropertiesSidebar = ({
             selectedNode={selectedNode}
             stageData={stageData}
             setStageData={setStageData}
-            updateSelectedNode={updateSelectedNode}
             deleteSelectedNode={deleteSelectedNode}
             datasources={datasources}
             isDatasourcesLoading={isDatasourcesLoading}

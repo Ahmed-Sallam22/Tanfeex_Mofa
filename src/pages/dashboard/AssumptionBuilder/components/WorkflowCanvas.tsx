@@ -7,12 +7,14 @@ import {
   type OnNodesChange,
   type OnEdgesChange,
   type OnConnect,
+  ReactFlowProvider,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Plus, Minus } from "lucide-react";
 import { ConditionNode } from "./ConditionNode";
 import { SuccessNode } from "./SuccessNode";
 import { FailNode } from "./FailNode";
+import { useCallback } from "react";
 
 // Define node types
 const nodeTypes = {
@@ -30,7 +32,7 @@ interface WorkflowCanvasProps {
   onNodeClick: (event: React.MouseEvent, node: Node) => void;
   onPaneClick: () => void;
   onDragOver: (event: React.DragEvent) => void;
-  onDrop: (event: React.DragEvent) => void;
+  onDrop: (event: React.DragEvent, position: { x: number; y: number }) => void;
 }
 
 const ZoomControls = () => {
@@ -41,20 +43,22 @@ const ZoomControls = () => {
       <button
         onClick={() => zoomIn({ duration: 300 })}
         className="p-2.5 hover:bg-gray-50 transition-colors border-b border-gray-100 cursor-pointer"
-        aria-label="Zoom in">
+        aria-label="Zoom in"
+      >
         <Plus className="w-4 h-4 text-gray-600" />
       </button>
       <button
         onClick={() => zoomOut({ duration: 300 })}
         className="p-2.5 hover:bg-gray-50 transition-colors cursor-pointer"
-        aria-label="Zoom out">
+        aria-label="Zoom out"
+      >
         <Minus className="w-4 h-4 text-gray-600" />
       </button>
     </div>
   );
 };
 
-export const WorkflowCanvas = ({
+const ReactFlowWrapper = ({
   nodes,
   edges,
   onNodesChange,
@@ -65,24 +69,50 @@ export const WorkflowCanvas = ({
   onDragOver,
   onDrop,
 }: WorkflowCanvasProps) => {
+  const { screenToFlowPosition } = useReactFlow();
+
+  const handleDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+
+      // Convert screen coordinates to flow coordinates
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      onDrop(event, position);
+    },
+    [screenToFlowPosition, onDrop]
+  );
+
+  return (
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      onConnect={onConnect}
+      onNodeClick={onNodeClick}
+      onPaneClick={onPaneClick}
+      onDragOver={onDragOver}
+      onDrop={handleDrop}
+      nodeTypes={nodeTypes}
+      fitView
+      className="bg-[#FAFAFA]"
+    >
+      <Background color="#575555" gap={16} size={1} />
+      <ZoomControls />
+    </ReactFlow>
+  );
+};
+
+export const WorkflowCanvas = (props: WorkflowCanvasProps) => {
   return (
     <div className="flex-1 relative">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeClick={onNodeClick}
-        onPaneClick={onPaneClick}
-        onDragOver={onDragOver}
-        onDrop={onDrop}
-        nodeTypes={nodeTypes}
-        fitView
-        className="bg-[#FAFAFA]">
-        <Background color="#575555" gap={16} size={1} />
-        <ZoomControls />
-      </ReactFlow>
+      <ReactFlowProvider>
+        <ReactFlowWrapper {...props} />
+      </ReactFlowProvider>
     </div>
   );
 };

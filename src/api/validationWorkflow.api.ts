@@ -102,9 +102,12 @@ export interface BulkCreateStepsRequest {
 }
 
 export interface BulkCreateStepsResponse {
-  message: string;
-  created_steps: ValidationStep[];
-  workflow_id: number;
+  success?: boolean;
+  message?: string;
+  created_steps?: ValidationStep[];
+  steps?: ValidationStep[];
+  workflow_id?: number;
+  created_count?: number;
 }
 
 export interface BulkUpdateStepsRequest {
@@ -112,8 +115,9 @@ export interface BulkUpdateStepsRequest {
 }
 
 export interface BulkUpdateStepsResponse {
-  message: string;
-  updated_steps: ValidationStep[];
+  success: boolean;
+  updated_count: number;
+  steps: ValidationStep[];
 }
 
 // Datasource Types
@@ -234,6 +238,15 @@ export const validationWorkflowApi = createApi({
       }),
       invalidatesTags: ['ValidationWorkflow'],
     }),
+
+    // Delete validation step
+    deleteValidationStep: builder.mutation<void, number>({
+      query: (stepId) => ({
+        url: `/validations/steps/${stepId}/`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['ValidationWorkflow'],
+    }),
   }),
 });
 
@@ -247,4 +260,5 @@ export const {
   useDeleteValidationWorkflowMutation,
   useBulkCreateStepsMutation,
   useBulkUpdateStepsMutation,
+  useDeleteValidationStepMutation,
 } = validationWorkflowApi;

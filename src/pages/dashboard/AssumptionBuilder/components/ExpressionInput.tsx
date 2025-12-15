@@ -143,28 +143,7 @@ export const ExpressionInput = ({
     <div className={`relative ${className}`}>
       {/* Highlighted overlay */}
       <div className="relative">
-        {/* Hidden highlighted text layer */}
-        <div className="absolute inset-0 flex items-center px-4 pointer-events-none overflow-hidden whitespace-pre">
-          {value.split(/({{[^}]+}})/g).map((part, index) => {
-            if (part.match(/^{{[^}]+}}$/)) {
-              return (
-                <span
-                  key={index}
-                  className="bg-[#00B7AD]/20 text-[#00B7AD] rounded px-0.5 font-medium"
-                >
-                  {part}
-                </span>
-              );
-            }
-            return (
-              <span key={index} className="text-gray-900">
-                {part}
-              </span>
-            );
-          })}
-        </div>
-
-        {/* Actual input */}
+      
         <input
           ref={inputRef}
           type="text"
@@ -177,7 +156,7 @@ export const ExpressionInput = ({
             )
           }
           placeholder={placeholder}
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#00B7AD] focus:border-transparent bg-transparent text-transparent caret-gray-900"
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#00B7AD] focus:border-transparent bg-transparent text-black caret-gray-900 cursor-text"
           style={{ caretColor: "#111827" }}
         />
       </div>
