@@ -56,7 +56,6 @@ export default function PendingTransferDetails() {
 
   const {
     data: apiData,
-    error,
     isLoading,
   } = useGetTransferDetailsQuery(transactionId);
 
@@ -541,22 +540,6 @@ export default function PendingTransferDetails() {
       <div className="flex justify-center items-center h-64 bg-white rounded-lg">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         <span className="ml-2 text-gray-600">Loading transfers...</span>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    const errorMessage =
-      "data" in error
-        ? JSON.stringify(error.data)
-        : "message" in error
-        ? error.message
-        : "Failed to load transfer details";
-
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg text-red-600">Error: {errorMessage}</div>
       </div>
     );
   }

@@ -19,8 +19,8 @@ const handleAccessDenied = (message?: string) => {
   if (message) {
     sessionStorage.setItem('accessDeniedMessage', message);
   }
-  // Redirect to access denied page (inside app layout)
-  window.location.href = '/app/access-denied';
+  // Use replace() for immediate redirect without loading state
+  window.location.replace('/app/access-denied');
 };
 
 export const customBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api, extraOptions) => {

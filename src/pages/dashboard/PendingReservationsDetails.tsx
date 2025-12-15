@@ -53,7 +53,6 @@ export default function PendingReservationsDetails() {
 
   const {
     data: apiData,
-    error,
     isLoading,
   } = useGetTransferDetailsQuery(transactionId);
 
@@ -544,23 +543,7 @@ export default function PendingReservationsDetails() {
     );
   }
 
-  // Show error state
-  if (error) {
-    const errorMessage =
-      "data" in error
-        ? JSON.stringify(error.data)
-        : "message" in error
-        ? error.message
-        : "Failed to load transfer details";
 
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg text-red-600">
-          {t("pendingReservationsDetails.errorLoading")}: {errorMessage}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div>

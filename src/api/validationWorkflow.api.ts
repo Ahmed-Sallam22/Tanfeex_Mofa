@@ -52,6 +52,44 @@ export interface ExecutionPointsResponse {
   total_count: number;
 }
 
+// Validation Step Types
+export interface ValidationStep {
+  id?: number;
+  step_id?: number;
+  name: string;
+  description?: string;
+  order: number;
+  left_expression: string;
+  operation: string;
+  right_expression: string;
+  if_true_action: string;
+  if_true_action_data?: Record<string, unknown>;
+  if_false_action: string;
+  if_false_action_data?: Record<string, unknown>;
+  failure_message?: string;
+  is_active?: boolean;
+}
+
+export interface BulkCreateStepsRequest {
+  workflow_id: number;
+  steps: ValidationStep[];
+}
+
+export interface BulkCreateStepsResponse {
+  message: string;
+  created_steps: ValidationStep[];
+  workflow_id: number;
+}
+
+export interface BulkUpdateStepsRequest {
+  updates: Partial<ValidationStep>[];
+}
+
+export interface BulkUpdateStepsResponse {
+  message: string;
+  updated_steps: ValidationStep[];
+}
+
 // Status options for the select dropdown
 export const statusOptions = [
   { value: 'draft', label: 'Draft' },
@@ -119,6 +157,26 @@ export const validationWorkflowApi = createApi({
       }),
       invalidatesTags: ['ValidationWorkflow'],
     }),
+
+    // Bulk create validation steps
+    bulkCreateSteps: builder.mutation<BulkCreateStepsResponse, BulkCreateStepsRequest>({
+      query: (body) => ({
+        url: '/validations/steps/bulk_create/',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['ValidationWorkflow'],
+    }),
+
+    // Bulk update validation steps
+    bulkUpdateSteps: builder.mutation<BulkUpdateStepsResponse, BulkUpdateStepsRequest>({
+      query: (body) => ({
+        url: '/validations/steps/bulk_update/',
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['ValidationWorkflow'],
+    }),
   }),
 });
 
@@ -129,4 +187,6 @@ export const {
   useCreateValidationWorkflowMutation,
   useUpdateValidationWorkflowMutation,
   useDeleteValidationWorkflowMutation,
+  useBulkCreateStepsMutation,
+  useBulkUpdateStepsMutation,
 } = validationWorkflowApi;

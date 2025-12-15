@@ -17,6 +17,7 @@ interface PropertiesSidebarProps {
   buildWorkflowJSON: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  isSaving?: boolean;
 }
 
 export const PropertiesSidebar = ({
@@ -32,6 +33,7 @@ export const PropertiesSidebar = ({
   buildWorkflowJSON,
   isCollapsed,
   onToggleCollapse,
+  isSaving = false,
 }: PropertiesSidebarProps) => {
   if (isCollapsed) {
     return (
@@ -76,6 +78,7 @@ export const PropertiesSidebar = ({
             workflowData={workflowData}
             setWorkflowData={setWorkflowData}
             buildWorkflowJSON={buildWorkflowJSON}
+            isSaving={isSaving}
           />
         ) : (
           <StagePropertiesForm

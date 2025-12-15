@@ -54,7 +54,6 @@ export default function PendingAdjustmentsDetails() {
 
   const {
     data: apiData,
-    error,
     isLoading,
   } = useGetTransferDetailsQuery(transactionId);
 
@@ -543,21 +542,6 @@ export default function PendingAdjustmentsDetails() {
     );
   }
 
-  // Show error state
-  if (error) {
-    const errorMessage =
-      "data" in error
-        ? JSON.stringify(error.data)
-        : "message" in error
-        ? error.message
-        : "Failed to load transfer details";
-
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg text-red-600">{t("pendingRequestsDetails.errorLoading")}: {errorMessage}</div>
-      </div>
-    );
-  }
 
   return (
     <div>

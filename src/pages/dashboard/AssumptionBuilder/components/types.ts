@@ -15,6 +15,7 @@ export interface WorkflowData {
   description: string;
   isDefault: boolean;
   conditions: ConditionData[];
+  workflowId?: number; // Optional workflow ID for updates
 }
 
 // Custom Node Types

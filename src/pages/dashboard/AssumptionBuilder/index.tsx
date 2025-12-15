@@ -10,10 +10,12 @@ import {
   MarkerType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import toast from "react-hot-toast";
 import { BlocksSidebar } from "./components/BlocksSidebar";
 import { PropertiesSidebar } from "./components/PropertiesSidebar";
 import { WorkflowCanvas } from "./components/WorkflowCanvas";
 import type { WorkflowData, StageData } from "./components/types";
+import { useBulkCreateStepsMutation, useBulkUpdateStepsMutation } from "../../../api/validationWorkflow.api";
 
 // Initial nodes and edges
 const initialNodes: Node[] = [];
@@ -27,6 +29,10 @@ export default function AssumptionBuilder() {
   const [activeTab, setActiveTab] = useState<"properties" | "settings">("settings");
   const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState(false);
   const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
+  
+  // API Mutations
+  const [bulkCreateSteps, { isLoading: isCreating }] = useBulkCreateStepsMutation();
+  const [bulkUpdateSteps, { isLoading: isUpdating }] = useBulkUpdateStepsMutation();
 
   // Workflow settings
   const [workflowData, setWorkflowData] = useState<WorkflowData>({
@@ -40,7 +46,7 @@ export default function AssumptionBuilder() {
   // Load workflow data from navigation state if available
   useEffect(() => {
     if (location.state) {
-      const { name, executionPoint, description, isDefault } = location.state as WorkflowData;
+      const { name, executionPoint, description, isDefault, workflowId } = location.state as WorkflowData & { workflowId?: number };
       if (name || executionPoint) {
         setWorkflowData({
           name: name || "",
@@ -48,6 +54,7 @@ export default function AssumptionBuilder() {
           description: description || "",
           isDefault: isDefault ?? true,
           conditions: [],
+          workflowId: workflowId, // Store workflow ID for updates
         });
       }
     }
@@ -198,26 +205,133 @@ export default function AssumptionBuilder() {
     setSelectedNode(null);
   }, [selectedNode, setNodes, setEdges]);
 
-  // Build workflow JSON for API - available for future use
-  const buildWorkflowJSON = useCallback(() => {
-    const workflow = {
-      ...workflowData,
-      nodes: nodes.map((node) => ({
-        id: node.id,
-        type: node.type,
-        position: node.position,
-        data: node.data,
-      })),
-      edges: edges.map((edge) => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        sourceHandle: edge.sourceHandle,
-      })),
-    };
-    console.log("Workflow JSON:", JSON.stringify(workflow, null, 2));
-    return workflow;
-  }, [workflowData, nodes, edges]);
+  // Build workflow JSON and save to API
+  const buildWorkflowJSON = useCallback(async () => {
+    if (!workflowData.workflowId) {
+      toast.error("Workflow ID is required. Please create a workflow first.");
+      return;
+    }
+
+    // Map nodes to validation steps
+    const steps = nodes.map((node, index) => {
+      const nodeData = node.data as {
+        id?: number;
+        label?: string;
+        leftSide?: string;
+        operator?: string;
+        rightSide?: string;
+        leftDataType?: string;
+        rightDataType?: string;
+      };
+
+      // Find connections for this node
+      const trueEdge = edges.find(e => e.source === node.id && e.sourceHandle === "true");
+      const falseEdge = edges.find(e => e.source === node.id && e.sourceHandle === "false");
+
+      // Determine actions based on connections
+      let ifTrueAction = "complete_success";
+      let ifTrueActionData: Record<string, unknown> = { message: "Step completed successfully" };
+      let ifFalseAction = "complete_failure";
+      let ifFalseActionData: Record<string, unknown> = { error: "Validation failed" };
+
+      if (trueEdge) {
+        const targetNode = nodes.find(n => n.id === trueEdge.target);
+        if (targetNode && (targetNode.data as { id?: number }).id) {
+          ifTrueAction = "proceed_to_step_by_id";
+          ifTrueActionData = {
+            next_step_id: (targetNode.data as { id?: number }).id,
+            note: `Proceed to ${(targetNode.data as { label?: string }).label || 'next step'}`
+          };
+        }
+      }
+
+      if (falseEdge) {
+        const targetNode = nodes.find(n => n.id === falseEdge.target);
+        if (targetNode && (targetNode.data as { id?: number }).id) {
+          ifFalseAction = "proceed_to_step_by_id";
+          ifFalseActionData = {
+            next_step_id: (targetNode.data as { id?: number }).id,
+            note: `Proceed to ${(targetNode.data as { label?: string }).label || 'next step'}`
+          };
+        }
+      }
+
+      return {
+        id: nodeData.id,
+        name: (nodeData.label as string) || `Step ${index + 1}`,
+        description: `Validation step: ${nodeData.label || ''}`,
+        order: index + 1,
+        left_expression: (nodeData.leftSide as string) || "",
+        operation: (nodeData.operator as string) || "==",
+        right_expression: (nodeData.rightSide as string) || "",
+        if_true_action: ifTrueAction,
+        if_true_action_data: ifTrueActionData,
+        if_false_action: ifFalseAction,
+        if_false_action_data: ifFalseActionData,
+        failure_message: `${nodeData.label || 'Step'} validation failed`,
+        is_active: true,
+      };
+    });
+
+    try {
+      // Check if we're creating new steps or updating existing ones
+      const hasExistingSteps = steps.some(step => step.id);
+
+      if (hasExistingSteps) {
+        // Bulk update existing steps
+        const updates = steps
+          .filter(step => step.id)
+          .map(step => ({
+            step_id: step.id,
+            name: step.name,
+            description: step.description,
+            order: step.order,
+            left_expression: step.left_expression,
+            operation: step.operation,
+            right_expression: step.right_expression,
+            if_true_action: step.if_true_action,
+            if_true_action_data: step.if_true_action_data,
+            if_false_action: step.if_false_action,
+            if_false_action_data: step.if_false_action_data,
+            failure_message: step.failure_message,
+            is_active: step.is_active,
+          }));
+
+        const result = await bulkUpdateSteps({ updates }).unwrap();
+        toast.success(`Successfully updated ${result.updated_steps.length} steps`);
+        console.log("Updated steps:", result);
+      } else {
+        // Bulk create new steps - remove id field for creation
+        const stepsForCreation = steps.map((step) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, ...stepWithoutId } = step;
+          return stepWithoutId;
+        });
+        
+        const result = await bulkCreateSteps({
+          workflow_id: workflowData.workflowId,
+          steps: stepsForCreation,
+        }).unwrap();
+        
+        toast.success(`Successfully created ${result.created_steps.length} steps`);
+        console.log("Created steps:", result);
+
+        // Update nodes with the returned IDs
+        setNodes((nds) =>
+          nds.map((node, index) => ({
+            ...node,
+            data: {
+              ...node.data,
+              id: result.created_steps[index]?.id,
+            },
+          }))
+        );
+      }
+    } catch (error) {
+      console.error("Error saving workflow steps:", error);
+      toast.error("Failed to save workflow steps. Please try again.");
+    }
+  }, [workflowData, nodes, edges, bulkCreateSteps, bulkUpdateSteps, setNodes]);
 
   return (
     <div className="h-[calc(100vh-137px)] flex flex-col bg-[#FAFAFA] overflow-hidden">
@@ -253,6 +367,7 @@ export default function AssumptionBuilder() {
           buildWorkflowJSON={buildWorkflowJSON}
           isCollapsed={isRightSidebarCollapsed}
           onToggleCollapse={() => setIsRightSidebarCollapsed(!isRightSidebarCollapsed)}
+          isSaving={isCreating || isUpdating}
         />
       </div>
     </div>
