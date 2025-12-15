@@ -38,14 +38,19 @@ export interface UpdateValidationWorkflowRequest {
   step_ids?: number[];
 }
 
-// Execution point options for the select dropdown
-export const executionPointOptions = [
-  { value: 'general', label: 'General' },
-  { value: 'on_transfer_submit', label: 'On Transfer Submit' },
-  { value: 'on_transfer_approve', label: 'On Transfer Approve' },
-  { value: 'on_fund_request', label: 'On Fund Request' },
-  { value: 'on_adjustment', label: 'On Adjustment' },
-];
+// Execution Point Types
+export interface ExecutionPoint {
+  code: string;
+  name: string;
+  description: string;
+  category: string;
+  allowed_datasources: string[];
+}
+
+export interface ExecutionPointsResponse {
+  execution_points: ExecutionPoint[];
+  total_count: number;
+}
 
 // Status options for the select dropdown
 export const statusOptions = [
@@ -57,8 +62,17 @@ export const statusOptions = [
 export const validationWorkflowApi = createApi({
   reducerPath: 'validationWorkflowApi',
   baseQuery: customBaseQuery,
-  tagTypes: ['ValidationWorkflow'],
+  tagTypes: ['ValidationWorkflow', 'ExecutionPoints'],
   endpoints: (builder) => ({
+    // Get execution points
+    getExecutionPoints: builder.query<ExecutionPointsResponse, void>({
+      query: () => ({
+        url: '/validations/execution-points/',
+        method: 'GET',
+      }),
+      providesTags: ['ExecutionPoints'],
+    }),
+
     // Get all validation workflows
     getValidationWorkflows: builder.query<ValidationWorkflowListResponse, void>({
       query: () => ({
@@ -109,6 +123,7 @@ export const validationWorkflowApi = createApi({
 });
 
 export const {
+  useGetExecutionPointsQuery,
   useGetValidationWorkflowsQuery,
   useGetValidationWorkflowQuery,
   useCreateValidationWorkflowMutation,

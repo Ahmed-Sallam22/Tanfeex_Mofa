@@ -1,14 +1,5 @@
 import type { ValidationWorkflow } from "./types";
 
-// Execution point options
-export const executionPointOptions = [
-  { value: "general", label: "General" },
-  { value: "on_transfer_submit", label: "On Transfer Submit" },
-  { value: "on_transfer_approve", label: "On Transfer Approve" },
-  { value: "on_fund_request", label: "On Fund Request" },
-  { value: "on_adjustment", label: "On Adjustment" },
-];
-
 // Status options
 export const statusOptions = [
   { value: "draft", label: "Draft" },
@@ -34,4 +25,3 @@ export const dummyValidationWorkflows: ValidationWorkflow[] = [
 
 // Keep old exports for backward compatibility
 export const dummyAssumptions = dummyValidationWorkflows;
-export const transferTypeOptions = executionPointOptions;

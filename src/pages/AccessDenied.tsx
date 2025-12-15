@@ -30,9 +30,9 @@ export default function AccessDenied() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-red-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-600/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#4E8476]/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#4E8476]/5 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10 text-center max-w-lg mx-auto">
@@ -40,13 +40,13 @@ export default function AccessDenied() {
         <div className="relative mb-8 inline-block">
           <div className="w-32 h-32 mx-auto relative">
             {/* Outer ring animation */}
-            <div className="absolute inset-0 border-4 border-red-500/30 rounded-full animate-ping" />
-            <div className="absolute inset-2 border-2 border-red-400/40 rounded-full animate-pulse" />
+            <div className="absolute inset-0 border-4 border-[#4E8476]/30 rounded-full animate-ping" />
+            <div className="absolute inset-2 border-2 border-[#4E8476]/40 rounded-full animate-pulse" />
 
             {/* Shield icon */}
             <div className="absolute inset-0 flex items-center justify-center">
               <svg
-                className="w-16 h-16 text-red-500"
+                className="w-16 h-16 text-[#4E8476]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -64,7 +64,7 @@ export default function AccessDenied() {
           </div>
 
           {/* X mark overlay */}
-          <div className="absolute bottom-0 right-0 bg-red-600 rounded-full p-2 shadow-lg shadow-red-600/50">
+          <div className="absolute bottom-0 right-0 bg-[#4E8476] rounded-full p-2 shadow-lg shadow-[#4E8476]/50">
             <svg
               className="w-5 h-5 text-white"
               fill="none"
@@ -85,7 +85,7 @@ export default function AccessDenied() {
 
         {/* Error Code */}
         <div className="mb-4">
-          <span className="text-8xl font-bold bg-gradient-to-r from-red-500 via-orange-500 to-red-600 bg-clip-text text-transparent">
+          <span className="text-8xl font-bold bg-gradient-to-r from-[#4E8476] via-teal-500 to-[#3d6b5f] bg-clip-text text-transparent">
             403
           </span>
         </div>
@@ -106,7 +106,7 @@ export default function AccessDenied() {
         {/* Divider */}
         <div className="flex items-center gap-4 mb-8">
           <div className="flex-1 h-px bg-gradient-to-r from-transparent to-slate-600" />
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+          <div className="w-2 h-2 bg-[#4E8476] rounded-full animate-pulse" />
           <div className="flex-1 h-px bg-gradient-to-l from-transparent to-slate-600" />
         </div>
 
@@ -136,7 +136,7 @@ export default function AccessDenied() {
 
           <button
             onClick={handleGoHome}
-            className="group relative px-8 py-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 rounded-xl text-white font-medium transition-all duration-300 shadow-lg shadow-red-600/25 hover:shadow-red-600/40 flex items-center justify-center gap-2"
+            className="group relative px-8 py-3 bg-gradient-to-r from-[#4E8476] to-teal-600 hover:from-[#5a9587] hover:to-teal-500 rounded-xl text-white font-medium transition-all duration-300 shadow-lg shadow-[#4E8476]/25 hover:shadow-[#4E8476]/40 flex items-center justify-center gap-2"
           >
             <svg
               className="w-5 h-5"
@@ -162,7 +162,7 @@ export default function AccessDenied() {
           {t("accessDenied.needHelp", "Need help?")}{" "}
           <a
             href="mailto:support@tanfeez.com"
-            className="text-red-400 hover:text-red-300 underline transition-colors"
+            className="text-[#4E8476] hover:text-[#5a9587] underline transition-colors"
           >
             {t("accessDenied.contactSupport", "Contact Support")}
           </a>

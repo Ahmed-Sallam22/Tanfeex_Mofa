@@ -4,6 +4,7 @@ import {
 } from "@/shared/SharedTable";
 import type { ValidationWorkflow } from "./types";
 import { getValidationWorkflowColumns } from "./tableColumns";
+import type { ExecutionPoint } from "@/api/validationWorkflow.api";
 
 interface ValidationWorkflowsTableProps {
   workflows: ValidationWorkflow[];
@@ -14,6 +15,7 @@ interface ValidationWorkflowsTableProps {
   onPageChange: (page: number) => void;
   itemsPerPage: number;
   totalCount?: number;
+  executionPoints?: ExecutionPoint[];
 }
 
 export const AssumptionsTable = ({
@@ -25,8 +27,12 @@ export const AssumptionsTable = ({
   onPageChange,
   itemsPerPage,
   totalCount,
+  executionPoints,
 }: ValidationWorkflowsTableProps) => {
-  const columns = getValidationWorkflowColumns(onDescriptionClick);
+  const columns = getValidationWorkflowColumns(
+    onDescriptionClick,
+    executionPoints
+  );
   const total = totalCount ?? workflows.length;
   const shouldShowPagination = total > itemsPerPage;
 

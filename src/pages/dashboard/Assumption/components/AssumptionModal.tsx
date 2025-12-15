@@ -1,7 +1,9 @@
 import SharedModal from "@/shared/SharedModal";
 import { Input } from "@/components/ui";
 import { SharedSelect } from "@/shared/SharedSelect";
-import { executionPointOptions, statusOptions } from "./constants";
+import { statusOptions } from "./constants";
+import { useGetExecutionPointsQuery } from "@/api/validationWorkflow.api";
+import { useMemo } from "react";
 
 interface ValidationWorkflowModalProps {
   isOpen: boolean;
@@ -34,6 +36,19 @@ export const AssumptionModal = ({
   setStatus,
   isLoading = false,
 }: ValidationWorkflowModalProps) => {
+  // Fetch execution points from API
+  const { data: executionPointsData, isLoading: isLoadingExecutionPoints } =
+    useGetExecutionPointsQuery();
+
+  // Transform execution points to options format (display name, pass code)
+  const executionPointOptions = useMemo(() => {
+    if (!executionPointsData?.execution_points) return [];
+    return executionPointsData.execution_points.map((ep) => ({
+      value: ep.code,
+      label: ep.name,
+    }));
+  }, [executionPointsData]);
+
   return (
     <SharedModal
       isOpen={isOpen}
@@ -82,7 +97,12 @@ export const AssumptionModal = ({
               options={executionPointOptions}
               value={executionPoint}
               onChange={(value) => setExecutionPoint(String(value))}
-              placeholder="Select Execution Point"
+              placeholder={
+                isLoadingExecutionPoints
+                  ? "Loading..."
+                  : "Select Execution Point"
+              }
+              disabled={isLoadingExecutionPoints}
             />
           </div>
 

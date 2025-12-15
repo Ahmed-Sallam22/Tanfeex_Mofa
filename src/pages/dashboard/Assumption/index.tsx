@@ -3,6 +3,7 @@ import { useState } from "react";
 import { type TableRow as SharedTableRow } from "@/shared/SharedTable";
 import {
   useGetValidationWorkflowsQuery,
+  useGetExecutionPointsQuery,
   useCreateValidationWorkflowMutation,
   useUpdateValidationWorkflowMutation,
   useDeleteValidationWorkflowMutation,
@@ -40,6 +41,7 @@ export default function Assumption() {
     isLoading,
     error,
   } = useGetValidationWorkflowsQuery();
+  const { data: executionPointsData } = useGetExecutionPointsQuery();
   const [createWorkflow, { isLoading: isCreating }] =
     useCreateValidationWorkflowMutation();
   const [updateWorkflow, { isLoading: isUpdating }] =
@@ -47,6 +49,7 @@ export default function Assumption() {
   const [deleteWorkflow] = useDeleteValidationWorkflowMutation();
 
   const workflows = workflowsData?.results || [];
+  const executionPoints = executionPointsData?.execution_points || [];
 
   const handleCreateNewWorkflow = () => {
     setModalMode("create");
@@ -206,6 +209,7 @@ export default function Assumption() {
         onPageChange={handlePageChange}
         itemsPerPage={itemsPerPage}
         totalCount={workflowsData?.count}
+        executionPoints={executionPoints}
       />
 
       <DescriptionModal
