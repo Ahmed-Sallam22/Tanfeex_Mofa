@@ -90,6 +90,28 @@ export interface BulkUpdateStepsResponse {
   updated_steps: ValidationStep[];
 }
 
+// Datasource Types
+export interface Datasource {
+  name: string;
+  parameters: string[];
+  return_type: string;
+  description: string;
+  function_name: string;
+}
+
+export interface DatasourcesResponse {
+  execution_point: {
+    code: string;
+    name: string;
+    description: string;
+    category: string;
+  };
+  datasources: Datasource[];
+  total_datasources: number;
+  usage_example: string;
+  message: string;
+}
+
 // Status options for the select dropdown
 export const statusOptions = [
   { value: 'draft', label: 'Draft' },
@@ -100,7 +122,7 @@ export const statusOptions = [
 export const validationWorkflowApi = createApi({
   reducerPath: 'validationWorkflowApi',
   baseQuery: customBaseQuery,
-  tagTypes: ['ValidationWorkflow', 'ExecutionPoints'],
+  tagTypes: ['ValidationWorkflow', 'ExecutionPoints', 'Datasources'],
   endpoints: (builder) => ({
     // Get execution points
     getExecutionPoints: builder.query<ExecutionPointsResponse, void>({
@@ -109,6 +131,15 @@ export const validationWorkflowApi = createApi({
         method: 'GET',
       }),
       providesTags: ['ExecutionPoints'],
+    }),
+
+    // Get datasources for a specific execution point
+    getDatasources: builder.query<DatasourcesResponse, string>({
+      query: (executionPointCode) => ({
+        url: `/validations/execution-points/${executionPointCode}/datasources/`,
+        method: 'GET',
+      }),
+      providesTags: ['Datasources'],
     }),
 
     // Get all validation workflows
@@ -182,6 +213,7 @@ export const validationWorkflowApi = createApi({
 
 export const {
   useGetExecutionPointsQuery,
+  useGetDatasourcesQuery,
   useGetValidationWorkflowsQuery,
   useGetValidationWorkflowQuery,
   useCreateValidationWorkflowMutation,

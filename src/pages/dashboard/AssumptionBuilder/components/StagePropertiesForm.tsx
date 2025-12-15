@@ -2,8 +2,10 @@ import type { Node } from "@xyflow/react";
 import { GitBranch } from "lucide-react";
 import { Input } from "@/components/ui";
 import { SharedSelect } from "@/shared/SharedSelect";
-import { operatorOptions, dataTypeOptions } from "./constants";
+import { operatorOptions } from "./constants";
 import type { StageData } from "./types";
+import { ExpressionInput } from "./ExpressionInput";
+import type { Datasource } from "@/api/validationWorkflow.api";
 
 interface StagePropertiesFormProps {
   selectedNode: Node | null;
@@ -11,6 +13,8 @@ interface StagePropertiesFormProps {
   setStageData: React.Dispatch<React.SetStateAction<StageData>>;
   updateSelectedNode: () => void;
   deleteSelectedNode: () => void;
+  datasources?: Datasource[];
+  isDatasourcesLoading?: boolean;
 }
 
 export const StagePropertiesForm = ({
@@ -19,6 +23,8 @@ export const StagePropertiesForm = ({
   setStageData,
   updateSelectedNode,
   deleteSelectedNode,
+  datasources = [],
+  isDatasourcesLoading = false,
 }: StagePropertiesFormProps) => {
   if (!selectedNode) {
     return (
@@ -51,32 +57,18 @@ export const StagePropertiesForm = ({
         <>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Left Hand Side (LHS)</label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter Left Hand Side"
-                value={stageData.leftSide}
-                onChange={(e) =>
-                  setStageData((prev) => ({
-                    ...prev,
-                    leftSide: e.target.value,
-                  }))
-                }
-                className="flex-1"
-              />
-              <div className="w-[120px]">
-                <SharedSelect
-                  options={dataTypeOptions}
-                  value={stageData.leftDataType}
-                  onChange={(value) =>
-                    setStageData((prev) => ({
-                      ...prev,
-                      leftDataType: String(value),
-                    }))
-                  }
-                  placeholder="Select Data"
-                />
-              </div>
-            </div>
+            <ExpressionInput
+              value={stageData.leftSide}
+              onChange={(value) =>
+                setStageData((prev) => ({
+                  ...prev,
+                  leftSide: value,
+                }))
+              }
+              placeholder="e.g., {{Transaction_Total_From}} + 100"
+              datasources={datasources}
+              isLoading={isDatasourcesLoading}
+            />
           </div>
 
           <div>
@@ -96,32 +88,18 @@ export const StagePropertiesForm = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Right Hand Side (RHS)</label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter Right Hand Side"
-                value={stageData.rightSide}
-                onChange={(e) =>
-                  setStageData((prev) => ({
-                    ...prev,
-                    rightSide: e.target.value,
-                  }))
-                }
-                className="flex-1"
-              />
-              <div className="w-[120px]">
-                <SharedSelect
-                  options={dataTypeOptions}
-                  value={stageData.rightDataType}
-                  onChange={(value) =>
-                    setStageData((prev) => ({
-                      ...prev,
-                      rightDataType: String(value),
-                    }))
-                  }
-                  placeholder="Select Data"
-                />
-              </div>
-            </div>
+            <ExpressionInput
+              value={stageData.rightSide}
+              onChange={(value) =>
+                setStageData((prev) => ({
+                  ...prev,
+                  rightSide: value,
+                }))
+              }
+              placeholder="e.g., 50000 * {{Tax_Rate}}"
+              datasources={datasources}
+              isLoading={isDatasourcesLoading}
+            />
           </div>
         </>
       )}
