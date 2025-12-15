@@ -755,34 +755,24 @@ export default function AssumptionBuilder() {
 
         nodeIdsToDelete = [nodeIdToDelete, ...connectedNodeIds];
       }
-    } else {
-      // For non-condition nodes (success/fail nodes)
-      // Also delete any nodes connected to this one
-      const connectedNodeIds = edges
-        .filter(
-          (edge) =>
-            edge.source === nodeIdToDelete || edge.target === nodeIdToDelete
-        )
-        .flatMap((edge) => [edge.source, edge.target])
-        .filter((id) => id !== nodeIdToDelete);
 
-      nodeIdsToDelete = [nodeIdToDelete, ...connectedNodeIds];
-    }
+      // If the node has an ID (saved in database), call the delete API
+      if (nodeData.id) {
+        try {
+          await deleteValidationStep(nodeData.id).unwrap();
+          toast.success("Step deleted successfully");
 
-    // If the node has an ID (saved in database), call the delete API
-    if (nodeData.id && selectedNode.type === "condition") {
-      try {
-        await deleteValidationStep(nodeData.id).unwrap();
-        toast.success("Step deleted successfully");
-
-        // Remove from original data ref
-        originalNodesDataRef.current.delete(nodeIdToDelete);
-      } catch (error) {
-        console.error("Error deleting step:", error);
-        toast.error("Failed to delete step. Please try again.");
-        return; // Don't remove from UI if API call fails
+          // Remove from original data ref
+          originalNodesDataRef.current.delete(nodeIdToDelete);
+        } catch (error) {
+          console.error("Error deleting step:", error);
+          toast.error("Failed to delete step. Please try again.");
+          return; // Don't remove from UI if API call fails
+        }
       }
     }
+    // For success/fail nodes, only delete that specific node (not the condition)
+    // nodeIdsToDelete already contains just [nodeIdToDelete]
 
     // Filter out nodes to delete
     setNodes((nds) => nds.filter((node) => !nodeIdsToDelete.includes(node.id)));
@@ -798,6 +788,141 @@ export default function AssumptionBuilder() {
 
     setSelectedNode(null);
   }, [selectedNode, edges, setNodes, setEdges, deleteValidationStep]);
+
+  // Helper function to find the next step connected via edges
+  const findNextStepFromNode = useCallback(
+    (
+      conditionNodeId: string,
+      isTrue: boolean
+    ): { action: string; actionData: Record<string, unknown> } => {
+      const handleId = isTrue ? "true" : "false";
+
+      // First, check if the condition node directly connects to another condition node
+      // This happens when user deletes the success/fail node and links directly
+      const directEdgeToCondition = edges.find(
+        (e) =>
+          e.source === conditionNodeId &&
+          e.sourceHandle === handleId &&
+          nodes.find((n) => n.id === e.target && n.type === "condition")
+      );
+
+      if (directEdgeToCondition) {
+        const targetNode = nodes.find(
+          (n) => n.id === directEdgeToCondition.target
+        );
+        if (targetNode && targetNode.type === "condition") {
+          const targetNodeData = targetNode.data as { id?: number };
+
+          if (targetNodeData.id) {
+            // Target is an existing step with ID → proceed_to_step_by_id
+            return {
+              action: "proceed_to_step_by_id",
+              actionData: {
+                next_step_id: targetNodeData.id,
+                note: isTrue ? "Condition passed" : "Condition failed",
+              },
+            };
+          } else {
+            // Target is a new step without ID → proceed_to_step
+            return {
+              action: "proceed_to_step",
+              actionData: {
+                message: isTrue
+                  ? "Proceeding to next step"
+                  : "Moving to fallback step",
+              },
+            };
+          }
+        }
+      }
+
+      // If no direct connection, check via success/fail action nodes
+      const stepIdMatch = conditionNodeId.match(/^condition-(\d+)$/);
+
+      let actionNodeId: string | undefined;
+
+      if (stepIdMatch) {
+        const stepId = stepIdMatch[1];
+        // For "true" path, look for success node; for "false" path, look for fail node
+        if (isTrue) {
+          actionNodeId = `success-${stepId}-true`;
+        } else {
+          actionNodeId = `fail-${stepId}-false`;
+        }
+
+        // Check if the action node exists
+        const actionNodeExists = nodes.some((n) => n.id === actionNodeId);
+        if (!actionNodeExists) {
+          // Action node was deleted, check for direct connection
+          actionNodeId = undefined;
+        }
+      } else {
+        // For manually created nodes, find the edge from condition with the right handle
+        const edgeFromCondition = edges.find(
+          (e) => e.source === conditionNodeId && e.sourceHandle === handleId
+        );
+        if (edgeFromCondition) {
+          const targetNode = nodes.find(
+            (n) => n.id === edgeFromCondition.target
+          );
+          // Only use as action node if it's not a condition node
+          if (targetNode && targetNode.type !== "condition") {
+            actionNodeId = edgeFromCondition.target;
+          }
+        }
+      }
+
+      if (!actionNodeId) {
+        // No action node found, return default
+        return isTrue
+          ? { action: "proceed_to_step", actionData: { message: "" } }
+          : { action: "complete_failure", actionData: { error: "" } };
+      }
+
+      // Now find if this action node connects to another condition node
+      const edgeToNextStep = edges.find((e) => e.source === actionNodeId);
+
+      if (edgeToNextStep) {
+        const targetNode = nodes.find((n) => n.id === edgeToNextStep.target);
+        if (targetNode && targetNode.type === "condition") {
+          const targetNodeData = targetNode.data as { id?: number };
+
+          if (targetNodeData.id) {
+            // Target is an existing step with ID → proceed_to_step_by_id
+            return {
+              action: "proceed_to_step_by_id",
+              actionData: {
+                next_step_id: targetNodeData.id,
+                note: isTrue ? "Condition passed" : "Condition failed",
+              },
+            };
+          } else {
+            // Target is a new step without ID → proceed_to_step
+            return {
+              action: "proceed_to_step",
+              actionData: {
+                message: isTrue
+                  ? "Proceeding to next step"
+                  : "Moving to fallback step",
+              },
+            };
+          }
+        }
+      }
+
+      // No connection to another step, return default actions
+      return isTrue
+        ? {
+            action: "complete_success",
+            actionData: { message: "Validation passed" },
+          }
+        : {
+            action: "complete_failure",
+            actionData: { error: "Validation failed" },
+          };
+    },
+    [edges, nodes]
+  );
 
   // Build workflow JSON and save to API
   const buildWorkflowJSON = useCallback(async () => {
@@ -844,11 +969,14 @@ export default function AssumptionBuilder() {
         failureMessage?: string;
       };
 
-      // Get actions from node data (set in properties panel)
-      const ifTrueAction = nodeData.ifTrueAction || "complete_success";
-      const ifTrueActionData = nodeData.ifTrueActionData || { message: "" };
-      const ifFalseAction = nodeData.ifFalseAction || "complete_failure";
-      const ifFalseActionData = nodeData.ifFalseActionData || { error: "" };
+      // Determine actions based on edge connections
+      const truePathResult = findNextStepFromNode(node.id, true);
+      const falsePathResult = findNextStepFromNode(node.id, false);
+
+      const ifTrueAction = truePathResult.action;
+      const ifTrueActionData = truePathResult.actionData;
+      const ifFalseAction = falsePathResult.action;
+      const ifFalseActionData = falsePathResult.actionData;
       const failureMessage =
         nodeData.failureMessage ||
         `${nodeData.label || "Step"} validation failed`;
@@ -900,7 +1028,7 @@ export default function AssumptionBuilder() {
           if (Object.keys(changes).length > 1) {
             existingStepsUpdates.push(changes);
           }
-        } else {
+
           // No original data found, send all fields
           existingStepsUpdates.push({
             step_id: nodeData.id,
@@ -1085,7 +1213,14 @@ export default function AssumptionBuilder() {
       console.error("Error saving workflow steps:", error);
       toast.error("Failed to save workflow steps. Please try again.");
     }
-  }, [workflowData, nodes, bulkCreateSteps, bulkUpdateSteps, setNodes]);
+  }, [
+    workflowData,
+    nodes,
+    bulkCreateSteps,
+    bulkUpdateSteps,
+    setNodes,
+    findNextStepFromNode,
+  ]);
 
   // Show loading overlay while fetching workflow
   if (isLoadingWorkflow) {
