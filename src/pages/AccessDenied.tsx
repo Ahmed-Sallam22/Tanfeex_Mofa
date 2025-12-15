@@ -1,9 +1,21 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
 
 export default function AccessDenied() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [errorMessage, setErrorMessage] = useState<string>("");
+
+  useEffect(() => {
+    // Get the custom error message from sessionStorage
+    const storedMessage = sessionStorage.getItem("accessDeniedMessage");
+    if (storedMessage) {
+      setErrorMessage(storedMessage);
+      // Clear it so it doesn't persist
+      sessionStorage.removeItem("accessDeniedMessage");
+    }
+  }, []);
 
   const handleGoBack = () => {
     navigate(-1);
@@ -83,10 +95,11 @@ export default function AccessDenied() {
 
         {/* Description */}
         <p className="text-gray-500 text-base mb-6 leading-relaxed">
-          {t(
-            "accessDenied.description",
-            "Sorry, you don't have permission to access this page. Please contact your administrator if you believe this is an error."
-          )}
+          {errorMessage ||
+            t(
+              "accessDenied.description",
+              "Sorry, you don't have permission to access this page. Please contact your administrator if you believe this is an error."
+            )}
         </p>
 
         {/* Divider */}

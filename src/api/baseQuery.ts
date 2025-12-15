@@ -1,6 +1,6 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
-// import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import type { RootState } from '../app/store';
 import { clearAuth, setCredentials } from '../features/auth/authSlice';
 
@@ -28,29 +28,59 @@ const handleUnauthorized = (api: { dispatch: (action: unknown) => void }) => {
 };
 
 // Helper function to handle access denied
-const handleAccessDenied = () => {
+const handleAccessDenied = (message?: string) => {
+  // Show toast with the error message if available
+  if (message) {
+    toast.error(message);
+  }
+  // Store the message in sessionStorage so it can be displayed on the access denied page
+  if (message) {
+    sessionStorage.setItem('accessDeniedMessage', message);
+  }
   // Redirect to access denied page (inside app layout)
-  window.location.href = '/app/access-denied';
-};
-
-// Helper function to handle not found
-const handleNotFound = () => {
-  // Redirect to not found page (inside app layout)
-  window.location.href = '/app/not-found';
+  // setTimeout(() => {
+    window.location.href = '/app/access-denied';
+  // }, 1000);
 };
 
 export const customBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
   
-  // Handle 404 Not Found
+  // Check for custom ACCESS_DENIED error in response data
+  if (result.error && result.error.data) {
+    const errorData = result.error.data as { 
+      error?: string; 
+      message?: string; 
+      success?: boolean;
+      details?: string;
+    };
+    
+    // If there's a custom ACCESS_DENIED error with a message, show it in a toast
+    // but DON'T redirect - let the component handle it
+    if (errorData.error === 'ACCESS_DENIED' && errorData.message) {
+      toast.error(errorData.message, {
+        duration: 5000,
+        position: 'top-right',
+      });
+      // Return the error to let the component handle it
+      return result;
+    }
+  }
+  
+  // Handle 404 Not Found - only redirect for page navigation, not for API calls
   if (result.error && result.error.status === 404) {
-    handleNotFound();
+    // For API endpoints, just show a toast notification
+    const errorData = result.error.data as { message?: string };
+    const message = errorData?.message || 'The requested resource was not found';
+    toast.error(message);
     return result;
   }
   
   // Handle 403 Forbidden - Access Denied
   if (result.error && result.error.status === 403) {
-    handleAccessDenied();
+    const errorData = result.error.data as { message?: string };
+    const message = errorData?.message || 'You do not have permission to access this resource';
+    handleAccessDenied(message);
     return result;
   }
   
