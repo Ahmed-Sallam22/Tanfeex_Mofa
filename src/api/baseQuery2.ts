@@ -13,8 +13,60 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
+// Helper function to handle access denied
+const handleAccessDenied = (message?: string) => {
+  // Store the message in sessionStorage so it can be displayed on the access denied page
+  if (message) {
+    sessionStorage.setItem('accessDeniedMessage', message);
+  }
+  // Redirect to access denied page (inside app layout)
+  window.location.href = '/app/access-denied';
+};
+
 export const customBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
+  
+  // Check for custom ACCESS_DENIED error in response data (can come with various status codes)
+  if (result.error && result.error.data) {
+    const errorData = result.error.data as { 
+      error?: string; 
+      message?: string; 
+      success?: boolean;
+      details?: string;
+    };
+    
+    // If there's a custom ACCESS_DENIED error, redirect to access denied page
+    if (errorData.error === 'ACCESS_DENIED') {
+      const message = errorData.message || errorData.details || 'You do not have permission to access this resource';
+      handleAccessDenied(message);
+      return result;
+    }
+  }
+  
+  // Also check successful responses that may contain ACCESS_DENIED error
+  if (result.data) {
+    const responseData = result.data as { 
+      error?: string; 
+      message?: string; 
+      success?: boolean;
+      details?: string;
+    };
+    
+    // If success is false and error is ACCESS_DENIED, redirect to access denied page
+    if (responseData.success === false && responseData.error === 'ACCESS_DENIED') {
+      const message = responseData.message || responseData.details || 'You do not have permission to access this resource';
+      handleAccessDenied(message);
+      return result;
+    }
+  }
+  
+  // Handle 403 Forbidden - Access Denied
+  if (result.error && result.error.status === 403) {
+    const errorData = result.error.data as { message?: string };
+    const message = errorData?.message || 'You do not have permission to access this resource';
+    handleAccessDenied(message);
+    return result;
+  }
   
   if (result.error && result.error.status === 401) {
     const state = api.getState() as RootState;

@@ -46,7 +46,7 @@ const handleAccessDenied = (message?: string) => {
 export const customBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
   
-  // Check for custom ACCESS_DENIED error in response data
+  // Check for custom ACCESS_DENIED error in response data (can come with various status codes)
   if (result.error && result.error.data) {
     const errorData = result.error.data as { 
       error?: string; 
@@ -55,14 +55,27 @@ export const customBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBase
       details?: string;
     };
     
-    // If there's a custom ACCESS_DENIED error with a message, show it in a toast
-    // but DON'T redirect - let the component handle it
-    if (errorData.error === 'ACCESS_DENIED' && errorData.message) {
-      toast.error(errorData.message, {
-        duration: 5000,
-        position: 'top-right',
-      });
-      // Return the error to let the component handle it
+    // If there's a custom ACCESS_DENIED error, redirect to access denied page
+    if (errorData.error === 'ACCESS_DENIED') {
+      const message = errorData.message || errorData.details || 'You do not have permission to access this resource';
+      handleAccessDenied(message);
+      return result;
+    }
+  }
+  
+  // Also check successful responses that may contain ACCESS_DENIED error
+  if (result.data) {
+    const responseData = result.data as { 
+      error?: string; 
+      message?: string; 
+      success?: boolean;
+      details?: string;
+    };
+    
+    // If success is false and error is ACCESS_DENIED, redirect to access denied page
+    if (responseData.success === false && responseData.error === 'ACCESS_DENIED') {
+      const message = responseData.message || responseData.details || 'You do not have permission to access this resource';
+      handleAccessDenied(message);
       return result;
     }
   }
