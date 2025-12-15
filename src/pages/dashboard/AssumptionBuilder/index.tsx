@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import {
   addEdge,
   useNodesState,
@@ -19,6 +19,7 @@ import {
   useBulkCreateStepsMutation,
   useBulkUpdateStepsMutation,
   useGetDatasourcesQuery,
+  useGetValidationWorkflowQuery,
 } from "../../../api/validationWorkflow.api";
 
 // Initial nodes and edges
@@ -27,6 +28,7 @@ const initialEdges: Edge[] = [];
 
 export default function AssumptionBuilder() {
   const location = useLocation();
+  const { id: urlWorkflowId } = useParams<{ id: string }>();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -35,6 +37,7 @@ export default function AssumptionBuilder() {
   );
   const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState(false);
   const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // API Mutations
   const [bulkCreateSteps, { isLoading: isCreating }] =
@@ -51,17 +54,133 @@ export default function AssumptionBuilder() {
     conditions: [],
   });
 
+  // Get workflow ID from URL params or location state
+  const workflowIdFromState = (location.state as { workflowId?: number })
+    ?.workflowId;
+  const currentWorkflowId = urlWorkflowId
+    ? parseInt(urlWorkflowId)
+    : workflowIdFromState;
+
+  // Fetch workflow data if we have a workflow ID
+  const { data: workflowApiData, isLoading: isWorkflowLoading } =
+    useGetValidationWorkflowQuery(currentWorkflowId!, {
+      skip: !currentWorkflowId,
+    });
+
   // Fetch datasources based on execution point
   const { data: datasourcesData, isLoading: isDatasourcesLoading } =
     useGetDatasourcesQuery(workflowData.executionPoint, {
       skip: !workflowData.executionPoint, // Skip if no execution point selected
     });
 
-  // Load workflow data from navigation state if available
+  // Show loading state while fetching workflow
+  const isLoadingWorkflow = isWorkflowLoading && currentWorkflowId;
+
+  // Load workflow data from API response
   useEffect(() => {
-    if (location.state) {
-      const { name, executionPoint, description, isDefault, workflowId } =
-        location.state as WorkflowData & { workflowId?: number };
+    if (workflowApiData && !isInitialized) {
+      // Set workflow data
+      setWorkflowData({
+        name: workflowApiData.name || "",
+        executionPoint: workflowApiData.execution_point || "",
+        description: workflowApiData.description || "",
+        isDefault: workflowApiData.is_default ?? true,
+        conditions: [],
+        workflowId: workflowApiData.id,
+      });
+
+      // Convert steps to nodes
+      if (workflowApiData.steps && workflowApiData.steps.length > 0) {
+        const stepNodes: Node[] = workflowApiData.steps.map((step, index) => ({
+          id: `condition-${step.id}`,
+          type: "condition",
+          position: {
+            x: 250,
+            y: 100 + index * 180, // Stack nodes vertically
+          },
+          data: {
+            id: step.id,
+            label: step.name,
+            leftSide: step.left_expression,
+            operator: step.operation,
+            rightSide: step.right_expression,
+            leftDataType: "text",
+            rightDataType: "text",
+            ifTrueAction: step.if_true_action,
+            ifTrueActionData: step.if_true_action_data,
+            ifFalseAction: step.if_false_action,
+            ifFalseActionData: step.if_false_action_data,
+            failureMessage: step.failure_message,
+            isActive: step.is_active,
+          },
+        }));
+
+        setNodes(stepNodes);
+
+        // Create edges based on step actions
+        const stepEdges: Edge[] = [];
+        workflowApiData.steps.forEach((step) => {
+          const sourceNodeId = `condition-${step.id}`;
+
+          // Check if true action points to another step
+          if (
+            step.if_true_action === "proceed_to_step" ||
+            step.if_true_action === "proceed_to_step_by_id"
+          ) {
+            const nextStepId = (
+              step.if_true_action_data as { next_step_id?: number }
+            )?.next_step_id;
+            if (nextStepId) {
+              stepEdges.push({
+                id: `edge-${step.id}-true-${nextStepId}`,
+                source: sourceNodeId,
+                target: `condition-${nextStepId}`,
+                sourceHandle: "true",
+                type: "smoothstep",
+                style: { stroke: "#22C55E", strokeWidth: 2 },
+                label: "True",
+                labelStyle: { fill: "#22C55E", fontWeight: 500 },
+                markerEnd: { type: MarkerType.ArrowClosed, color: "#22C55E" },
+              });
+            }
+          }
+
+          // Check if false action points to another step
+          if (
+            step.if_false_action === "proceed_to_step" ||
+            step.if_false_action === "proceed_to_step_by_id"
+          ) {
+            const nextStepId = (
+              step.if_false_action_data as { next_step_id?: number }
+            )?.next_step_id;
+            if (nextStepId) {
+              stepEdges.push({
+                id: `edge-${step.id}-false-${nextStepId}`,
+                source: sourceNodeId,
+                target: `condition-${nextStepId}`,
+                sourceHandle: "false",
+                type: "smoothstep",
+                style: { stroke: "#9CA3AF", strokeWidth: 2 },
+                label: "False",
+                labelStyle: { fill: "#9CA3AF", fontWeight: 500 },
+                markerEnd: { type: MarkerType.ArrowClosed, color: "#9CA3AF" },
+              });
+            }
+          }
+        });
+
+        setEdges(stepEdges);
+      }
+
+      setIsInitialized(true);
+    }
+  }, [workflowApiData, isInitialized, setNodes, setEdges]);
+
+  // Load workflow data from navigation state if available (fallback for creating new workflow)
+  useEffect(() => {
+    if (location.state && !currentWorkflowId) {
+      const { name, executionPoint, description, isDefault } =
+        location.state as WorkflowData;
       if (name || executionPoint) {
         setWorkflowData({
           name: name || "",
@@ -69,11 +188,10 @@ export default function AssumptionBuilder() {
           description: description || "",
           isDefault: isDefault ?? true,
           conditions: [],
-          workflowId: workflowId, // Store workflow ID for updates
         });
       }
     }
-  }, [location.state]);
+  }, [location.state, currentWorkflowId]);
 
   // Stage properties (for selected node)
   const [stageData, setStageData] = useState<StageData>({
@@ -372,6 +490,37 @@ export default function AssumptionBuilder() {
       toast.error("Failed to save workflow steps. Please try again.");
     }
   }, [workflowData, nodes, edges, bulkCreateSteps, bulkUpdateSteps, setNodes]);
+
+  // Show loading overlay while fetching workflow
+  if (isLoadingWorkflow) {
+    return (
+      <div className="h-[calc(100vh-137px)] flex items-center justify-center bg-[#FAFAFA]">
+        <div className="flex flex-col items-center gap-4">
+          <svg
+            className="animate-spin h-10 w-10 text-[#00B7AD]"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <p className="text-gray-500">Loading workflow...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-[calc(100vh-137px)] flex flex-col bg-[#FAFAFA] overflow-hidden">

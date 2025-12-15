@@ -3,19 +3,31 @@ import { LuBlocks } from "react-icons/lu";
 import { TbLayoutSidebarLeftCollapse } from "react-icons/tb";
 
 interface BlocksSidebarProps {
-  onDragStart: (event: React.DragEvent, nodeType: string, label: string) => void;
+  onDragStart: (
+    event: React.DragEvent,
+    nodeType: string,
+    label: string
+  ) => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
 }
 
-export const BlocksSidebar = ({ onDragStart, isCollapsed, onToggleCollapse }: BlocksSidebarProps) => {
+export const BlocksSidebar = ({
+  onDragStart,
+  isCollapsed,
+  onToggleCollapse,
+}: BlocksSidebarProps) => {
   if (isCollapsed) {
     return (
       <button
         onClick={onToggleCollapse}
         className="bg-white rounded-r-2xl p-3 flex-shrink-0 absolute top-4 left-0 shadow-md z-20 border border-gray-100 hover:bg-gray-50 transition-colors"
-        aria-label="Expand left sidebar">
-        <TbLayoutSidebarLeftCollapse size={20} className="text-gray-600 rotate-180" />
+        aria-label="Expand left sidebar"
+      >
+        <TbLayoutSidebarLeftCollapse
+          size={20}
+          className="text-gray-600 rotate-180"
+        />
       </button>
     );
   }
@@ -28,7 +40,8 @@ export const BlocksSidebar = ({ onDragStart, isCollapsed, onToggleCollapse }: Bl
         <button
           onClick={onToggleCollapse}
           className="ml-auto p-1 hover:bg-gray-100 rounded-lg transition-colors"
-          aria-label="Collapse left sidebar">
+          aria-label="Collapse left sidebar"
+        >
           <TbLayoutSidebarLeftCollapse size={16} className="text-gray-600" />
         </button>
       </div>
@@ -42,13 +55,17 @@ export const BlocksSidebar = ({ onDragStart, isCollapsed, onToggleCollapse }: Bl
             key={block.type}
             draggable
             onDragStart={(e) => onDragStart(e, block.type, block.label)}
-            className="flex items-center gap-2 p-2.5 bg-white border border-gray-100 rounded-xl cursor-grab hover:border-[#00B7AD] hover:shadow-sm transition-all active:cursor-grabbing">
+            className="flex items-center gap-2 p-2.5 bg-white border border-gray-100 rounded-xl cursor-grab hover:border-[#00B7AD] hover:shadow-sm transition-all active:cursor-grabbing"
+          >
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: `${block.color}10` }}>
+              style={{ backgroundColor: `${block.color}10` }}
+            >
               <span style={{ color: block.color }}>{block.icon}</span>
             </div>
-            <span className="text-xs font-medium text-gray-700">{block.label}</span>
+            <span className="text-xs font-medium text-gray-700">
+              {block.label}
+            </span>
           </div>
         ))}
       </div>

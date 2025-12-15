@@ -1,6 +1,29 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { customBaseQuery } from './baseQuery';
 
+// Validation Step Detail Types (for workflow response)
+export interface ValidationStepDetail {
+  id: number;
+  name: string;
+  description: string;
+  order: number;
+  left_expression: string;
+  operation: string;
+  right_expression: string;
+  if_true_action: string;
+  if_true_action_data: Record<string, unknown>;
+  if_false_action: string;
+  if_false_action_data: Record<string, unknown>;
+  failure_message: string | null;
+  is_active: boolean;
+  referenced_datasources_left: string[];
+  referenced_datasources_right: string[];
+  created_by: number;
+  created_by_username: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Types for Validation Workflow
 export interface ValidationWorkflow {
   id: number;
@@ -9,6 +32,9 @@ export interface ValidationWorkflow {
   execution_point: string;
   status: 'draft' | 'active' | 'inactive';
   is_default: boolean;
+  initial_step: number | null;
+  initial_step_detail: ValidationStepDetail | null;
+  steps: ValidationStepDetail[];
   created_by: number;
   created_by_username: string;
   created_at: string;
