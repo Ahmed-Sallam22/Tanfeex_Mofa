@@ -73,7 +73,6 @@ export default function FundAdjustments() {
   const {
     data: fundAdjustmentResponse,
     isLoading,
-    error,
   } = useGetFundAdjustmentListQuery({
     page: currentPage,
     page_size: 10,
@@ -683,21 +682,6 @@ export default function FundAdjustments() {
           <span className="ml-2 text-gray-600">
             {t("fundAdjustmentsPage.loading")}
           </span>
-        </div>
-      ) : error ? (
-        <div className="flex justify-center items-center h-64 bg-white rounded-lg">
-          <div className="text-center">
-            <div className="text-red-500 text-lg mb-2">⚠️</div>
-            <p className="text-gray-600">
-              {t("fundAdjustmentsPage.failedToLoad")}
-            </p>
-            <button
-              className="mt-2 px-4 py-2 bg-[#4E8476] text-white rounded hover:bg-[#35584f]"
-              onClick={() => window.location.reload()}
-            >
-              {t("fundAdjustmentsPage.retry")}
-            </button>
-          </div>
         </div>
       ) : transformedData.length === 0 ? (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">

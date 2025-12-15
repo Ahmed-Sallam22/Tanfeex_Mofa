@@ -53,7 +53,6 @@ export default function FundRequests() {
   const {
     data: FundAdjumentsResponse,
     isLoading,
-    error,
   } = useGetFundRequestListQuery({
     page: currentPage,
     page_size: 10,
@@ -701,19 +700,6 @@ export default function FundRequests() {
           <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
             {t("fundRequests.loadingFundAdjuments")}
           </span>
-        </div>
-      ) : error ? (
-        <div className="flex justify-center items-center h-64 bg-white rounded-lg">
-          <div className="text-center">
-            <div className="text-red-500 text-lg mb-2">⚠️</div>
-            <p className="text-gray-600">{t("fundRequests.failedToLoad")}</p>
-            <button
-              className="mt-2 px-4 py-2 bg-[#4E8476] text-white rounded hover:bg-[#4E8476]"
-              onClick={() => window.location.reload()}
-            >
-              Retry
-            </button>
-          </div>
         </div>
       ) : transformedData.length === 0 ? (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">

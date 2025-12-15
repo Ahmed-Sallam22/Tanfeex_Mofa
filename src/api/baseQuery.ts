@@ -29,18 +29,10 @@ const handleUnauthorized = (api: { dispatch: (action: unknown) => void }) => {
 
 // Helper function to handle access denied
 const handleAccessDenied = (message?: string) => {
-  // Show toast with the error message if available
-  if (message) {
-    toast.error(message);
-  }
-  // Store the message in sessionStorage so it can be displayed on the access denied page
   if (message) {
     sessionStorage.setItem('accessDeniedMessage', message);
   }
-  // Redirect to access denied page (inside app layout)
-  // setTimeout(() => {
     window.location.href = '/app/access-denied';
-  // }, 1000);
 };
 
 export const customBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api, extraOptions) => {

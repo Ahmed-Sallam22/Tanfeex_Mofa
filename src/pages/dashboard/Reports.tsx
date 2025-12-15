@@ -37,7 +37,6 @@ export default function Reports() {
   const {
     data: reportResponse,
     isLoading,
-    error,
     isFetching,
   } = useGetSegmentsFundQuery(
     {
@@ -430,19 +429,6 @@ export default function Reports() {
           <span className={cn("text-gray-600", isRTL ? "mr-2" : "ml-2")}>
             {t("reports.loadingReportData")}
           </span>
-        </div>
-      ) : error ? (
-        <div className="flex justify-center items-center h-64 bg-white rounded-lg">
-          <div className="text-center">
-            <div className="text-red-500 text-lg mb-2">⚠️</div>
-            <p className="text-gray-600">{t("reports.failedToLoad")}</p>
-            <button
-              className="mt-2 px-4 py-2 bg-[#4E8476] text-white rounded hover:bg-blue-700"
-              onClick={() => window.location.reload()}
-            >
-              {t("common.retry")}
-            </button>
-          </div>
         </div>
       ) : (
         <div>
