@@ -30,6 +30,7 @@ const formatDate = (dateString: string): string => {
 
 export const getValidationWorkflowColumns = (
   onDescriptionClick: (workflow: ValidationWorkflow) => void,
+  onNameClick: (workflow: ValidationWorkflow) => void,
   executionPoints?: ExecutionPoint[]
 ): TableColumn[] => {
   // Create a map for quick lookup: code -> name
@@ -47,9 +48,12 @@ export const getValidationWorkflowColumns = (
       render: (_, row) => {
         const workflow = row as unknown as ValidationWorkflow;
         return (
-          <span className="text-sm text-gray-900 font-medium">
+          <button
+            onClick={() => onNameClick(workflow)}
+            className="text-sm text-[#4E8476] font-medium hover:text-[#3d6b5f] hover:underline transition-colors cursor-pointer"
+          >
             {workflow.name}
-          </span>
+          </button>
         );
       },
     },

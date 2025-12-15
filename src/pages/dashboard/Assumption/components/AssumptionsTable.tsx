@@ -11,6 +11,7 @@ interface ValidationWorkflowsTableProps {
   onEdit: (row: SharedTableRow) => void;
   onDelete: (row: SharedTableRow) => void;
   onDescriptionClick: (workflow: ValidationWorkflow) => void;
+  onNameClick: (workflow: ValidationWorkflow) => void;
   currentPage: number;
   onPageChange: (page: number) => void;
   itemsPerPage: number;
@@ -23,6 +24,7 @@ export const AssumptionsTable = ({
   onEdit,
   onDelete,
   onDescriptionClick,
+  onNameClick,
   currentPage,
   onPageChange,
   itemsPerPage,
@@ -31,6 +33,7 @@ export const AssumptionsTable = ({
 }: ValidationWorkflowsTableProps) => {
   const columns = getValidationWorkflowColumns(
     onDescriptionClick,
+    onNameClick,
     executionPoints
   );
   const total = totalCount ?? workflows.length;

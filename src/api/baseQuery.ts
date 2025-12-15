@@ -29,12 +29,24 @@ const handleUnauthorized = (api: { dispatch: (action: unknown) => void }) => {
 
 // Helper function to handle access denied
 const handleAccessDenied = () => {
-  // Redirect to access denied page
-  window.location.href = '/access-denied';
+  // Redirect to access denied page (inside app layout)
+  window.location.href = '/app/access-denied';
+};
+
+// Helper function to handle not found
+const handleNotFound = () => {
+  // Redirect to not found page (inside app layout)
+  window.location.href = '/app/not-found';
 };
 
 export const customBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
+  
+  // Handle 404 Not Found
+  if (result.error && result.error.status === 404) {
+    handleNotFound();
+    return result;
+  }
   
   // Handle 403 Forbidden - Access Denied
   if (result.error && result.error.status === 403) {

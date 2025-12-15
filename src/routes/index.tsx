@@ -39,6 +39,7 @@ import Assumption from "@/pages/dashboard/Assumption";
 import AssumptionBuilder from "@/pages/dashboard/AssumptionBuilder";
 import AppLayout from "@/components/layout/AppLayout";
 import AccessDenied from "@/pages/AccessDenied";
+import NotFound from "@/pages/NotFound";
 
 const SignIn = lazy(() => import("../pages/auth/SignIn"));
 const Home = lazy(() => import("../pages/dashboard/Home"));
@@ -50,9 +51,6 @@ export default function AppRoutes() {
   return (
     <Suspense fallback={<TanfeezLoader />}>
       <Routes>
-        {/* Access Denied Route */}
-        <Route path="/access-denied" element={<AccessDenied />} />
-
         <Route
           path="/auth/sign-in"
           element={
@@ -69,6 +67,12 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         >
+          {/* Access Denied Route - inside AppLayout */}
+          <Route path="access-denied" element={<AccessDenied />} />
+
+          {/* Not Found Route - inside AppLayout */}
+          <Route path="not-found" element={<NotFound />} />
+
           <Route index element={<Home />} />
           <Route
             path="dashboard-details/:type"
@@ -401,6 +405,14 @@ export default function AppRoutes() {
           />
           <Route
             path="AssumptionBuilder"
+            element={
+              <RoleProtectedRoute allowedRoles={["superadmin"]}>
+                <AssumptionBuilder />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="AssumptionBuilder/:id"
             element={
               <RoleProtectedRoute allowedRoles={["superadmin"]}>
                 <AssumptionBuilder />

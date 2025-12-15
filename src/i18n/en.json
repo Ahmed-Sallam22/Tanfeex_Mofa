@@ -1728,5 +1728,15 @@
     "goHome": "Go Home",
     "needHelp": "Need help?",
     "contactSupport": "Contact Support"
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "description": "Oops! The page you're looking for doesn't exist or has been moved. Please check the URL or navigate back to the homepage.",
+    "goBack": "Go Back",
+    "goHome": "Go Home",
+    "tip": "Tip:",
+    "tipDescription": "If you believe this is an error, try refreshing the page or contact support.",
+    "needHelp": "Need help?",
+    "contactSupport": "Contact Support"
   }
 }

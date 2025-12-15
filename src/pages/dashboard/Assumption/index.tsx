@@ -80,7 +80,7 @@ export default function Assumption() {
 
     try {
       if (modalMode === "create") {
-        await createWorkflow({
+        const createdWorkflow = await createWorkflow({
           name: name.trim(),
           description: description.trim(),
           execution_point: executionPoint,
@@ -89,15 +89,8 @@ export default function Assumption() {
         }).unwrap();
         toast.success("Validation workflow created successfully");
 
-        // Navigate to AssumptionBuilder with workflow data
-        navigate("/app/AssumptionBuilder", {
-          state: {
-            name,
-            description,
-            executionPoint,
-            status,
-          },
-        });
+        // Navigate to AssumptionBuilder with the created workflow ID
+        navigate(`/app/AssumptionBuilder/${createdWorkflow.id}`);
       } else if (selectedWorkflow) {
         // Build update payload with only changed fields
         const updatePayload: Record<string, unknown> = {};
@@ -173,6 +166,11 @@ export default function Assumption() {
     setIsDescriptionModalOpen(true);
   };
 
+  const handleNameClick = (workflow: ValidationWorkflow) => {
+    // Navigate to AssumptionBuilder with the workflow ID
+    navigate(`/app/AssumptionBuilder/${workflow.id}`);
+  };
+
   // Show loading state
   if (isLoading) {
     return (
@@ -205,6 +203,7 @@ export default function Assumption() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onDescriptionClick={handleDescriptionClick}
+        onNameClick={handleNameClick}
         currentPage={currentPage}
         onPageChange={handlePageChange}
         itemsPerPage={itemsPerPage}
