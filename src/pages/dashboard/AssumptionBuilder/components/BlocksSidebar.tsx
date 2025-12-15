@@ -13,7 +13,7 @@ export const BlocksSidebar = ({ onDragStart, isCollapsed, onToggleCollapse }: Bl
     return (
       <button
         onClick={onToggleCollapse}
-        className="bg-white rounded-r-2xl p-3 flex-shrink-0 absolute top-4 left-0 shadow-md z-50 border border-gray-100 hover:bg-gray-50 transition-colors"
+        className="bg-white rounded-r-2xl p-3 flex-shrink-0 absolute top-4 left-0 shadow-md z-20 border border-gray-100 hover:bg-gray-50 transition-colors"
         aria-label="Expand left sidebar">
         <TbLayoutSidebarLeftCollapse size={20} className="text-gray-600 rotate-180" />
       </button>
@@ -21,7 +21,7 @@ export const BlocksSidebar = ({ onDragStart, isCollapsed, onToggleCollapse }: Bl
   }
 
   return (
-    <div className="w-56 bg-white rounded-2xl p-4 flex-shrink-0 absolute top-4 left-4 shadow-md gap-6 z-50 border border-gray-100">
+    <div className="w-56 bg-white rounded-2xl p-4 flex-shrink-0 absolute top-4 left-4 shadow-md gap-6 z-20 border border-gray-100">
       <div className="flex items-center gap-2 mb-1">
         <LuBlocks size={24} />
         <span className="font-semibold text-gray-800">Blocks</span>

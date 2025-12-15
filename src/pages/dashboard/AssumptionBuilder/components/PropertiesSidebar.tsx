@@ -44,7 +44,7 @@ export const PropertiesSidebar = ({
     return (
       <button
         onClick={onToggleCollapse}
-        className="bg-white rounded-l-2xl p-3 flex-shrink-0 absolute top-4 right-0 shadow-md z-50 border border-gray-100 hover:bg-gray-50 transition-colors"
+        className="bg-white rounded-l-2xl p-3 flex-shrink-0 absolute top-4 right-0 shadow-md z-20 border border-gray-100 hover:bg-gray-50 transition-colors"
         aria-label="Expand right sidebar"
       >
         <TbLayoutSidebarRightCollapse
@@ -56,7 +56,7 @@ export const PropertiesSidebar = ({
   }
 
   return (
-    <div className="w-90 bg-white rounded-2xl p-4 flex-shrink-0 absolute top-4 right-4 shadow-md z-50 border border-gray-100 max-h-[calc(100vh-170px)] overflow-y-auto">
+    <div className="w-90 bg-white rounded-2xl p-4 flex-shrink-0 absolute top-4 right-4 shadow-md z-20 border border-gray-100 max-h-[calc(100vh-170px)] overflow-y-auto">
       {/* Tabs */}
       <div className="flex p-2 gap-1 mb-2">
         <button
