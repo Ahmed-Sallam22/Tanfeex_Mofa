@@ -190,6 +190,11 @@ export default function AssumptionBuilder() {
     operator: "==",
     rightSide: "",
     rightDataType: "text",
+    ifTrueAction: "complete_success",
+    ifTrueActionData: { message: "" },
+    ifFalseAction: "complete_failure",
+    ifFalseActionData: { error: "" },
+    failureMessage: "",
   });
 
   const onConnect = useCallback(
@@ -240,6 +245,11 @@ export default function AssumptionBuilder() {
         operator: (node.data.operator as string) || "==",
         rightSide: (node.data.rightSide as string) || "",
         rightDataType: (node.data.rightDataType as string) || "text",
+        ifTrueAction: (node.data.ifTrueAction as string) || "complete_success",
+        ifTrueActionData: (node.data.ifTrueActionData as Record<string, unknown>) || { message: "" },
+        ifFalseAction: (node.data.ifFalseAction as string) || "complete_failure",
+        ifFalseActionData: (node.data.ifFalseActionData as Record<string, unknown>) || { error: "" },
+        failureMessage: (node.data.failureMessage as string) || "",
       });
     }
   }, []);
@@ -280,6 +290,11 @@ export default function AssumptionBuilder() {
           rightSide: "",
           leftDataType: "text",
           rightDataType: "text",
+          ifTrueAction: "complete_success",
+          ifTrueActionData: { message: "" },
+          ifFalseAction: "complete_failure",
+          ifFalseActionData: { error: "" },
+          failureMessage: "",
         },
       };
 
@@ -315,6 +330,11 @@ export default function AssumptionBuilder() {
               operator: stageData.operator,
               rightSide: stageData.rightSide,
               rightDataType: stageData.rightDataType,
+              ifTrueAction: stageData.ifTrueAction,
+              ifTrueActionData: stageData.ifTrueActionData,
+              ifFalseAction: stageData.ifFalseAction,
+              ifFalseActionData: stageData.ifFalseActionData,
+              failureMessage: stageData.failureMessage,
             },
           };
         }
@@ -353,9 +373,14 @@ export default function AssumptionBuilder() {
         rightSide?: string;
         leftDataType?: string;
         rightDataType?: string;
+        ifTrueAction?: string;
+        ifTrueActionData?: Record<string, unknown>;
+        ifFalseAction?: string;
+        ifFalseActionData?: Record<string, unknown>;
+        failureMessage?: string;
       };
 
-      // Find connections for this node
+      // Find connections for this node to determine proceed_to_step actions
       const trueEdge = edges.find(
         (e) => e.source === node.id && e.sourceHandle === "true"
       );
@@ -363,40 +388,46 @@ export default function AssumptionBuilder() {
         (e) => e.source === node.id && e.sourceHandle === "false"
       );
 
-      // Determine actions based on connections
-      let ifTrueAction = "complete_success";
-      let ifTrueActionData: Record<string, unknown> = {
-        message: "Step completed successfully",
-      };
-      let ifFalseAction = "complete_failure";
-      let ifFalseActionData: Record<string, unknown> = {
-        error: "Validation failed",
-      };
+      // Use stageData values if set
+      const ifTrueAction = nodeData.ifTrueAction || "complete_success";
+      let ifTrueActionData: Record<string, unknown> = nodeData.ifTrueActionData ? { ...nodeData.ifTrueActionData } : {};
+      const ifFalseAction = nodeData.ifFalseAction || "complete_failure";
+      let ifFalseActionData: Record<string, unknown> = nodeData.ifFalseActionData ? { ...nodeData.ifFalseActionData } : {};
 
-      if (trueEdge) {
+      // Handle proceed_to_step with edge connection
+      if ((ifTrueAction === "proceed_to_step" || ifTrueAction === "proceed_to_step_by_id") && trueEdge) {
         const targetNode = nodes.find((n) => n.id === trueEdge.target);
         if (targetNode && (targetNode.data as { id?: number }).id) {
-          ifTrueAction = "proceed_to_step_by_id";
+          // Use edge target's step ID
           ifTrueActionData = {
+            ...ifTrueActionData,
             next_step_id: (targetNode.data as { id?: number }).id,
-            note: `Proceed to ${
-              (targetNode.data as { label?: string }).label || "next step"
-            }`,
           };
         }
       }
 
-      if (falseEdge) {
+      if ((ifFalseAction === "proceed_to_step" || ifFalseAction === "proceed_to_step_by_id") && falseEdge) {
         const targetNode = nodes.find((n) => n.id === falseEdge.target);
         if (targetNode && (targetNode.data as { id?: number }).id) {
-          ifFalseAction = "proceed_to_step_by_id";
+          // Use edge target's step ID
           ifFalseActionData = {
+            ...ifFalseActionData,
             next_step_id: (targetNode.data as { id?: number }).id,
-            note: `Proceed to ${
-              (targetNode.data as { label?: string }).label || "next step"
-            }`,
           };
         }
+      }
+
+      // Ensure action data has proper structure based on action type
+      if (ifTrueAction === "complete_success" && !ifTrueActionData.message) {
+        ifTrueActionData = { message: "Step completed successfully" };
+      } else if (ifTrueAction === "complete_failure" && !ifTrueActionData.error) {
+        ifTrueActionData = { error: "Validation failed" };
+      }
+
+      if (ifFalseAction === "complete_success" && !ifFalseActionData.message) {
+        ifFalseActionData = { message: "Step completed successfully" };
+      } else if (ifFalseAction === "complete_failure" && !ifFalseActionData.error) {
+        ifFalseActionData = { error: "Validation failed" };
       }
 
       return {
@@ -411,7 +442,7 @@ export default function AssumptionBuilder() {
         if_true_action_data: ifTrueActionData,
         if_false_action: ifFalseAction,
         if_false_action_data: ifFalseActionData,
-        failure_message: `${nodeData.label || "Step"} validation failed`,
+        failure_message: nodeData.failureMessage || undefined,
         is_active: true,
       };
     });

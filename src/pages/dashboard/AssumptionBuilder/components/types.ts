@@ -48,4 +48,10 @@ export interface StageData {
   operator: string;
   rightSide: string;
   rightDataType: string;
+  // Action fields
+  ifTrueAction: string;
+  ifTrueActionData: Record<string, unknown>;
+  ifFalseAction: string;
+  ifFalseActionData: Record<string, unknown>;
+  failureMessage: string;
 }

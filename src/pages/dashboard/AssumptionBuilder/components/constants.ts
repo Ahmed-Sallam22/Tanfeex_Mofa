@@ -30,3 +30,11 @@ export const executionPointOptions: SelectOption[] = [
   { value: "before_delete", label: "Before Delete" },
   { value: "after_delete", label: "After Delete" },
 ];
+
+// Action options for if_true_action and if_false_action
+export const actionOptions: SelectOption[] = [
+  { value: "proceed_to_step", label: "Proceed to Next Step" },
+  { value: "proceed_to_step_by_id", label: "Proceed to Step by ID" },
+  { value: "complete_success", label: "Complete Success" },
+  { value: "complete_failure", label: "Complete Failure" },
+];
