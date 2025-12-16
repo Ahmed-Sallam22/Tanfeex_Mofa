@@ -880,9 +880,8 @@ export default function TransferDetails() {
     const hasInsufficientRows = totalValidRows < 2;
 
     // Check if there are validation errors in any row
-    const hasValidationErrors = [...editedRows, ...localRows].some(
-      (row) => row.validation_errors && row.validation_errors.length > 0
-    );
+    const hasValidationErrors =
+      apiData?.validation_errors && apiData.validation_errors.length > 0;
 
     return hasInsufficientRows || hasValidationErrors;
   };
@@ -1423,10 +1422,11 @@ export default function TransferDetails() {
     segmentName: string
   ): string => {
     const translations: Record<number, string> = {
-      5: "Mofa Geographic",
-      9: "Mofa Cost Center",
-      11: "Mofa Budget",
+      5: t("segmentNames.mofaGeographic"),
+      9: t("segmentNames.mofaCostCenter"),
+      11: t("segmentNames.mofaBudget"),
     };
+
     return translations[segmentNumber] || segmentName;
   };
 
@@ -1601,9 +1601,10 @@ export default function TransferDetails() {
       header: t("tableColumns.status"),
       render: (_, row) => {
         const transferRow = row as unknown as TransferTableRow;
-        const hasErrors =
-          transferRow.validation_errors &&
-          transferRow.validation_errors.length > 0;
+        const apiValidationErrors = apiData?.validation_errors || [];
+        console.log("apiValidationErrors", apiValidationErrors);
+
+        const hasErrors = apiValidationErrors.length > 0;
 
         return (
           <div className="flex items-center  gap-3 justify-center">
@@ -1634,11 +1635,16 @@ export default function TransferDetails() {
 
             {hasErrors ? (
               <button
-                onClick={() =>
-                  handleValidationErrorClick(
-                    transferRow.validation_errors || []
-                  )
-                }
+                onClick={() => {
+                  // Extract messages from validation errors
+                  const errorMessages = apiValidationErrors
+                    .map((error) => {
+                      console.log(error.message);
+                      return error.message;
+                    })
+                    .filter((msg): msg is string => !!msg);
+                  handleValidationErrorClick(errorMessages);
+                }}
                 className="flex items-center justify-center w-6 h-6 bg-yellow-100 border border-yellow-300 rounded-full text-yellow-600 hover:bg-yellow-200 transition-colors"
                 title="Click to view validation errors"
               >
@@ -1946,6 +1952,8 @@ export default function TransferDetails() {
 
   // Handler for validation error click
   const handleValidationErrorClick = (errors: string[]) => {
+    console.log("errors", errors);
+
     setSelectedValidationErrors(errors);
     setIsValidationErrorModalOpen(true);
   };

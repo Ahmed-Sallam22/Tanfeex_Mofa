@@ -634,12 +634,15 @@ export default function AssumptionBuilder() {
         );
 
         if (existingEdgeFromHandle) {
-          const oldTargetNode = nodes.find((n) => n.id === existingEdgeFromHandle.target);
+          const oldTargetNode = nodes.find(
+            (n) => n.id === existingEdgeFromHandle.target
+          );
 
           // Delete old target if it's success/fail and different from new target
           if (
             oldTargetNode &&
-            (oldTargetNode.type === "success" || oldTargetNode.type === "fail") &&
+            (oldTargetNode.type === "success" ||
+              oldTargetNode.type === "fail") &&
             existingEdgeFromHandle.target !== params.target
           ) {
             setNodes((nds) =>
@@ -648,7 +651,9 @@ export default function AssumptionBuilder() {
           }
 
           // Remove old edge
-          setEdges((eds) => eds.filter((edge) => edge.id !== existingEdgeFromHandle.id));
+          setEdges((eds) =>
+            eds.filter((edge) => edge.id !== existingEdgeFromHandle.id)
+          );
         }
       }
 
@@ -660,7 +665,9 @@ export default function AssumptionBuilder() {
 
       if (existingEdgeToTarget) {
         // Just remove the old incoming edge, don't delete any nodes
-        setEdges((eds) => eds.filter((edge) => edge.id !== existingEdgeToTarget.id));
+        setEdges((eds) =>
+          eds.filter((edge) => edge.id !== existingEdgeToTarget.id)
+        );
       }
 
       // Add the new edge

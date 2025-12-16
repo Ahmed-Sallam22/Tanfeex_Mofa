@@ -592,10 +592,9 @@ export default function ReservationsDetails() {
     // Check if there are fewer than 1 rows
     const hasInsufficientRows = totalValidRows < 1;
 
-    // Check if there are validation errors in any row
-    const hasValidationErrors = [...editedRows, ...localRows].some(
-      (row) => row.validation_errors && row.validation_errors.length > 0
-    );
+    // Check if there are validation errors from API data
+    const hasValidationErrors =
+      apiData?.validation_errors && apiData.validation_errors.length > 0;
 
     return hasInsufficientRows || hasValidationErrors;
   };
@@ -1070,10 +1069,11 @@ export default function ReservationsDetails() {
     segmentName: string
   ): string => {
     const translations: Record<number, string> = {
-      5: "Mofa Geographic",
-      9: "Mofa Cost Center",
-      11: "Mofa Budget",
+      5: t("segmentNames.mofaGeographic"),
+      9: t("segmentNames.mofaCostCenter"),
+      11: t("segmentNames.mofaBudget"),
     };
+
     return translations[segmentNumber] || segmentName;
   };
 
@@ -1167,9 +1167,10 @@ export default function ReservationsDetails() {
       header: t("fundAdjustmentsDetails.columns.status"),
       render: (_, row) => {
         const transferRow = row as unknown as TransferTableRow;
-        const hasErrors =
-          transferRow.validation_errors &&
-          transferRow.validation_errors.length > 0;
+
+        // Get validation errors from API data instead of row
+        const apiValidationErrors = apiData?.validation_errors || [];
+        const hasErrors = apiValidationErrors.length > 0;
 
         return (
           <div className="flex items-center  gap-3 justify-center">
@@ -1200,13 +1201,18 @@ export default function ReservationsDetails() {
 
             {hasErrors ? (
               <button
-                onClick={() =>
-                  handleValidationErrorClick(
-                    transferRow.validation_errors || []
-                  )
-                }
+                onClick={() => {
+                  // Extract messages from validation errors
+                  const errorMessages = apiValidationErrors
+                    .map((error) => {
+                      console.log(error.message);
+                      return error.message;
+                    })
+                    .filter((msg): msg is string => !!msg);
+                  handleValidationErrorClick(errorMessages);
+                }}
                 className="flex items-center justify-center w-6 h-6 bg-yellow-100 border border-yellow-300 rounded-full text-yellow-600 hover:bg-yellow-200 transition-colors"
-                title={t("fundAdjustmentsDetails.viewValidationErrors")}
+                title="Click to view validation errors"
               >
                 <svg
                   width="12"

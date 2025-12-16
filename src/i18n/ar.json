@@ -1760,5 +1760,10 @@
     "proceedToStep": "الانتقال للخطوة التالية",
     "completeSuccess": "إنهاء بنجاح",
     "completeFailure": "إنهاء بفشل"
+  },
+  "segmentNames": {
+    "mofaGeographic": "الموقع الجغرافي",
+    "mofaCostCenter": "مراكز التكلفة",
+    "mofaBudget": "عنصر الميزانية"
   }
 }

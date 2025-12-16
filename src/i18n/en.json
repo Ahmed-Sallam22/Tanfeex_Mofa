@@ -1761,5 +1761,10 @@
     "proceedToStep": "Proceed to Next Step",
     "completeSuccess": "Complete Success",
     "completeFailure": "Complete Failure"
+  },
+  "segmentNames": {
+    "mofaGeographic": "Mofa Geographic",
+    "mofaCostCenter": "Mofa Cost Center",
+    "mofaBudget": "Mofa Budget"
   }
 }

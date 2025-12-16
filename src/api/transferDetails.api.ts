@@ -111,6 +111,14 @@ export interface TransferDetailsResponse {
   summary: TransferDetailsSummary;
   transfers: TransferDetail[];
   status: TransferDetailsStatus;
+  validation_errors?: Array<{
+    scope?: string;
+    transaction_id?: string;
+    workflow?: string;
+    step?: string;
+    message?: string;
+    execution_id?: string | null;
+  }>;
 }
 
 export interface UpdateTransferDetailRequest {
