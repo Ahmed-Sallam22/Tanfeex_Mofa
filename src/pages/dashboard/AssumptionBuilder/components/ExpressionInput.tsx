@@ -68,16 +68,10 @@ export const ExpressionInput = ({
     const newValue = e.target.value;
     const newPosition = e.target.selectionStart || 0;
 
-    // Allow the input if it matches the pattern or contains datasource syntax
-    if (
-      // ALLOWED_PATTERN.test(newValue) ||
-      newValue.includes("{{") ||
-      newValue.includes("}}")
-    ) {
-      onChange(newValue);
-      setCursorPosition(newPosition);
-      checkForTrigger(newValue, newPosition);
-    }
+    // Allow any character input
+    onChange(newValue);
+    setCursorPosition(newPosition);
+    checkForTrigger(newValue, newPosition);
   };
 
   // Handle key navigation in dropdown
@@ -203,7 +197,7 @@ export const ExpressionInput = ({
       {/* Helper text */}
       <p className="text-xs text-gray-400 mt-1">
         Type <code className="bg-gray-100 px-1 rounded">{"{{"}</code> to insert
-        a datasource. Allowed: numbers, +, -, *, /, %, (, )
+        a datasource
       </p>
     </div>
   );
