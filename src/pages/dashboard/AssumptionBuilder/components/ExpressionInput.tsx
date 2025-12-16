@@ -11,7 +11,7 @@ interface ExpressionInputProps {
 }
 
 // Allowed characters: numbers, operators, parentheses, spaces, and {{ }} for datasources
-const ALLOWED_PATTERN = /^[0-9+\-*/%().\s{}a-zA-Z_]*$/;
+// const ALLOWED_PATTERN = /^[0-9+\-*/%().\s{}a-zA-Z_]*$/;
 
 export const ExpressionInput = ({
   value,
@@ -70,7 +70,7 @@ export const ExpressionInput = ({
 
     // Allow the input if it matches the pattern or contains datasource syntax
     if (
-      ALLOWED_PATTERN.test(newValue) ||
+      // ALLOWED_PATTERN.test(newValue) ||
       newValue.includes("{{") ||
       newValue.includes("}}")
     ) {
