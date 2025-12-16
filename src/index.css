@@ -64,3 +64,70 @@ html[dir="ltr"] body {
   scrollbar-width: thin;
   scrollbar-color: #4E8476 transparent; /* thumb ثم track */
 }
+
+/* Print Styles for PDF */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 5mm;
+  }
+
+  body {
+    background-color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print\\:hidden {
+    display: none !important;
+  }
+
+  /* Ensure the main container fills the page height */
+  .flex.flex-col.min-h-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Page header will repeat on each page */
+  .page-header {
+    border-bottom: 2px solid #e5e7eb;
+    margin-bottom: 10px;
+  }
+
+  /* Content area takes available space */
+  .flex-1 {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Page footer appears only at the end and pushed to bottom */
+  .page-footer {
+    border-top: 2px solid #e5e7eb;
+    margin-top: auto !important;
+    page-break-before: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Data table inside content */
+  .data-table {
+    page-break-inside: auto;
+  }
+
+  .data-table thead {
+    display: table-header-group;
+  }
+
+  .data-table tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  /* Ensure proper sizing */
+  .data-table th,
+  .data-table td {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+}
