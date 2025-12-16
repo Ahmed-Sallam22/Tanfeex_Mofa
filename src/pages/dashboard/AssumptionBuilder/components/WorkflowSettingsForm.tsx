@@ -52,6 +52,7 @@ export const WorkflowSettingsForm = ({
           Execution Point
         </label>
         <SharedSelect
+        disabled={true}
           options={executionPointOptions}
           value={workflowData.executionPoint}
           onChange={(value) =>
