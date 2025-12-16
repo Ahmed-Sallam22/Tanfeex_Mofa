@@ -1,7 +1,8 @@
 import { Input, Toggle } from "@/components/ui";
 import { SharedSelect } from "@/shared/SharedSelect";
-import { executionPointOptions } from "./constants";
 import type { WorkflowData } from "./types";
+import { useGetExecutionPointsQuery } from "@/api/validationWorkflow.api";
+import { useMemo } from "react";
 
 interface WorkflowSettingsFormProps {
   workflowData: WorkflowData;
@@ -16,6 +17,18 @@ export const WorkflowSettingsForm = ({
   buildWorkflowJSON,
   isSaving = false,
 }: WorkflowSettingsFormProps) => {
+    const { data: executionPointsData } =
+      useGetExecutionPointsQuery();
+  
+    // Transform execution points to options format (display name, pass code)
+    const executionPointOptions = useMemo(() => {
+      if (!executionPointsData?.execution_points) return [];
+      return executionPointsData.execution_points.map((ep) => ({
+        value: ep.code,
+        label: ep.name,
+      }));
+    }, [executionPointsData]);
+  
   return (
     <div className="space-y-5">
       <div>
