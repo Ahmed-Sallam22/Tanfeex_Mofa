@@ -596,6 +596,10 @@ export default function AssumptionBuilder() {
               ifFalseAction: stageData.ifFalseAction,
               ifFalseActionData: stageData.ifFalseActionData,
               failureMessage: stageData.failureMessage,
+              // Update message/error/actionType for success/fail nodes
+              message: stageData.message,
+              error: stageData.error,
+              actionType: stageData.actionType,
             },
           };
         }
@@ -664,6 +668,15 @@ export default function AssumptionBuilder() {
           unknown
         >) || { error: "" },
         failureMessage: (node.data.failureMessage as string) || "",
+        // For success/fail nodes, load message/error/actionType (auto-determined by node type)
+        message: (node.data.message as string) || "",
+        error: (node.data.error as string) || "",
+        actionType:
+          node.type === "success"
+            ? "complete_success"
+            : node.type === "fail"
+            ? "complete_failure"
+            : "",
       });
     }
   }, []);
@@ -797,129 +810,228 @@ export default function AssumptionBuilder() {
     ): { action: string; actionData: Record<string, unknown> } => {
       const handleId = isTrue ? "true" : "false";
 
-      // First, check if the condition node directly connects to another condition node
-      // This happens when user deletes the success/fail node and links directly
-      const directEdgeToCondition = edges.find(
-        (e) =>
-          e.source === conditionNodeId &&
-          e.sourceHandle === handleId &&
-          nodes.find((n) => n.id === e.target && n.type === "condition")
-      );
+      // Current condition node and its stored data (may contain custom messages)
+      const currentCondition = nodes.find((n) => n.id === conditionNodeId);
+      const currentCondData = (currentCondition?.data || {}) as Record<
+        string,
+        unknown
+      >;
 
+      // Helper to safely read fields from unknown record
+      const getStringField = (
+        src: Record<string, unknown> | undefined,
+        key: string
+      ): string | undefined => {
+        if (!src) return undefined;
+        const val = src[key];
+        return typeof val === "string" ? val : undefined;
+      };
+
+      // First: direct connection from condition handle to another condition
+      const directEdgeToCondition = edges.find(
+        (e) => e.source === conditionNodeId && e.sourceHandle === handleId
+      );
       if (directEdgeToCondition) {
         const targetNode = nodes.find(
           (n) => n.id === directEdgeToCondition.target
         );
         if (targetNode && targetNode.type === "condition") {
-          const targetNodeData = targetNode.data as { id?: number };
+          const targetData = (targetNode.data || {}) as Record<string, unknown>;
+          if (typeof targetData.id === "number") {
+            // prefer note from current condition data, then fallback
+            const note =
+              getStringField(
+                currentCondData as Record<string, unknown>,
+                "note"
+              ) ||
+              getStringField(
+                currentCondData as Record<string, unknown>,
+                "message"
+              ) ||
+              (isTrue ? "Condition passed" : "Condition failed");
 
-          if (targetNodeData.id) {
-            // Target is an existing step with ID → proceed_to_step_by_id
             return {
               action: "proceed_to_step_by_id",
-              actionData: {
-                next_step_id: targetNodeData.id,
-                note: isTrue ? "Condition passed" : "Condition failed",
-              },
+              actionData: { next_step_id: targetData.id as number, note },
             };
           } else {
-            // Target is a new step without ID → proceed_to_step
-            return {
-              action: "proceed_to_step",
-              actionData: {
-                message: isTrue
-                  ? "Proceeding to next step"
-                  : "Moving to fallback step",
-              },
-            };
+            const message =
+              getStringField(
+                currentCondData as Record<string, unknown>,
+                "message"
+              ) ||
+              (isTrue ? "Proceeding to next step" : "Moving to fallback step");
+            return { action: "proceed_to_step", actionData: { message } };
           }
         }
       }
 
-      // If no direct connection, check via success/fail action nodes
-      const stepIdMatch = conditionNodeId.match(/^condition-(\d+)$/);
-
+      // Next: check for an action node (success/fail) coming from this condition
+      // Find the edge with the matching handle (true or false)
+      const edgeFromCondition = edges.find(
+        (e) => e.source === conditionNodeId && e.sourceHandle === handleId
+      );
+      
+      console.log(`🔗 Looking for ${isTrue ? 'TRUE' : 'FALSE'} edge from ${conditionNodeId}:`, edgeFromCondition);
+      
       let actionNodeId: string | undefined;
+      if (edgeFromCondition) {
+        const targetNode = nodes.find(
+          (n) => n.id === edgeFromCondition.target
+        );
+        console.log(`🎯 Target node:`, targetNode);
+        // Accept success or fail nodes, we'll determine action by node type
+        if (targetNode && (targetNode.type === "success" || targetNode.type === "fail")) {
+          actionNodeId = edgeFromCondition.target;
+        }
+      }
 
-      if (stepIdMatch) {
-        const stepId = stepIdMatch[1];
-        // For "true" path, look for success node; for "false" path, look for fail node
-        if (isTrue) {
-          actionNodeId = `success-${stepId}-true`;
-        } else {
-          actionNodeId = `fail-${stepId}-false`;
+      // If we have an action node, prefer reading its message/error and whether it links further
+      if (actionNodeId) {
+        const actionNode = nodes.find((n) => n.id === actionNodeId);
+        const actionData = (actionNode?.data || {}) as Record<string, unknown>;
+
+        // If the action node links to another condition, handle proceed_to_step_by_id/proceed_to_step
+        const edgeToNextStep = edges.find((e) => e.source === actionNodeId);
+        if (edgeToNextStep) {
+          const targetNode = nodes.find((n) => n.id === edgeToNextStep.target);
+          if (targetNode && targetNode.type === "condition") {
+            const targetData = (targetNode.data || {}) as Record<
+              string,
+              unknown
+            >;
+            if (typeof targetData.id === "number") {
+              // use action node message as note if present
+              const note =
+                getStringField(actionData, "message") ||
+                getStringField(actionData, "error") ||
+                getStringField(
+                  currentCondData as Record<string, unknown>,
+                  "note"
+                ) ||
+                (isTrue ? "Condition passed" : "Condition failed");
+              return {
+                action: "proceed_to_step_by_id",
+                actionData: { next_step_id: targetData.id as number, note },
+              };
+            } else {
+              const message =
+                getStringField(actionData, "message") ||
+                getStringField(actionData, "error") ||
+                getStringField(
+                  currentCondData as Record<string, unknown>,
+                  "message"
+                ) ||
+                (isTrue
+                  ? "Proceeding to next step"
+                  : "Moving to fallback step");
+              return { action: "proceed_to_step", actionData: { message } };
+            }
+          }
         }
 
-        // Check if the action node exists
-        const actionNodeExists = nodes.some((n) => n.id === actionNodeId);
-        if (!actionNodeExists) {
-          // Action node was deleted, check for direct connection
-          actionNodeId = undefined;
+        // Otherwise, return the action indicated by the action node type
+        // Success node = complete_success, Fail node = complete_failure
+        const actionNodeType = actionNode?.type;
+        
+        console.log(`📍 Action node for ${isTrue ? 'TRUE' : 'FALSE'} path:`, {
+          actionNodeId,
+          actionNodeType,
+          actionData,
+          message: getStringField(actionData, "message"),
+          error: getStringField(actionData, "error")
+        });
+
+        if (actionNodeType === "success") {
+          const finalMessage =
+            getStringField(actionData, "message") ||
+            getStringField(
+              currentCondData as Record<string, unknown>,
+              "message"
+            ) ||
+            "";
+          return {
+            action: "complete_success",
+            actionData: { message: finalMessage },
+          };
+        }
+        if (actionNodeType === "fail") {
+          // allow error or message field (flexible)
+          const error =
+            getStringField(actionData, "error") ||
+            getStringField(actionData, "message") ||
+            getStringField(
+              currentCondData as Record<string, unknown>,
+              "error"
+            ) ||
+            "";
+          return { action: "complete_failure", actionData: { error } };
+        }
+      }
+
+      // Fallback: use stored condition data (allow swapped actions/messages)
+      const storedTrue =
+        currentCondData?.ifTrueAction ||
+        (isTrue ? "complete_success" : "complete_failure");
+      const storedFalse =
+        currentCondData?.ifFalseAction ||
+        (isTrue ? "complete_failure" : "complete_success");
+
+      if (isTrue) {
+        if (storedTrue === "complete_success") {
+          const msg =
+            getStringField(
+              currentCondData as Record<string, unknown>,
+              "message"
+            ) ||
+            getStringField(
+              currentCondData as Record<string, unknown>,
+              "ifTrueActionData"
+            ) ||
+            "";
+          return { action: "complete_success", actionData: { message: msg } };
+        }
+        if (storedTrue === "complete_failure") {
+          const err =
+            getStringField(
+              currentCondData as Record<string, unknown>,
+              "error"
+            ) ||
+            getStringField(
+              currentCondData as Record<string, unknown>,
+              "message"
+            ) ||
+            "";
+          return { action: "complete_failure", actionData: { error: err } };
         }
       } else {
-        // For manually created nodes, find the edge from condition with the right handle
-        const edgeFromCondition = edges.find(
-          (e) => e.source === conditionNodeId && e.sourceHandle === handleId
-        );
-        if (edgeFromCondition) {
-          const targetNode = nodes.find(
-            (n) => n.id === edgeFromCondition.target
-          );
-          // Only use as action node if it's not a condition node
-          if (targetNode && targetNode.type !== "condition") {
-            actionNodeId = edgeFromCondition.target;
-          }
+        if (storedFalse === "complete_success") {
+          const msg =
+            getStringField(
+              currentCondData as Record<string, unknown>,
+              "message"
+            ) || "";
+          return { action: "complete_success", actionData: { message: msg } };
+        }
+        if (storedFalse === "complete_failure") {
+          const err =
+            getStringField(
+              currentCondData as Record<string, unknown>,
+              "error"
+            ) ||
+            getStringField(
+              currentCondData as Record<string, unknown>,
+              "message"
+            ) ||
+            "";
+          return { action: "complete_failure", actionData: { error: err } };
         }
       }
 
-      if (!actionNodeId) {
-        // No action node found, return default
-        return isTrue
-          ? { action: "proceed_to_step", actionData: { message: "" } }
-          : { action: "complete_failure", actionData: { error: "" } };
-      }
-
-      // Now find if this action node connects to another condition node
-      const edgeToNextStep = edges.find((e) => e.source === actionNodeId);
-
-      if (edgeToNextStep) {
-        const targetNode = nodes.find((n) => n.id === edgeToNextStep.target);
-        if (targetNode && targetNode.type === "condition") {
-          const targetNodeData = targetNode.data as { id?: number };
-
-          if (targetNodeData.id) {
-            // Target is an existing step with ID → proceed_to_step_by_id
-            return {
-              action: "proceed_to_step_by_id",
-              actionData: {
-                next_step_id: targetNodeData.id,
-                note: isTrue ? "Condition passed" : "Condition failed",
-              },
-            };
-          } else {
-            // Target is a new step without ID → proceed_to_step
-            return {
-              action: "proceed_to_step",
-              actionData: {
-                message: isTrue
-                  ? "Proceeding to next step"
-                  : "Moving to fallback step",
-              },
-            };
-          }
-        }
-      }
-
-      // No connection to another step, return default actions
+      // final fallback
       return isTrue
-        ? {
-            action: "complete_success",
-            actionData: { message: "Validation passed" },
-          }
-        : {
-            action: "complete_failure",
-            actionData: { error: "Validation failed" },
-          };
+        ? { action: "complete_success", actionData: { message: "" } }
+        : { action: "complete_failure", actionData: { error: "" } };
     },
     [edges, nodes]
   );
@@ -972,6 +1084,10 @@ export default function AssumptionBuilder() {
       // Determine actions based on edge connections
       const truePathResult = findNextStepFromNode(node.id, true);
       const falsePathResult = findNextStepFromNode(node.id, false);
+
+      console.log('🔍 Node:', node.id);
+      console.log('✅ True path:', truePathResult);
+      console.log('❌ False path:', falsePathResult);
 
       const ifTrueAction = truePathResult.action;
       const ifTrueActionData = truePathResult.actionData;

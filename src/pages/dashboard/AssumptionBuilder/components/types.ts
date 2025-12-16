@@ -61,4 +61,8 @@ export interface StageData {
   ifFalseAction: string;
   ifFalseActionData: Record<string, unknown>;
   failureMessage?: string;
+  // For success/fail nodes
+  message?: string;
+  error?: string;
+  actionType?: string; // complete_success or complete_failure
 }

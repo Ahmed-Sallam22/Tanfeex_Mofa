@@ -113,6 +113,52 @@ export const StagePropertiesForm = ({
         </>
       )}
 
+      {/* Show message/error inputs only for success and fail nodes */}
+      {(selectedNode.type === "success" || selectedNode.type === "fail") && (
+        <>
+          {/* Dynamic Message/Error Input based on node type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {selectedNode.type === "success"
+                ? "Success Message"
+                : "Error Message"}
+            </label>
+            <Input
+              placeholder={
+                selectedNode.type === "success"
+                  ? "Enter success message"
+                  : "Enter error message"
+              }
+              value={
+                selectedNode.type === "success"
+                  ? stageData.message || ""
+                  : stageData.error || ""
+              }
+              onChange={(e) => {
+                if (selectedNode.type === "success") {
+                  setStageData((prev) => ({
+                    ...prev,
+                    message: e.target.value,
+                    actionType: "complete_success", // Auto-set based on node type
+                  }));
+                } else {
+                  setStageData((prev) => ({
+                    ...prev,
+                    error: e.target.value,
+                    actionType: "complete_failure", // Auto-set based on node type
+                  }));
+                }
+              }}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              {selectedNode.type === "success"
+                ? "Message to display when this action completes successfully"
+                : "Error message to display when this action fails"}
+            </p>
+          </div>
+        </>
+      )}
+
       <div className="flex justify-end pt-4">
         <button
           onClick={deleteSelectedNode}
