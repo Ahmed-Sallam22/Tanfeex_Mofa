@@ -622,6 +622,48 @@ export default function AssumptionBuilder() {
         labelText = "False";
       }
 
+      const sourceNode = nodes.find((n) => n.id === params.source);
+      const isSourceCondition = sourceNode?.type === "condition";
+
+      // Rule 1: Each condition handle can only have ONE outgoing edge
+      if (isSourceCondition) {
+        const existingEdgeFromHandle = edges.find(
+          (edge) =>
+            edge.source === params.source &&
+            edge.sourceHandle === params.sourceHandle
+        );
+
+        if (existingEdgeFromHandle) {
+          const oldTargetNode = nodes.find((n) => n.id === existingEdgeFromHandle.target);
+
+          // Delete old target if it's success/fail and different from new target
+          if (
+            oldTargetNode &&
+            (oldTargetNode.type === "success" || oldTargetNode.type === "fail") &&
+            existingEdgeFromHandle.target !== params.target
+          ) {
+            setNodes((nds) =>
+              nds.filter((node) => node.id !== existingEdgeFromHandle.target)
+            );
+          }
+
+          // Remove old edge
+          setEdges((eds) => eds.filter((edge) => edge.id !== existingEdgeFromHandle.id));
+        }
+      }
+
+      // Rule 2: Each node can only have ONE incoming edge
+      // Find any existing edge that goes TO the same target
+      const existingEdgeToTarget = edges.find(
+        (edge) => edge.target === params.target
+      );
+
+      if (existingEdgeToTarget) {
+        // Just remove the old incoming edge, don't delete any nodes
+        setEdges((eds) => eds.filter((edge) => edge.id !== existingEdgeToTarget.id));
+      }
+
+      // Add the new edge
       setEdges((eds) =>
         addEdge(
           {
@@ -640,6 +682,17 @@ export default function AssumptionBuilder() {
           },
           eds
         )
+      );
+    },
+    [setEdges, edges, nodes, setNodes]
+  );
+
+  // Handle edge deletion - only delete the edge, not the nodes
+  const onEdgesDelete = useCallback(
+    (edgesToDelete: Edge[]) => {
+      // Just delete the edges, don't touch the nodes
+      setEdges((eds) =>
+        eds.filter((edge) => !edgesToDelete.some((e) => e.id === edge.id))
       );
     },
     [setEdges]
@@ -1391,6 +1444,7 @@ export default function AssumptionBuilder() {
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          onEdgesDelete={onEdgesDelete}
           onConnect={onConnect}
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}

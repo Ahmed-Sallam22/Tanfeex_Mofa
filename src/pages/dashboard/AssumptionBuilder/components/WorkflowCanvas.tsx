@@ -28,6 +28,7 @@ interface WorkflowCanvasProps {
   edges: Edge[];
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
+  onEdgesDelete?: (edges: Edge[]) => void;
   onConnect: OnConnect;
   onNodeClick: (event: React.MouseEvent, node: Node) => void;
   onPaneClick: () => void;
@@ -63,6 +64,7 @@ const ReactFlowWrapper = ({
   edges,
   onNodesChange,
   onEdgesChange,
+  onEdgesDelete,
   onConnect,
   onNodeClick,
   onPaneClick,
@@ -92,6 +94,7 @@ const ReactFlowWrapper = ({
       edges={edges}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
+      onEdgesDelete={onEdgesDelete}
       onConnect={onConnect}
       onNodeClick={onNodeClick}
       onPaneClick={onPaneClick}
