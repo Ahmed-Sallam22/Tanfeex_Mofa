@@ -871,17 +871,23 @@ export default function AssumptionBuilder() {
       const edgeFromCondition = edges.find(
         (e) => e.source === conditionNodeId && e.sourceHandle === handleId
       );
-      
-      console.log(`🔗 Looking for ${isTrue ? 'TRUE' : 'FALSE'} edge from ${conditionNodeId}:`, edgeFromCondition);
-      
+
+      console.log(
+        `🔗 Looking for ${
+          isTrue ? "TRUE" : "FALSE"
+        } edge from ${conditionNodeId}:`,
+        edgeFromCondition
+      );
+
       let actionNodeId: string | undefined;
       if (edgeFromCondition) {
-        const targetNode = nodes.find(
-          (n) => n.id === edgeFromCondition.target
-        );
+        const targetNode = nodes.find((n) => n.id === edgeFromCondition.target);
         console.log(`🎯 Target node:`, targetNode);
         // Accept success or fail nodes, we'll determine action by node type
-        if (targetNode && (targetNode.type === "success" || targetNode.type === "fail")) {
+        if (
+          targetNode &&
+          (targetNode.type === "success" || targetNode.type === "fail")
+        ) {
           actionNodeId = edgeFromCondition.target;
         }
       }
@@ -933,13 +939,13 @@ export default function AssumptionBuilder() {
         // Otherwise, return the action indicated by the action node type
         // Success node = complete_success, Fail node = complete_failure
         const actionNodeType = actionNode?.type;
-        
-        console.log(`📍 Action node for ${isTrue ? 'TRUE' : 'FALSE'} path:`, {
+
+        console.log(`📍 Action node for ${isTrue ? "TRUE" : "FALSE"} path:`, {
           actionNodeId,
           actionNodeType,
           actionData,
           message: getStringField(actionData, "message"),
-          error: getStringField(actionData, "error")
+          error: getStringField(actionData, "error"),
         });
 
         if (actionNodeType === "success") {
@@ -1085,9 +1091,9 @@ export default function AssumptionBuilder() {
       const truePathResult = findNextStepFromNode(node.id, true);
       const falsePathResult = findNextStepFromNode(node.id, false);
 
-      console.log('🔍 Node:', node.id);
-      console.log('✅ True path:', truePathResult);
-      console.log('❌ False path:', falsePathResult);
+      console.log("🔍 Node:", node.id);
+      console.log("✅ True path:", truePathResult);
+      console.log("❌ False path:", falsePathResult);
 
       const ifTrueAction = truePathResult.action;
       const ifTrueActionData = truePathResult.actionData;
