@@ -878,7 +878,7 @@ export default function AssumptionBuilder() {
     // FIRST PASS: Assign IDs to all new nodes that don't have one
     const nodeIdAssignments = new Map<string, number>();
     let nextAvailableId = newStepId;
-    
+
     conditionNodes.forEach((node) => {
       const nodeData = node.data as { id?: number };
       if (!nodeData.id || nodeData.id >= newStepId) {
@@ -939,8 +939,13 @@ export default function AssumptionBuilder() {
       const handleId = isTrue ? "true" : "false";
 
       // Current condition node
-      const currentCondition = updatedNodes.find((n) => n.id === conditionNodeId);
-      const currentCondData = (currentCondition?.data || {}) as Record<string, unknown>;
+      const currentCondition = updatedNodes.find(
+        (n) => n.id === conditionNodeId
+      );
+      const currentCondData = (currentCondition?.data || {}) as Record<
+        string,
+        unknown
+      >;
 
       // Helper to safely read fields
       const getStringField = (
@@ -956,15 +961,15 @@ export default function AssumptionBuilder() {
       const directEdgeToCondition = edges.find(
         (e) => e.source === conditionNodeId && e.sourceHandle === handleId
       );
-      
+
       if (directEdgeToCondition) {
         const targetNode = updatedNodes.find(
           (n) => n.id === directEdgeToCondition.target
         );
-        
+
         if (targetNode && targetNode.type === "condition") {
           const targetData = (targetNode.data || {}) as Record<string, unknown>;
-          
+
           if (typeof targetData.id === "number") {
             const note =
               getStringField(currentCondData, "note") ||
@@ -985,24 +990,34 @@ export default function AssumptionBuilder() {
       );
 
       if (edgeFromCondition) {
-        const targetNode = updatedNodes.find((n) => n.id === edgeFromCondition.target);
-        
-        if (targetNode && (targetNode.type === "success" || targetNode.type === "fail")) {
+        const targetNode = updatedNodes.find(
+          (n) => n.id === edgeFromCondition.target
+        );
+
+        if (
+          targetNode &&
+          (targetNode.type === "success" || targetNode.type === "fail")
+        ) {
           const actionData = (targetNode.data || {}) as Record<string, unknown>;
 
           // Check if action node links to another condition
           const edgeToNextStep = edges.find((e) => e.source === targetNode.id);
           if (edgeToNextStep) {
-            const nextCondition = updatedNodes.find((n) => n.id === edgeToNextStep.target);
+            const nextCondition = updatedNodes.find(
+              (n) => n.id === edgeToNextStep.target
+            );
             if (nextCondition && nextCondition.type === "condition") {
-              const nextData = (nextCondition.data || {}) as Record<string, unknown>;
-              
+              const nextData = (nextCondition.data || {}) as Record<
+                string,
+                unknown
+              >;
+
               if (typeof nextData.id === "number") {
                 const note =
                   getStringField(actionData, "message") ||
                   getStringField(actionData, "error") ||
                   (isTrue ? "Condition passed" : "Condition failed");
-                
+
                 return {
                   action: "proceed_to_step_by_id",
                   actionData: { next_step_id: nextData.id, note },
@@ -1407,4 +1422,3 @@ export default function AssumptionBuilder() {
   );
 }
 
-// https://youtube.com/shorts/p0kjVrGME9g?si=jvm4M0yyu8UyaUqW
