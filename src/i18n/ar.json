@@ -1894,9 +1894,33 @@
     "needHelp": "تحتاج مساعدة؟",
     "contactSupport": "تواصل مع الدعم"
   },
-  "segmentNames": {
-    "mofaGeographic": "الموقع الجغرافي",
-    "mofaCostCenter": "مراكز التكلفة",
-    "mofaBudget": "عنصر الميزانية"
-  }
+  "assumptionBuilder": {
+    "selectStage": "اختر مرحلة لتعديل خصائصها",
+    "stageName": "اسم المرحلة",
+    "leftHandSide": "الطرف الأيسر (LHS)",
+    "rightHandSide": "الطرف الأيمن (RHS)",
+    "operation": "العملية",
+    "selectOperator": "اختر العملية",
+    "ifTrue": "إذا كان صحيح (الشرط تحقق)",
+    "ifFalse": "إذا كان خطأ (الشرط لم يتحقق)",
+    "action": "الإجراء",
+    "selectAction": "اختر الإجراء",
+    "successMessage": "رسالة النجاح",
+    "errorMessage": "رسالة الخطأ",
+    "enterSuccessMessage": "أدخل رسالة النجاح",
+    "enterErrorMessage": "أدخل رسالة الخطأ",
+    "failureMessage": "رسالة الفشل (اختياري)",
+    "enterFailureMessage": "أدخل رسالة الفشل لهذه الخطوة",
+    "updateStage": "تحديث المرحلة",
+    "delete": "حذف",
+    "proceedToStep": "الانتقال للخطوة التالية",
+    "completeSuccess": "إنهاء بنجاح",
+    "completeFailure": "إنهاء بفشل"
+  },
+  "SegmentNames": {
+    "MofaGeographic": "الموقع الجغرافي",
+    "MofaCostCenter": "مراكز التكلفة",
+    "MofaBudget": "عنصر الميزانية"
+  },
+  "TransferStatus": "حالة التحويل"
 }

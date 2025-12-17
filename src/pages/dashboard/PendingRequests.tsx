@@ -25,10 +25,7 @@ export default function PendingTransfer() {
   const [currentPage, setCurrentPage] = useState<number>(1);
 
   // RTK Query hooks
-  const {
-    data: apiData,
-    isLoading,
-  } = useGetPendingTransfersQuery({
+  const { data: apiData, isLoading } = useGetPendingTransfersQuery({
     page: currentPage,
     page_size: 10,
     code: "AFR",
@@ -489,9 +486,11 @@ export default function PendingTransfer() {
         {isLoading ? (
           <div className="flex justify-center items-center h-64 bg-white rounded-lg">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-600">{t("pendingRequests.loadingTransfers")}</span>
+            <span className="ml-2 text-gray-600">
+              {t("pendingRequests.loadingTransfers")}
+            </span>
           </div>
-        ) :  (
+        ) : (
           <SharedTable
             title={t("pendingRequests.recentPendingRequests")}
             columns={getPendingTransferColumns()}
@@ -632,13 +631,17 @@ export default function PendingTransfer() {
           {isLoadingStatus ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600">{t("pendingRequests.loadingStatus")}</span>
+              <span className="ml-2 text-gray-600">
+                {t("pendingRequests.loadingStatus")}
+              </span>
             </div>
           ) : statusError ? (
             <div className="flex justify-center items-center py-12">
               <div className="text-center">
                 <div className="text-red-500 text-lg mb-2">⚠️</div>
-                <p className="text-gray-600">{t("pendingRequests.failedToLoadStatus")}</p>
+                <p className="text-gray-600">
+                  {t("pendingRequests.failedToLoadStatus")}
+                </p>
               </div>
             </div>
           ) : statusData ? (
@@ -646,12 +649,18 @@ export default function PendingTransfer() {
               {/* Overall Status */}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-600">Transfer Status:</span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    statusData.transfer_status === 'approved' ? 'bg-green-100 text-green-800' :
-                    statusData.transfer_status === 'rejected' ? 'bg-red-100 text-red-800' :
-                    'bg-blue-100 text-blue-800'
-                  }`}>
+                  <span className="text-sm font-medium text-gray-600">
+                    {t("TransferStatus")}:
+                  </span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      statusData.transfer_status === "approved"
+                        ? "bg-green-100 text-green-800"
+                        : statusData.transfer_status === "rejected"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-blue-100 text-blue-800"
+                    }`}
+                  >
                     {statusData.transfer_status}
                   </span>
                 </div>
@@ -664,184 +673,194 @@ export default function PendingTransfer() {
                     <h4 className="text-md font-semibold text-gray-800">
                       {workflow.workflow_name}
                     </h4>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      workflow.workflow_status === 'approved' ? 'bg-green-100 text-green-800' :
-                      workflow.workflow_status === 'rejected' ? 'bg-red-100 text-red-800' :
-                      'bg-blue-100 text-blue-800'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${
+                        workflow.workflow_status === "approved"
+                          ? "bg-green-100 text-green-800"
+                          : workflow.workflow_status === "rejected"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-blue-100 text-blue-800"
+                      }`}
+                    >
                       {workflow.workflow_status}
                     </span>
                   </div>
 
                   <div className="relative">
-                      {/* Timeline line */}
-                      <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                    {/* Timeline line */}
+                    <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
 
-                      {workflow.stages?.map((stage) => (
-                    <div
-                      key={stage.order_index}
-                      className="relative flex items-start space-x-4 pb-8 last:pb-0"
-                    >
-                      {/* Timeline dot */}
+                    {workflow.stages?.map((stage) => (
                       <div
-                        className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 ${
-                          stage.status === "approved" ||
-                          stage.status === "active"
-                            ? "bg-green-500 border-green-200"
-                            : stage.status === "pending"
-                            ? "bg-yellow-500 border-yellow-200"
-                            : stage.status === "rejected"
-                            ? "bg-red-500 border-red-200"
-                            : "bg-[#4E8476] border-blue-200"
-                        }`}
+                        key={stage.order_index}
+                        className="relative flex items-start space-x-4 pb-8 last:pb-0"
                       >
-                        {stage.status === "approved" ||
-                        stage.status === "active" ? (
-                          <svg
-                            className="w-6 h-6 text-white"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        ) : stage.status === "pending" ? (
-                          <svg
-                            className="w-6 h-6 text-white"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        ) : stage.status === "rejected" ? (
-                          <svg
-                            className="w-6 h-6 text-white"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        ) : (
-                          <svg
-                            className="w-6 h-6 text-white animate-spin"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            role="status"
-                            aria-label="In progress"
-                          >
-                            {/* faint full ring */}
-                            <circle
-                              cx="10"
-                              cy="10"
-                              r="8"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              opacity="0.25"
-                            />
-                            {/* leading arc */}
-                            <path
-                              d="M10 2 A 8 8 0 0 1 18 10"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                        )}
-                      </div>
+                        {/* Timeline dot */}
+                        <div
+                          className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 ${
+                            stage.status === "approved" ||
+                            stage.status === "active"
+                              ? "bg-green-500 border-green-200"
+                              : stage.status === "pending"
+                              ? "bg-yellow-500 border-yellow-200"
+                              : stage.status === "rejected"
+                              ? "bg-red-500 border-red-200"
+                              : "bg-[#4E8476] border-blue-200"
+                          }`}
+                        >
+                          {stage.status === "approved" ||
+                          stage.status === "active" ? (
+                            <svg
+                              className="w-6 h-6 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          ) : stage.status === "pending" ? (
+                            <svg
+                              className="w-6 h-6 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          ) : stage.status === "rejected" ? (
+                            <svg
+                              className="w-6 h-6 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="w-6 h-6 text-white animate-spin"
+                              viewBox="0 0 20 20"
+                              fill="none"
+                              role="status"
+                              aria-label="In progress"
+                            >
+                              {/* faint full ring */}
+                              <circle
+                                cx="10"
+                                cy="10"
+                                r="8"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                opacity="0.25"
+                              />
+                              {/* leading arc */}
+                              <path
+                                d="M10 2 A 8 8 0 0 1 18 10"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          )}
+                        </div>
 
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="bg-white rounded-lg ">
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="text-sm font-semibold text-gray-900">
-                              {stage.name}
-                            </h5>
-                            <span className="text-xs text-gray-500">
-                              {t("pendingRequests.stage")} {stage.order_index}
-                            </span>
-                          </div>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="bg-white rounded-lg ">
+                            <div className="flex items-center justify-between mb-2">
+                              <h5 className="text-sm font-semibold text-gray-900">
+                                {stage.name}
+                              </h5>
+                              <span className="text-xs text-gray-500">
+                                {t("pendingRequests.stage")} {stage.order_index}
+                              </span>
+                            </div>
 
-                          <div className="flex items-center justify-between text-sm text-gray-600">
-                            <span>
-                              <span className="font-medium">
-                                {t("pendingRequests.decisionPolicy")}:
-                              </span>{" "}
-                              {stage.decision_policy}
-                            </span>
-                          </div>
-
-                          {/* Stage Status Icon */}
-                          <div className="flex items-center mt-3 text-sm">
-                            {stage.status === "approved" ||
-                            stage.status === "active" ? (
-                              <div className="flex items-center text-green-600">
-                                <svg
-                                  className="w-4 h-4 mr-1"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                                <span className="font-medium">{t("pendingRequests.approved")}</span>
-                              </div>
-                            ) : stage.status === "pending" ? (
-                              <div className="flex items-center text-yellow-600">
-                                <svg
-                                  className="w-4 h-4 mr-1"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
+                            <div className="flex items-center justify-between text-sm text-gray-600">
+                              <span>
                                 <span className="font-medium">
-                                  {t("pendingRequests.awaitingApproval")}
-                                </span>
-                              </div>
-                            ) : stage.status === "rejected" ? (
-                              <div className="flex items-center text-red-600">
-                                <svg
-                                  className="w-4 h-4 mr-1"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                                <span className="font-medium">{t("pendingRequests.rejected")}</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center text-blue-700">
-                                <div className="w-4 h-4 bg-blue-700 rounded-full mr-1"></div>
-                                <span className="font-medium">{t("pendingRequests.inProgress")}</span>
-                              </div>
-                            )}
+                                  {t("pendingRequests.decisionPolicy")}:
+                                </span>{" "}
+                                {stage.decision_policy}
+                              </span>
+                            </div>
+
+                            {/* Stage Status Icon */}
+                            <div className="flex items-center mt-3 text-sm">
+                              {stage.status === "approved" ||
+                              stage.status === "active" ? (
+                                <div className="flex items-center text-green-600">
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  <span className="font-medium">
+                                    {t("pendingRequests.approved")}
+                                  </span>
+                                </div>
+                              ) : stage.status === "pending" ? (
+                                <div className="flex items-center text-yellow-600">
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  <span className="font-medium">
+                                    {t("pendingRequests.awaitingApproval")}
+                                  </span>
+                                </div>
+                              ) : stage.status === "rejected" ? (
+                                <div className="flex items-center text-red-600">
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  <span className="font-medium">
+                                    {t("pendingRequests.rejected")}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center text-blue-700">
+                                  <div className="w-4 h-4 bg-blue-700 rounded-full mr-1"></div>
+                                  <span className="font-medium">
+                                    {t("pendingRequests.inProgress")}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                   </div>
                 </div>
               ))}
@@ -881,7 +900,9 @@ export default function PendingTransfer() {
         <div className="p-4">
           <div className="mb-4">
             <p className="text-sm text-[#282828] mb-4">
-              {t("pendingRequests.delegateMessage", { count: selectedTransfers.size })}
+              {t("pendingRequests.delegateMessage", {
+                count: selectedTransfers.size,
+              })}
             </p>
           </div>
 
