@@ -1761,9 +1761,11 @@
     "completeSuccess": "إنهاء بنجاح",
     "completeFailure": "إنهاء بفشل"
   },
-  "segmentNames": {
-    "mofaGeographic": "الموقع الجغرافي",
-    "mofaCostCenter": "مراكز التكلفة",
-    "mofaBudget": "عنصر الميزانية"
-  }
+  "SegmentNames": {
+    "MofaGeographic": "الموقع الجغرافي",
+    "MofaCostCenter": "مراكز التكلفة",
+    "MofaBudget": "عنصر الميزانية"
+  },
+  "TransferStatus": "حالة التحويل"
+
 }

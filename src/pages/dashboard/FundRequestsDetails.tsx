@@ -1057,9 +1057,9 @@ export default function TransferDetails() {
     segmentName: string
   ): string => {
     const translations: Record<number, string> = {
-      5: t("segmentNames.mofaGeographic"),
-      9: t("segmentNames.mofaCostCenter"),
-      11: t("segmentNames.mofaBudget"),
+      5: t("SegmentNames.MofaGeographic"),
+      9: t("SegmentNames.MofaCostCenter"),
+      11: t("SegmentNames.MofaBudget"),
     };
 
     return translations[segmentNumber] || segmentName;

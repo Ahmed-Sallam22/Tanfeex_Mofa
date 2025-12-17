@@ -1762,9 +1762,10 @@
     "completeSuccess": "Complete Success",
     "completeFailure": "Complete Failure"
   },
-  "segmentNames": {
-    "mofaGeographic": "Mofa Geographic",
-    "mofaCostCenter": "Mofa Cost Center",
-    "mofaBudget": "Mofa Budget"
-  }
+  "SegmentNames": {
+    "MofaGeographic": "Mofa Geographic",
+    "MofaCostCenter": "Mofa Cost Center",
+    "MofaBudget": "Mofa Budget"
+  },
+  "TransferStatus": "Transfer Status"
 }
