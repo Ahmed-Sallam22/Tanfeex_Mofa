@@ -123,6 +123,7 @@ export default function AddWorkFlow() {
     { value: "FAR", label: "FAR" },
     { value: "DFR", label: "DFR" },
     { value: "AFR", label: "AFR" },
+    { value: "HFR", label: "HFR" },
     { value: "Generic", label: "Generic" },
   ];
 
