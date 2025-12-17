@@ -1,10 +1,8 @@
-import {
-  SharedTable,
-  type TableRow as SharedTableRow,
-} from "@/shared/SharedTable";
+import { SharedTable, type TableRow as SharedTableRow } from "@/shared/SharedTable";
 import type { ValidationWorkflow } from "./types";
 import { getValidationWorkflowColumns } from "./tableColumns";
 import type { ExecutionPoint } from "@/api/validationWorkflow.api";
+import { useTranslation } from "react-i18next";
 
 interface ValidationWorkflowsTableProps {
   workflows: ValidationWorkflow[];
@@ -31,18 +29,15 @@ export const AssumptionsTable = ({
   totalCount,
   executionPoints,
 }: ValidationWorkflowsTableProps) => {
-  const columns = getValidationWorkflowColumns(
-    onDescriptionClick,
-    onNameClick,
-    executionPoints
-  );
+  const { t } = useTranslation();
+  const columns = getValidationWorkflowColumns(onDescriptionClick, onNameClick, executionPoints, t);
   const total = totalCount ?? workflows.length;
   const shouldShowPagination = total > itemsPerPage;
 
   return (
     <div className="bg-white rounded-lg shadow-sm">
       <SharedTable
-        title="Validation Workflows List"
+        title={t("assumptions.validationWorkflowsList")}
         columns={columns}
         data={workflows as unknown as SharedTableRow[]}
         showFooter={false}

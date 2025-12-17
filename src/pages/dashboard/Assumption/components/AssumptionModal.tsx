@@ -4,6 +4,7 @@ import { SharedSelect } from "@/shared/SharedSelect";
 import { statusOptions } from "./constants";
 import { useGetExecutionPointsQuery } from "@/api/validationWorkflow.api";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 interface ValidationWorkflowModalProps {
   isOpen: boolean;
@@ -36,9 +37,10 @@ export const AssumptionModal = ({
   setStatus,
   isLoading = false,
 }: ValidationWorkflowModalProps) => {
+  const { t } = useTranslation();
+
   // Fetch execution points from API
-  const { data: executionPointsData, isLoading: isLoadingExecutionPoints } =
-    useGetExecutionPointsQuery();
+  const { data: executionPointsData, isLoading: isLoadingExecutionPoints } = useGetExecutionPointsQuery();
 
   // Transform execution points to options format (display name, pass code)
   const executionPointOptions = useMemo(() => {
@@ -49,26 +51,27 @@ export const AssumptionModal = ({
     }));
   }, [executionPointsData]);
 
+  // Translate status options
+  const translatedStatusOptions = useMemo(() => {
+    return statusOptions.map((option) => ({
+      ...option,
+      label: t(`assumptions.${option.value}`),
+    }));
+  }, [t]);
+
   return (
     <SharedModal
       isOpen={isOpen}
       onClose={onClose}
-      title={
-        mode === "create"
-          ? "Create Validation Workflow"
-          : "Edit Validation Workflow"
-      }
-      size="md"
-    >
+      title={mode === "create" ? t("assumptions.createValidationWorkflow") : t("assumptions.editValidationWorkflow")}
+      size="md">
       <>
         <div className="p-6 space-y-5 max-h-[calc(100vh-200px)] overflow-y-auto">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Name *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t("assumptions.nameRequired")}</label>
             <Input
-              placeholder="Enter workflow name"
+              placeholder={t("assumptions.enterWorkflowName")}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -76,13 +79,11 @@ export const AssumptionModal = ({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t("assumptions.description")}</label>
             <textarea
               className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#00B7AD] focus:border-transparent resize-none bg-white"
               rows={4}
-              placeholder="Enter workflow description"
+              placeholder={t("assumptions.enterWorkflowDescription")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -91,31 +92,25 @@ export const AssumptionModal = ({
           {/* Execution Point */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Execution Point *
+              {t("assumptions.executionPointRequired")}
             </label>
             <SharedSelect
               options={executionPointOptions}
               value={executionPoint}
               onChange={(value) => setExecutionPoint(String(value))}
-              placeholder={
-                isLoadingExecutionPoints
-                  ? "Loading..."
-                  : "Select Execution Point"
-              }
+              placeholder={isLoadingExecutionPoints ? t("assumptions.loading") : t("assumptions.selectExecutionPoint")}
               disabled={isLoadingExecutionPoints}
             />
           </div>
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t("assumptions.statusRequired")}</label>
             <SharedSelect
-              options={statusOptions}
+              options={translatedStatusOptions}
               value={status}
               onChange={(value) => setStatus(String(value))}
-              placeholder="Select Status"
+              placeholder={t("assumptions.selectStatus")}
             />
           </div>
         </div>
@@ -125,15 +120,13 @@ export const AssumptionModal = ({
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
-          >
-            Cancel
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50">
+            {t("assumptions.cancel")}
           </button>
           <button
             onClick={onSave}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-[#00B7AD] rounded-md hover:bg-[#009B92] transition-colors disabled:opacity-50 flex items-center gap-2"
-          >
+            className="px-4 py-2 text-sm font-medium text-white bg-[#00B7AD] rounded-md hover:bg-[#009B92] transition-colors disabled:opacity-50 flex items-center gap-2">
             {isLoading && (
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                 <circle
@@ -152,7 +145,7 @@ export const AssumptionModal = ({
                 />
               </svg>
             )}
-            {mode === "create" ? "Create" : "Save Changes"}
+            {mode === "create" ? t("assumptions.save") : t("assumptions.save")}
           </button>
         </div>
       </>

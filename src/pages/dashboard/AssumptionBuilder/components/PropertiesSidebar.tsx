@@ -4,6 +4,7 @@ import { StagePropertiesForm } from "./StagePropertiesForm";
 import { WorkflowSettingsForm } from "./WorkflowSettingsForm";
 import { TbLayoutSidebarRightCollapse } from "react-icons/tb";
 import type { Datasource } from "@/api/validationWorkflow.api";
+import { useTranslation } from "react-i18next";
 
 interface PropertiesSidebarProps {
   activeTab: "properties" | "settings";
@@ -38,17 +39,15 @@ export const PropertiesSidebar = ({
   datasources = [],
   isDatasourcesLoading = false,
 }: PropertiesSidebarProps) => {
+  const { t } = useTranslation();
+
   if (isCollapsed) {
     return (
       <button
         onClick={onToggleCollapse}
         className="bg-white rounded-l-2xl p-3 flex-shrink-0 absolute top-4 right-0 shadow-md z-20 border border-gray-100 hover:bg-gray-50 transition-colors"
-        aria-label="Expand right sidebar"
-      >
-        <TbLayoutSidebarRightCollapse
-          size={20}
-          className="text-gray-600 rotate-180"
-        />
+        aria-label={t("assumptionBuilder.expandRightSidebar")}>
+        <TbLayoutSidebarRightCollapse size={20} className="text-gray-600 rotate-180" />
       </button>
     );
   }
@@ -60,28 +59,21 @@ export const PropertiesSidebar = ({
         <button
           onClick={() => setActiveTab("properties")}
           className={`flex-1 py-3 text-sm font-medium transition-all rounded-lg ${
-            activeTab === "properties"
-              ? "text-white bg-[#00B7AD] shadow-sm"
-              : "text-gray-500 hover:bg-gray-50"
-          }`}
-        >
-          Stage Properties
+            activeTab === "properties" ? "text-white bg-[#00B7AD] shadow-sm" : "text-gray-500 hover:bg-gray-50"
+          }`}>
+          {t("assumptionBuilder.stageProperties")}
         </button>
         <button
           onClick={() => setActiveTab("settings")}
           className={`flex-1 py-2.5 text-sm font-medium transition-all rounded-lg ${
-            activeTab === "settings"
-              ? "text-white bg-[#00B7AD] shadow-sm"
-              : "text-gray-500 hover:bg-gray-50"
-          }`}
-        >
-          Workflow Settings
+            activeTab === "settings" ? "text-white bg-[#00B7AD] shadow-sm" : "text-gray-500 hover:bg-gray-50"
+          }`}>
+          {t("assumptionBuilder.workflowSettings")}
         </button>
         <button
           onClick={onToggleCollapse}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          aria-label="Collapse right sidebar"
-        >
+          aria-label={t("assumptionBuilder.collapseRightSidebar")}>
           <TbLayoutSidebarRightCollapse size={18} className="text-gray-600" />
         </button>
       </div>

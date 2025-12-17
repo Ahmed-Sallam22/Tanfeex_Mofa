@@ -1,12 +1,10 @@
 import type { TableColumn } from "@/shared/SharedTable";
 import type { ValidationWorkflow } from "./types";
 import type { ExecutionPoint } from "@/api/validationWorkflow.api";
+import type { TFunction } from "i18next";
 
 // Helper function to format execution point for display
-const formatExecutionPoint = (
-  executionPoint: string,
-  executionPointsMap?: Map<string, string>
-): string => {
+const formatExecutionPoint = (executionPoint: string, executionPointsMap?: Map<string, string>): string => {
   // If we have a map from API, use it
   if (executionPointsMap && executionPointsMap.has(executionPoint)) {
     return executionPointsMap.get(executionPoint) || executionPoint;
@@ -31,7 +29,8 @@ const formatDate = (dateString: string): string => {
 export const getValidationWorkflowColumns = (
   onDescriptionClick: (workflow: ValidationWorkflow) => void,
   onNameClick: (workflow: ValidationWorkflow) => void,
-  executionPoints?: ExecutionPoint[]
+  executionPoints?: ExecutionPoint[],
+  t?: TFunction
 ): TableColumn[] => {
   // Create a map for quick lookup: code -> name
   const executionPointsMap = new Map<string, string>();
@@ -44,14 +43,13 @@ export const getValidationWorkflowColumns = (
   return [
     {
       id: "name",
-      header: "Name",
+      header: t ? t("assumptions.name") : "Name",
       render: (_, row) => {
         const workflow = row as unknown as ValidationWorkflow;
         return (
           <button
             onClick={() => onNameClick(workflow)}
-            className="text-sm text-[#4E8476] font-medium hover:text-[#3d6b5f] hover:underline transition-colors cursor-pointer"
-          >
+            className="text-sm text-[#4E8476] font-medium hover:text-[#3d6b5f] hover:underline transition-colors cursor-pointer">
             {workflow.name}
           </button>
         );
@@ -59,23 +57,22 @@ export const getValidationWorkflowColumns = (
     },
     {
       id: "description",
-      header: "Description",
+      header: t ? t("assumptions.description") : "Description",
       render: (_, row) => {
         const workflow = row as unknown as ValidationWorkflow;
         return (
           <button
             onClick={() => onDescriptionClick(workflow)}
             className="text-sm text-gray-900 bg-gray-100 p-2 rounded-md truncate max-w-xs hover:bg-gray-200 transition-colors cursor-pointer text-left"
-            title="Click to view full description"
-          >
-            Description
+            title={t ? t("assumptions.clickToViewFullDescription") : "Click to view full description"}>
+            {t ? t("assumptions.description") : "Description"}
           </button>
         );
       },
     },
     {
       id: "execution_point",
-      header: "Execution Point",
+      header: t ? t("assumptions.executionPoint") : "Execution Point",
       render: (_, row) => {
         const workflow = row as unknown as ValidationWorkflow;
         return (
@@ -87,7 +84,7 @@ export const getValidationWorkflowColumns = (
     },
     {
       id: "status",
-      header: "Status",
+      header: t ? t("assumptions.status") : "Status",
       render: (_, row) => {
         const workflow = row as unknown as ValidationWorkflow;
         const statusColors: Record<string, string> = {
@@ -95,57 +92,46 @@ export const getValidationWorkflowColumns = (
           inactive: "bg-red-100 text-red-800",
           draft: "bg-yellow-100 text-yellow-800",
         };
+        const statusText = t ? t(`assumptions.${workflow.status}`) : workflow.status;
         return (
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
               statusColors[workflow.status] || "bg-gray-100 text-gray-800"
-            }`}
-          >
-            {workflow.status}
+            }`}>
+            {statusText}
           </span>
         );
       },
     },
     {
       id: "is_default",
-      header: "Default",
+      header: t ? t("assumptions.isDefault") : "Default",
       render: (_, row) => {
         const workflow = row as unknown as ValidationWorkflow;
         return (
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              workflow.is_default
-                ? "bg-purple-100 text-purple-800"
-                : "bg-gray-100 text-gray-600"
-            }`}
-          >
-            {workflow.is_default ? "Yes" : "No"}
+              workflow.is_default ? "bg-purple-100 text-purple-800" : "bg-gray-100 text-gray-600"
+            }`}>
+            {workflow.is_default ? (t ? t("assumptions.yes") : "Yes") : t ? t("assumptions.no") : "No"}
           </span>
         );
       },
     },
     {
       id: "created_by_username",
-      header: "Created By",
+      header: t ? t("assumptions.createdBy") : "Created By",
       render: (_, row) => {
         const workflow = row as unknown as ValidationWorkflow;
-        return (
-          <span className="text-sm text-gray-900">
-            {workflow.created_by_username}
-          </span>
-        );
+        return <span className="text-sm text-gray-900">{workflow.created_by_username}</span>;
       },
     },
     {
       id: "updated_at",
-      header: "Last Updated",
+      header: t ? t("assumptions.lastUpdated") : "Last Updated",
       render: (_, row) => {
         const workflow = row as unknown as ValidationWorkflow;
-        return (
-          <span className="text-sm text-gray-500">
-            {formatDate(workflow.updated_at)}
-          </span>
-        );
+        return <span className="text-sm text-gray-500">{formatDate(workflow.updated_at)}</span>;
       },
     },
   ];
