@@ -1447,18 +1447,7 @@
     "checkType": "نوع الفحص",
     "type": "النوع",
     "leftSide": "الجانب الأيسر",
-    "rightSide": "الجانب الأيمن",
-    "ifTrue": "إذا كان صحيح (الشرط تحقق)",
-    "ifFalse": "إذا كان خطأ (الشرط لم يتحقق)",
-    "action": "الإجراء",
-    "selectAction": "اختر الإجراء",
-
-    "failureMessage": "رسالة الفشل (اختياري)",
-    "enterFailureMessage": "أدخل رسالة الفشل لهذه الخطوة",
-    "updateStage": "تحديث المرحلة",
-    "proceedToStep": "الانتقال للخطوة التالية",
-    "completeSuccess": "إنهاء بنجاح",
-    "completeFailure": "إنهاء بفشل"
+    "rightSide": "الجانب الأيمن"
   },
   "users": {
     "title": "إدارة المستخدمين",
@@ -1893,29 +1882,6 @@
     "tipDescription": "إذا كنت تعتقد أن هذا خطأ، حاول تحديث الصفحة أو تواصل مع الدعم.",
     "needHelp": "تحتاج مساعدة؟",
     "contactSupport": "تواصل مع الدعم"
-  },
-  "assumptionBuilder": {
-    "selectStage": "اختر مرحلة لتعديل خصائصها",
-    "stageName": "اسم المرحلة",
-    "leftHandSide": "الطرف الأيسر (LHS)",
-    "rightHandSide": "الطرف الأيمن (RHS)",
-    "operation": "العملية",
-    "selectOperator": "اختر العملية",
-    "ifTrue": "إذا كان صحيح (الشرط تحقق)",
-    "ifFalse": "إذا كان خطأ (الشرط لم يتحقق)",
-    "action": "الإجراء",
-    "selectAction": "اختر الإجراء",
-    "successMessage": "رسالة النجاح",
-    "errorMessage": "رسالة الخطأ",
-    "enterSuccessMessage": "أدخل رسالة النجاح",
-    "enterErrorMessage": "أدخل رسالة الخطأ",
-    "failureMessage": "رسالة الفشل (اختياري)",
-    "enterFailureMessage": "أدخل رسالة الفشل لهذه الخطوة",
-    "updateStage": "تحديث المرحلة",
-    "delete": "حذف",
-    "proceedToStep": "الانتقال للخطوة التالية",
-    "completeSuccess": "إنهاء بنجاح",
-    "completeFailure": "إنهاء بفشل"
   },
   "SegmentNames": {
     "MofaGeographic": "الموقع الجغرافي",
