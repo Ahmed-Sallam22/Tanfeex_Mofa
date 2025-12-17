@@ -1257,6 +1257,9 @@
     "createNewWorkflow": "Create New Workflow",
     "editWorkflow": "Edit Workflow",
     "deleteWorkflow": "Delete Workflow",
+    "manageAssignments": "Manage Assignments",
+    "saveAssignments": "Save Assignments",
+    "workflowAssignments": "Workflow Assignments",
     "updateWorkflow": "Update Workflow",
     "workflowName": "Workflow Name",
     "workflowType": "Workflow Type",
@@ -1306,6 +1309,9 @@
     "editStageTitle": "Edit stage",
     "deleteStageTitle": "Delete stage",
     "cancel": "Cancel"
+  },
+  "assumptions": {
+    "title": "Assumptions Management"
   },
   "users": {
     "title": "User Management",

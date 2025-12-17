@@ -1253,6 +1253,9 @@
     "workflows": "سير العمل",
     "workflowsList": "قائمة سير العمل",
     "addWorkflow": "إضافة سير عمل جديد",
+    "manageAssignments": "إدارة التعيينات",
+    "workflowAssignments": "تعيينات سير العمل",
+    "saveAssignments": "حفظ التعيينات",
     "createNewWorkflow": "إنشاء سير عمل جديد",
     "editWorkflow": "تعديل سير العمل",
     "deleteWorkflow": "حذف سير العمل",
@@ -1305,6 +1308,10 @@
     "editStageTitle": "تعديل المرحلة",
     "deleteStageTitle": "حذف المرحلة",
     "cancel": "إلغاء"
+  },
+  "assumptions": {
+    "title": "الافتراضات"
+    
   },
   "users": {
     "title": "إدارة المستخدمين",

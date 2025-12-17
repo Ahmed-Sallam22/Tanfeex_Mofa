@@ -801,7 +801,7 @@ const getSections = (
         },
          {
           to: "/app/Assumption",
-          label: "Assumption",
+          label: t("assumptions.title"),
           icon: AssumptionIcon,
           allowedRoles: ["superadmin"],
           allowedLevels: [] as number[],
