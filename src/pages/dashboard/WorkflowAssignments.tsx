@@ -164,24 +164,31 @@ export default function WorkflowAssignments() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 cursor-pointer py-2 text-md text-[#4E8476] hover:text-[#4E8476]">
+            className="flex items-center gap-2 cursor-pointer py-2 text-md text-[#4E8476] hover:text-[#4E8476]"
+          >
             {t("workflow.workflows")}
           </button>
           <span className="text-[#737373] text-lg">/</span>
-          <h1 className="text-md text-[#282828] font-medium tracking-wide">{t("workflow.workflowAssignments")}</h1>
+          <h1 className="text-md text-[#282828] font-medium tracking-wide">
+            {t("workflow.workflowAssignments")}
+          </h1>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 cursor-pointer p-1 text-md text-[#282828] px-4 py-2 rounded-md border border-[#BBBBBB] transition">
+            className="flex items-center gap-2 cursor-pointer p-1 text-md text-[#282828] px-4 py-2 rounded-md border border-[#BBBBBB] transition"
+          >
             {t("workflow.cancel")}
           </button>
           <button
             onClick={handleSave}
             disabled={!selectedSecurityGroup || isSaving}
-            className="flex items-center gap-2 cursor-pointer p-1 text-md bg-[#4E8476] text-white px-4 py-2 rounded-md hover:bg-[#4E8476] transition disabled:opacity-50 disabled:cursor-not-allowed">
-            {isSaving && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
+            className="flex items-center gap-2 cursor-pointer p-1 text-md bg-[#4E8476] text-white px-4 py-2 rounded-md hover:bg-[#4E8476] transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSaving && (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            )}
             {t("workflow.saveAssignments")}
           </button>
         </div>
@@ -189,7 +196,9 @@ export default function WorkflowAssignments() {
 
       <div className="bg-white p-6 rounded-lg shadow-md space-y-6">
         <div>
-          <h2 className="text-md font-semibold mb-4">{t("workflow.selectSecurityGroup")}</h2>
+          <h2 className="text-md font-semibold mb-4">
+            {t("workflow.selectSecurityGroup")}
+          </h2>
           <SharedSelect
             title={t("workflow.securityGroup")}
             size="text-sm"
@@ -206,13 +215,19 @@ export default function WorkflowAssignments() {
             {assignmentsData && assignmentsData.count > 0 && (
               <div className="bg-green-50 border border-green-200 rounded-md p-3">
                 <p className="text-sm text-green-800">
-                  ✓ {t("workflow.currentlyAssigned")}: <strong>{assignmentsData.count}</strong>{" "}
+                  ✓ {t("workflow.currentlyAssigned")}:{" "}
+                  <strong>{assignmentsData.count}</strong>{" "}
                   {t("workflow.workflows")}
-                  {assignmentsData.assignments && assignmentsData.assignments.length > 0 && (
-                    <span className="ml-2 text-xs">
-                      ({assignmentsData.assignments.map((a) => a.workflow_template_code).join(", ")})
-                    </span>
-                  )}
+                  {assignmentsData.assignments &&
+                    assignmentsData.assignments.length > 0 && (
+                      <span className="ml-2 text-xs">
+                        (
+                        {assignmentsData.assignments
+                          .map((a) => a.workflow_template_code)
+                          .join(", ")}
+                        )
+                      </span>
+                    )}
                 </p>
               </div>
             )}
@@ -229,32 +244,38 @@ export default function WorkflowAssignments() {
                 </h2>
               </div>
 
-              {workflowSelections.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed">
-                  <p className="mb-4">{t("workflow.noWorkflowsAssigned")}</p>
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    <button
-                      onClick={() => handleAddWorkflow("FAR")}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
-                      + {t("workflow.addFarWorkflow")}
-                    </button>
-                    <button
-                      onClick={() => handleAddWorkflow("DFR")}
-                      className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm">
-                      + {t("workflow.addDfrWorkflow")}
-                    </button>
-                    <button
-                      onClick={() => handleAddWorkflow("HFR")}
-                      className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm">
-                      + {t("workflow.addHfrWorkflow")}
-                    </button>
-                    <button
-                      onClick={() => handleAddWorkflow(null)}
-                      className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm">
-                      + {t("workflow.addGeneralWorkflow")}
-                    </button>
-                  </div>
+              <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed">
+                <p className="mb-4">{t("workflow.noWorkflowsAssigned")}</p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <button
+                    onClick={() => handleAddWorkflow("FAR")}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm"
+                  >
+                    + {t("workflow.addFarWorkflow")}
+                  </button>
+                  <button
+                    onClick={() => handleAddWorkflow("DFR")}
+                    className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
+                  >
+                    + {t("workflow.addDfrWorkflow")}
+                  </button>
+                  <button
+                    onClick={() => handleAddWorkflow("HFR")}
+                    className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm"
+                  >
+                    + {t("workflow.addHfrWorkflow")}
+                  </button>
+                  <button
+                    onClick={() => handleAddWorkflow(null)}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm"
+                  >
+                    + {t("workflow.addGeneralWorkflow")}
+                  </button>
                 </div>
+              </div>
+
+              {workflowSelections.length === 0 ? (
+                <></>
               ) : (
                 <div className="space-y-6">
                   {/* Group workflows by transaction code */}
@@ -265,11 +286,16 @@ export default function WorkflowAssignments() {
                       return order.indexOf(keyA) - order.indexOf(keyB);
                     })
                     .map(([transactionCode, workflows]) => (
-                      <div key={transactionCode} className="bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
+                      <div
+                        key={transactionCode}
+                        className="bg-gray-50 rounded-lg p-4 border-2 border-gray-200"
+                      >
                         <div className="flex justify-between items-center mb-3">
                           <h3 className="font-semibold text-lg flex items-center gap-2">
                             {transactionCode === "ALL" ? (
-                              <span className="text-gray-700">🌐 {t("workflow.allTransactions")}</span>
+                              <span className="text-gray-700">
+                                🌐 {t("workflow.allTransactions")}
+                              </span>
                             ) : (
                               <>
                                 <span
@@ -281,20 +307,33 @@ export default function WorkflowAssignments() {
                                       : transactionCode === "HFR"
                                       ? "bg-purple-500"
                                       : "bg-orange-500"
-                                  }`}>
+                                  }`}
+                                >
                                   {transactionCode}
                                 </span>
-                                <span className="text-gray-600">{t("workflow.workflowsLabel")}</span>
+                                <span className="text-gray-600">
+                                  {t("workflow.workflowsLabel")}
+                                </span>
                               </>
                             )}
                             <span className="text-sm text-gray-500 font-normal">
                               ({workflows.length}{" "}
-                              {workflows.length !== 1 ? t("workflow.workflows_plural") : t("workflow.workflow")})
+                              {workflows.length !== 1
+                                ? t("workflow.workflows_plural")
+                                : t("workflow.workflow")}
+                              )
                             </span>
                           </h3>
                           <button
-                            onClick={() => handleAddWorkflow(transactionCode === "ALL" ? null : transactionCode)}
-                            className="flex items-center gap-1 text-xs cursor-pointer bg-[#4E8476] text-white px-3 py-1 rounded-md hover:bg-[#3d6d5f] transition">
+                            onClick={() =>
+                              handleAddWorkflow(
+                                transactionCode === "ALL"
+                                  ? null
+                                  : transactionCode
+                              )
+                            }
+                            className="flex items-center gap-1 text-xs cursor-pointer bg-[#4E8476] text-white px-3 py-1 rounded-md hover:bg-[#3d6d5f] transition"
+                          >
                             + {t("workflow.addTo")} {transactionCode}
                           </button>
                         </div>
@@ -304,35 +343,44 @@ export default function WorkflowAssignments() {
                             const index = workflow.originalIndex;
                             const selection = workflowSelections[index];
                             return (
-                              <div key={index} className="flex items-center gap-3 bg-[#F6F6F6] p-4 rounded-md">
+                              <div
+                                key={index}
+                                className="flex items-center gap-3 bg-[#F6F6F6] p-4 rounded-md"
+                              >
                                 <div className="flex flex-col gap-1">
                                   <button
                                     onClick={() => handleMoveUp(index)}
                                     disabled={index === 0}
                                     className="p-1 text-[#4E8476] hover:bg-[#4E8476] hover:text-white rounded disabled:opacity-30 disabled:cursor-not-allowed"
-                                    title={t("workflow.moveUp")}>
+                                    title={t("workflow.moveUp")}
+                                  >
                                     <svg
                                       width="16"
                                       height="16"
                                       viewBox="0 0 24 24"
                                       fill="none"
                                       stroke="currentColor"
-                                      strokeWidth="2">
+                                      strokeWidth="2"
+                                    >
                                       <polyline points="18 15 12 9 6 15"></polyline>
                                     </svg>
                                   </button>
                                   <button
                                     onClick={() => handleMoveDown(index)}
-                                    disabled={index === workflowSelections.length - 1}
+                                    disabled={
+                                      index === workflowSelections.length - 1
+                                    }
                                     className="p-1 text-[#4E8476] hover:bg-[#4E8476] hover:text-white rounded disabled:opacity-30 disabled:cursor-not-allowed"
-                                    title={t("workflow.moveDown")}>
+                                    title={t("workflow.moveDown")}
+                                  >
                                     <svg
                                       width="16"
                                       height="16"
                                       viewBox="0 0 24 24"
                                       fill="none"
                                       stroke="currentColor"
-                                      strokeWidth="2">
+                                      strokeWidth="2"
+                                    >
                                       <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
                                   </button>
@@ -348,7 +396,9 @@ export default function WorkflowAssignments() {
                                     size="text-sm"
                                     options={workflowOptions}
                                     value={selection.workflow_template_id.toString()}
-                                    onChange={(value) => handleWorkflowChange(index, Number(value))}
+                                    onChange={(value) =>
+                                      handleWorkflowChange(index, Number(value))
+                                    }
                                     placeholder={t("workflow.selectWorkflow")}
                                   />
 
@@ -358,68 +408,108 @@ export default function WorkflowAssignments() {
                                       {t("workflow.applyToTransaction")}:
                                     </label>
                                     <select
-                                      value={selection.transaction_code_filter || ""}
-                                      onChange={(e) => handleTransactionCodeChange(index, e.target.value)}
-                                      className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#4E8476] bg-white">
-                                      <option value="">{t("workflow.allTransactionsNoFilter")}</option>
-                                      <option value="FAR">{t("workflow.farOnly")}</option>
-                                      <option value="DFR">{t("workflow.dfrOnly")}</option>
-                                      <option value="HFR">{t("workflow.hfrOnly")}</option>
-                                      <option value="DAR">{t("workflow.darOnly")}</option>
-                                      <option value="RAR">{t("workflow.rarOnly")}</option>
+                                      value={
+                                        selection.transaction_code_filter || ""
+                                      }
+                                      onChange={(e) =>
+                                        handleTransactionCodeChange(
+                                          index,
+                                          e.target.value
+                                        )
+                                      }
+                                      className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#4E8476] bg-white"
+                                    >
+                                      <option value="">
+                                        {t("workflow.allTransactionsNoFilter")}
+                                      </option>
+                                      <option value="FAR">
+                                        {t("workflow.farOnly")}
+                                      </option>
+                                      <option value="DFR">
+                                        {t("workflow.dfrOnly")}
+                                      </option>
+                                      <option value="HFR">
+                                        {t("workflow.hfrOnly")}
+                                      </option>
+                                      <option value="DAR">
+                                        {t("workflow.darOnly")}
+                                      </option>
+                                      <option value="RAR">
+                                        {t("workflow.rarOnly")}
+                                      </option>
                                     </select>
                                     {selection.transaction_code_filter && (
                                       <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded whitespace-nowrap">
-                                        {selection.transaction_code_filter} {t("workflow.only")}
+                                        {selection.transaction_code_filter}{" "}
+                                        {t("workflow.only")}
                                       </span>
                                     )}
                                   </div>
 
                                   {/* Show additional info if this is an existing assignment */}
-                                  {assignmentsData?.assignments && assignmentsData.assignments[index] && (
-                                    <div className="mt-1 text-xs text-gray-600">
-                                      <span className="inline-flex items-center gap-1">
-                                        <span className="font-semibold">
-                                          {assignmentsData.assignments[index].workflow_template_code}
+                                  {assignmentsData?.assignments &&
+                                    assignmentsData.assignments[index] && (
+                                      <div className="mt-1 text-xs text-gray-600">
+                                        <span className="inline-flex items-center gap-1">
+                                          <span className="font-semibold">
+                                            {
+                                              assignmentsData.assignments[index]
+                                                .workflow_template_code
+                                            }
+                                          </span>
+                                          <span>•</span>
+                                          <span>
+                                            {
+                                              assignmentsData.assignments[index]
+                                                .transfer_type
+                                            }
+                                          </span>
+                                          {assignmentsData.assignments[index]
+                                            .transaction_code_filter && (
+                                            <>
+                                              <span>•</span>
+                                              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                                                {t("workflow.filter")}:{" "}
+                                                {
+                                                  assignmentsData.assignments[
+                                                    index
+                                                  ].transaction_code_filter
+                                                }
+                                              </span>
+                                            </>
+                                          )}
+                                          {assignmentsData.assignments[index]
+                                            .created_at && (
+                                            <>
+                                              <span>•</span>
+                                              <span>
+                                                {t("workflow.created")}:{" "}
+                                                {new Date(
+                                                  assignmentsData.assignments[
+                                                    index
+                                                  ].created_at
+                                                ).toLocaleDateString()}
+                                              </span>
+                                            </>
+                                          )}
                                         </span>
-                                        <span>•</span>
-                                        <span>{assignmentsData.assignments[index].transfer_type}</span>
-                                        {assignmentsData.assignments[index].transaction_code_filter && (
-                                          <>
-                                            <span>•</span>
-                                            <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
-                                              {t("workflow.filter")}:{" "}
-                                              {assignmentsData.assignments[index].transaction_code_filter}
-                                            </span>
-                                          </>
-                                        )}
-                                        {assignmentsData.assignments[index].created_at && (
-                                          <>
-                                            <span>•</span>
-                                            <span>
-                                              {t("workflow.created")}:{" "}
-                                              {new Date(
-                                                assignmentsData.assignments[index].created_at
-                                              ).toLocaleDateString()}
-                                            </span>
-                                          </>
-                                        )}
-                                      </span>
-                                    </div>
-                                  )}
+                                      </div>
+                                    )}
                                 </div>
 
                                 <button
                                   onClick={() => handleRemoveWorkflow(index)}
                                   className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                                  title={t("workflow.remove")}>
+                                  title={t("workflow.remove")}
+                                >
                                   <svg
                                     width="20"
                                     height="20"
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     stroke="currentColor"
-                                    strokeWidth="2">
+                                    strokeWidth="2"
+                                  >
                                     <polyline points="3,6 5,6 21,6" />
                                     <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2" />
                                   </svg>
@@ -435,7 +525,9 @@ export default function WorkflowAssignments() {
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-              <h3 className="font-semibold text-blue-900 mb-2">ℹ️ {t("workflow.transactionCodeFilterInfo")}</h3>
+              <h3 className="font-semibold text-blue-900 mb-2">
+                ℹ️ {t("workflow.transactionCodeFilterInfo")}
+              </h3>
               <ul className="text-sm text-blue-800 space-y-2">
                 <li>
                   • <strong>{t("workflow.filterInfo1")}</strong>
