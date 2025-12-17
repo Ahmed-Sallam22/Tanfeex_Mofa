@@ -208,7 +208,7 @@ export const validationWorkflowApi = createApi({
     updateValidationWorkflow: builder.mutation<ValidationWorkflow, { id: number; body: UpdateValidationWorkflowRequest }>({
       query: ({ id, body }) => ({
         url: `/validations/workflows/${id}/`,
-        method: 'PUT',
+        method: 'PATCH',
         body,
       }),
       invalidatesTags: ['ValidationWorkflow'],
