@@ -1044,7 +1044,9 @@ export default function AssumptionBuilder() {
     };
 
     conditionNodes.forEach((node) => {
-      const nodeData = node.data as {
+      // Get the corresponding node from updatedNodes (which has assigned IDs)
+      const updatedNode = updatedNodes.find((n) => n.id === node.id);
+      const nodeData = (updatedNode?.data || node.data) as {
         id?: number;
         label?: string;
         leftSide?: string;
@@ -1421,4 +1423,3 @@ export default function AssumptionBuilder() {
     </div>
   );
 }
-
