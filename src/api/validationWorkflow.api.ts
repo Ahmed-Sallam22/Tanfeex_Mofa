@@ -39,6 +39,7 @@ export interface ValidationWorkflow {
   created_by_username: string;
   created_at: string;
   updated_at: string;
+  new_step_id: number;
 }
 
 export interface ValidationWorkflowListResponse {
@@ -94,10 +95,12 @@ export interface ValidationStep {
   if_false_action_data?: Record<string, unknown>;
   failure_message?: string;
   is_active?: boolean;
+  workflow_id?: number;
 }
 
 export interface BulkCreateStepsRequest {
   workflow_id: number;
+  new_step_id: number;
   steps: ValidationStep[];
 }
 
@@ -111,6 +114,7 @@ export interface BulkCreateStepsResponse {
 }
 
 export interface BulkUpdateStepsRequest {
+  new_step_id: number;
   updates: Partial<ValidationStep>[];
 }
 
