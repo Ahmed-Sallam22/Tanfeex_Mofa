@@ -44,6 +44,7 @@ export interface ActionNodeData extends Record<string, unknown> {
 export interface BlockItem {
   type: string;
   label: string;
+  labelKey: string; // Translation key
   icon: React.ReactNode;
   color: string;
 }

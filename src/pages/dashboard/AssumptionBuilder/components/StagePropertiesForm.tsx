@@ -41,9 +41,7 @@ export const StagePropertiesForm = ({
   return (
     <div className="space-y-5">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {t("assumptionBuilder.stageName")}
-        </label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">{t("assumptionBuilder.stageName")}</label>
         <Input
           placeholder={t("assumptionBuilder.stageName")}
           value={stageData.name}
@@ -77,9 +75,7 @@ export const StagePropertiesForm = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t("assumptionBuilder.operation")}
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t("assumptionBuilder.operation")}</label>
             <SharedSelect
               options={operatorOptions}
               value={stageData.operator}
@@ -120,20 +116,16 @@ export const StagePropertiesForm = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {selectedNode.type === "success"
-                ? "Success Message"
-                : "Error Message"}
+                ? t("assumptionBuilder.successMessage")
+                : t("assumptionBuilder.errorMessage")}
             </label>
             <Input
               placeholder={
                 selectedNode.type === "success"
-                  ? "Enter success message"
-                  : "Enter error message"
+                  ? t("assumptionBuilder.enterSuccessMessage")
+                  : t("assumptionBuilder.enterErrorMessage")
               }
-              value={
-                selectedNode.type === "success"
-                  ? stageData.message || ""
-                  : stageData.error || ""
-              }
+              value={selectedNode.type === "success" ? stageData.message || "" : stageData.error || ""}
               onChange={(e) => {
                 if (selectedNode.type === "success") {
                   setStageData((prev) => ({
@@ -152,8 +144,8 @@ export const StagePropertiesForm = ({
             />
             <p className="text-xs text-gray-500 mt-1">
               {selectedNode.type === "success"
-                ? "Message to display when this action completes successfully"
-                : "Error message to display when this action fails"}
+                ? t("assumptionBuilder.successMessageInfo")
+                : t("assumptionBuilder.errorMessageInfo")}
             </p>
           </div>
         </>
@@ -162,8 +154,7 @@ export const StagePropertiesForm = ({
       <div className="flex justify-end pt-4">
         <button
           onClick={deleteSelectedNode}
-          className="px-4 py-2.5 bg-red-50 text-red-500 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
-        >
+          className="px-4 py-2.5 bg-red-50 text-red-500 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors">
           {t("assumptionBuilder.delete")}
         </button>
       </div>

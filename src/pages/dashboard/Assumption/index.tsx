@@ -16,36 +16,29 @@ import {
   DescriptionModal,
   type ValidationWorkflow,
 } from "./components";
+import { useTranslation } from "react-i18next";
 
 export default function Assumption() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
   const [isWorkflowModalOpen, setIsWorkflowModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [selectedWorkflow, setSelectedWorkflow] =
-    useState<ValidationWorkflow | null>(null);
+  const [selectedWorkflow, setSelectedWorkflow] = useState<ValidationWorkflow | null>(null);
 
   // Workflow form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [executionPoint, setExecutionPoint] = useState("");
-  const [status, setStatus] = useState<"draft" | "active" | "inactive">(
-    "draft"
-  );
+  const [status, setStatus] = useState<"draft" | "active" | "inactive">("draft");
 
   // API hooks
-  const {
-    data: workflowsData,
-    isLoading,
-    error,
-  } = useGetValidationWorkflowsQuery();
+  const { data: workflowsData, isLoading, error } = useGetValidationWorkflowsQuery();
   const { data: executionPointsData } = useGetExecutionPointsQuery();
-  const [createWorkflow, { isLoading: isCreating }] =
-    useCreateValidationWorkflowMutation();
-  const [updateWorkflow, { isLoading: isUpdating }] =
-    useUpdateValidationWorkflowMutation();
+  const [createWorkflow, { isLoading: isCreating }] = useCreateValidationWorkflowMutation();
+  const [updateWorkflow, { isLoading: isUpdating }] = useUpdateValidationWorkflowMutation();
   const [deleteWorkflow] = useDeleteValidationWorkflowMutation();
 
   const workflows = workflowsData?.results || [];
@@ -66,15 +59,15 @@ export default function Assumption() {
 
   const handleSaveWorkflow = async () => {
     if (!name.trim()) {
-      toast.error("Please enter a workflow name");
+      toast.error(t("assumptions.pleaseEnterWorkflowName"));
       return;
     }
     if (!executionPoint) {
-      toast.error("Please select an execution point");
+      toast.error(t("assumptions.pleaseSelectExecutionPoint"));
       return;
     }
     if (!status) {
-      toast.error("Please select a status");
+      toast.error(t("assumptions.pleaseSelectStatus"));
       return;
     }
 
@@ -87,19 +80,16 @@ export default function Assumption() {
           status,
           step_ids: [], // Empty - no steps when creating
         }).unwrap();
-        toast.success("Validation workflow created successfully");
+        toast.success(t("assumptions.validationWorkflowCreated"));
 
         // Navigate to AssumptionBuilder with the created workflow ID
         navigate(`/app/AssumptionBuilder/${createdWorkflow.id}`);
       } else if (selectedWorkflow) {
         // Build update payload with only changed fields
         const updatePayload: Record<string, unknown> = {};
-        if (name.trim() !== selectedWorkflow.name)
-          updatePayload.name = name.trim();
-        if (description.trim() !== selectedWorkflow.description)
-          updatePayload.description = description.trim();
-        if (executionPoint !== selectedWorkflow.execution_point)
-          updatePayload.execution_point = executionPoint;
+        if (name.trim() !== selectedWorkflow.name) updatePayload.name = name.trim();
+        if (description.trim() !== selectedWorkflow.description) updatePayload.description = description.trim();
+        if (executionPoint !== selectedWorkflow.execution_point) updatePayload.execution_point = executionPoint;
         if (status !== selectedWorkflow.status) updatePayload.status = status;
 
         if (Object.keys(updatePayload).length > 0) {
@@ -107,9 +97,9 @@ export default function Assumption() {
             id: selectedWorkflow.id,
             body: updatePayload,
           }).unwrap();
-          toast.success("Validation workflow updated successfully");
+          toast.success(t("assumptions.validationWorkflowUpdated"));
         } else {
-          toast("No changes to save", { icon: "ℹ️" });
+          toast(t("assumptions.noChangesToSave"), { icon: "ℹ️" });
         }
       }
 
@@ -119,9 +109,7 @@ export default function Assumption() {
     } catch (err) {
       console.error("Failed to save workflow:", err);
       toast.error(
-        modalMode === "create"
-          ? "Failed to create workflow"
-          : "Failed to update workflow"
+        modalMode === "create" ? t("assumptions.failedToCreateWorkflow") : t("assumptions.failedToUpdateWorkflow")
       );
     }
   };
@@ -150,10 +138,10 @@ export default function Assumption() {
     const workflow = row as unknown as ValidationWorkflow;
     try {
       await deleteWorkflow(workflow.id).unwrap();
-      toast.success("Validation workflow deleted successfully");
+      toast.success(t("assumptions.validationWorkflowDeleted"));
     } catch (err) {
       console.error("Failed to delete workflow:", err);
-      toast.error("Failed to delete validation workflow");
+      toast.error(t("assumptions.failedToDeleteWorkflow"));
     }
   };
 
@@ -176,9 +164,7 @@ export default function Assumption() {
     return (
       <div className="flex justify-center items-center h-64 bg-white rounded-lg">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">
-          Loading validation workflows...
-        </span>
+        <span className="ml-2 text-gray-600">{t("assumptions.loadingValidationWorkflows")}</span>
       </div>
     );
   }
@@ -187,9 +173,7 @@ export default function Assumption() {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg text-red-600">
-          Error: Failed to load validation workflows
-        </div>
+        <div className="text-lg text-red-600">{t("assumptions.errorLoadingWorkflows")}</div>
       </div>
     );
   }
@@ -229,9 +213,7 @@ export default function Assumption() {
         executionPoint={executionPoint}
         setExecutionPoint={setExecutionPoint}
         status={status}
-        setStatus={(value) =>
-          setStatus(value as "draft" | "active" | "inactive")
-        }
+        setStatus={(value) => setStatus(value as "draft" | "active" | "inactive")}
         isLoading={isCreating || isUpdating}
       />
     </div>

@@ -15,6 +15,7 @@ import { ConditionNode } from "./ConditionNode";
 import { SuccessNode } from "./SuccessNode";
 import { FailNode } from "./FailNode";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 // Define node types
 const nodeTypes = {
@@ -38,21 +39,20 @@ interface WorkflowCanvasProps {
 
 const ZoomControls = () => {
   const { zoomIn, zoomOut } = useReactFlow();
+  const { t } = useTranslation();
 
   return (
     <div className="absolute bottom-4 z-50 left-4 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <button
         onClick={() => zoomIn({ duration: 300 })}
         className="p-2.5 hover:bg-gray-50 transition-colors border-b border-gray-100 cursor-pointer"
-        aria-label="Zoom in"
-      >
+        aria-label={t("assumptionBuilder.zoomIn")}>
         <Plus className="w-4 h-4 text-gray-600" />
       </button>
       <button
         onClick={() => zoomOut({ duration: 300 })}
         className="p-2.5 hover:bg-gray-50 transition-colors cursor-pointer"
-        aria-label="Zoom out"
-      >
+        aria-label={t("assumptionBuilder.zoomOut")}>
         <Minus className="w-4 h-4 text-gray-600" />
       </button>
     </div>
@@ -103,7 +103,8 @@ const ReactFlowWrapper = ({
       nodeTypes={nodeTypes}
       fitView
       className="bg-[#FAFAFA]"
-    >
+      minZoom={0.00001}
+      maxZoom={100}>
       <Background color="#575555" gap={16} size={1} />
       <ZoomControls />
     </ReactFlow>
