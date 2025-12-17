@@ -33,12 +33,12 @@ export const levelApi = createApi({
           : [{ type: 'Levels', id: 'LIST' }],
     }),
     createLevel: builder.mutation<LevelItem, CreateLevelBody>({
-      query: (body) => ({ url: '/auth/levels/', method: 'POST', body }),
+      query: (body) => ({ url: '/auth/levels/create/', method: 'POST', body }),
       invalidatesTags: [{ type: 'Levels', id: 'LIST' }],
     }),
     updateLevel: builder.mutation<LevelItem, { pk: number; data: UpdateLevelBody }>({
       query: ({ pk, data }) => ({
-        url: `/auth/levels/${pk}/`,
+        url: `/auth/levels/update/?pk=${pk}`,
         method: 'PUT',
         body: data,
       }),
@@ -49,7 +49,7 @@ export const levelApi = createApi({
     }),
     deleteLevel: builder.mutation<{ message?: string }, { pk: number }>({
       query: ({ pk }) => ({
-        url: `/auth/levels/${pk}/`,
+        url: `/auth/levels/delete?pk=${pk}`,
         method: 'DELETE',
       }),
       invalidatesTags: [{ type: 'Levels', id: 'LIST' }],

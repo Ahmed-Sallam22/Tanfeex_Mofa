@@ -707,13 +707,13 @@
     "edit": "تعديل",
     "delete": "حذف",
     "save": "حفظ",
-    "refresh": "تحديث", 
+    "refresh": "تحديث",
     "cancel": "إلغاء",
     "close": "إغلاق",
     "back": "رجوع",
     "next": "التالي",
     "previous": "السابق",
-    "submit":"إرسال",
+    "submit": "إرسال",
     "search": "بحث",
     "filter": "تصفية",
     "export": "تصدير",
@@ -1363,7 +1363,9 @@
     "users": "المستخدمون",
     "noUsersInLevel": "لا يوجد مستخدمون في هذا المستوى",
     "admin": "مسؤول",
-    "user": "مستخدم"
+    "user": "مستخدم",
+    "userLevelUpdated": "تم تحديث مستوى المستخدم بنجاح",
+    "userLevelCreated": "تم إنشاء مستوى المستخدم بنجاح"
   },
   "reports": {
     "title": "التقارير",

@@ -581,7 +581,7 @@
   "fundAdjustmentsDetails": {
     "title": "Decrease Fund Requests Details",
     "back": "Back",
-    "cancel":"Cancel",
+    "cancel": "Cancel",
     "save": "Save",
     "submit": "Submit",
     "addRow": "Add Row",
@@ -1364,7 +1364,9 @@
     "users": "USERS",
     "noUsersInLevel": "No users in this level",
     "admin": "Admin",
-    "user": "User"
+    "user": "User",
+    "userLevelUpdated": "User level updated successfully",
+    "userLevelCreated": "User level created successfully"
   },
   "reports": {
     "title": "Reports",

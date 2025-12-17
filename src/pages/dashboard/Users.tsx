@@ -17,13 +17,17 @@ import {
   useDeleteUserMutation,
   type UserListItem,
 } from "@/api/user.api";
-import { useGetLevelsQuery, type LevelItem } from "@/api/level.api";
+import {
+  useGetLevelsQuery,
+  useCreateLevelMutation,
+  useUpdateLevelMutation,
+  useDeleteLevelMutation,
+  type LevelItem,
+} from "@/api/level.api";
 
-const toApiRole = (uiRole: string) =>
-  (uiRole || "").toLowerCase() === "admin" ? "admin" : "user";
+const toApiRole = (uiRole: string) => ((uiRole || "").toLowerCase() === "admin" ? "admin" : "user");
 
-const fromApiRole = (apiRole: string) =>
-  (apiRole || "").toLowerCase() === "admin" ? "Admin" : "User";
+const fromApiRole = (apiRole: string) => ((apiRole || "").toLowerCase() === "admin" ? "Admin" : "User");
 // Role options
 const roleOptions: SelectOption[] = [
   { value: "Admin", label: "Admin" },
@@ -51,11 +55,12 @@ function UserChip({ name }: { name: string }) {
 }
 export default function Users() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<
-    "users" | "userLevels" | "assignment"
-  >("users");
+  const [activeTab, setActiveTab] = useState<"users" | "userLevels" | "assignment">("users");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const { data: serverLevels } = useGetLevelsQuery();
+  const [createLevel] = useCreateLevelMutation();
+  const [updateLevel] = useUpdateLevelMutation();
+  const [deleteLevel] = useDeleteLevelMutation();
 
   const userLevelsData: TableRow[] = useMemo(() => {
     const list = serverLevels ?? [];
@@ -68,10 +73,9 @@ export default function Users() {
   }, [serverLevels]);
   // Modal states
   const [isUserModalOpen, setIsUserModalOpen] = useState<boolean>(false);
-  const [isUserLevelModalOpen, setIsUserLevelModalOpen] =
-    useState<boolean>(false);
+  const [isUserLevelModalOpen, setIsUserLevelModalOpen] = useState<boolean>(false);
   const [editingUser, setEditingUser] = useState<TableRow | null>(null);
-  const [editingUserLevel] = useState<TableRow | null>(null);
+  const [editingUserLevel, setEditingUserLevel] = useState<TableRow | null>(null);
 
   const { data: serverUsers, isLoading } = useGetUsersQuery();
   const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
@@ -120,27 +124,15 @@ export default function Users() {
   // Filter data based on search query
   const filteredUsersData = usersData.filter(
     (user) =>
-      user.username
-        ?.toString()
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
+      user.username?.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.role?.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.userLevel
-        ?.toString()
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase())
+      user.userLevel?.toString().toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const filteredUserLevelsData = userLevelsData.filter(
     (level) =>
-      level.name
-        ?.toString()
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      level.description
-        ?.toString()
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase())
+      level.name?.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
+      level.description?.toString().toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Icons
@@ -159,11 +151,8 @@ export default function Users() {
       render: (value) => (
         <span
           className={`px-2 py-1 rounded-lg text-xs font-medium ${
-            value === "Admin"
-              ? "bg-purple-100 text-purple-800"
-              : "bg-blue-100 text-blue-800"
-          }`}
-        >
+            value === "Admin" ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800"
+          }`}>
           {String(value)}
         </span>
       ),
@@ -181,8 +170,7 @@ export default function Users() {
         <span
           className={`px-2 py-1 rounded-lg text-xs font-medium ${
             value ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          }`}
-        >
+          }`}>
           {value ? t("users.active") : t("users.inactive")}
         </span>
       ),
@@ -286,36 +274,55 @@ export default function Users() {
   //   }
   // };
 
-  // const handleAddUserLevel = () => {
-  //   setEditingUserLevel(null);
-  //   setUserLevelForm({ name: '', description: '', order: '' });
-  //   setIsUserLevelModalOpen(true);
-  // };
+  const handleAddUserLevel = () => {
+    setEditingUserLevel(null);
+    setUserLevelForm({ name: "", description: "", order: "" });
+    setIsUserLevelModalOpen(true);
+  };
 
-  // const handleEditUserLevel = (level: TableRow) => {
-  //   setEditingUserLevel(level);
-  //   setUserLevelForm({
-  //     name: String(level.name),
-  //     description: String(level.description),
-  //     order: String(level.order)
-  //   });
-  //   setIsUserLevelModalOpen(true);
-  // };
+  const handleEditUserLevel = (level: TableRow) => {
+    setEditingUserLevel(level);
+    setUserLevelForm({
+      name: String(level.name),
+      description: String(level.description),
+      order: String(level.order),
+    });
+    setIsUserLevelModalOpen(true);
+  };
 
-  // const handleDeleteUserLevel = (level: TableRow) => {
-  //   if (confirm(`Are you sure you want to delete level "${level.name}"?`)) {
-  //     console.log("Deleting user level:", level);
-  //     // Add delete logic here
-  //   }
-  // };
+  const handleDeleteUserLevel = async (level: TableRow) => {
+    try {
+      await deleteLevel({ pk: Number(level.id) }).unwrap();
+      toast.success(t("users.userLevelDeleted"));
+    } catch (e: any) {
+      toast.error(e?.data?.message || t("users.deleteFailed"));
+    }
+  };
 
-  const handleSaveUserLevel = () => {
-    console.log(
-      editingUserLevel ? "Updating user level:" : "Creating user level:",
-      userLevelForm
-    );
-    setIsUserLevelModalOpen(false);
-    // Add save logic here
+  const handleSaveUserLevel = async () => {
+    try {
+      if (editingUserLevel) {
+        await updateLevel({
+          pk: Number(editingUserLevel.id),
+          data: {
+            name: userLevelForm.name,
+            description: userLevelForm.description,
+            level_order: Number(userLevelForm.order),
+          },
+        }).unwrap();
+        toast.success(t("users.userLevelUpdated"));
+      } else {
+        await createLevel({
+          name: userLevelForm.name,
+          description: userLevelForm.description,
+          level_order: Number(userLevelForm.order),
+        }).unwrap();
+        toast.success(t("users.userLevelCreated"));
+      }
+      setIsUserLevelModalOpen(false);
+    } catch (e: any) {
+      toast.error(e?.data?.message || t("users.operationFailed"));
+    }
   };
 
   const handleAssignLevel = () => {
@@ -329,7 +336,8 @@ export default function Users() {
   };
 
   const shouldShowAddButton = () => {
-    return activeTab === "users";
+    console.log(activeTab);
+    return activeTab === "users" || activeTab === "userLevels";
   };
   // map لاسم العرض من الليست الجاهزة
   const usernameToLabel = new Map(userOptions.map((o) => [o.value, o.label]));
@@ -341,9 +349,7 @@ export default function Users() {
     .map((level) => {
       const members = usersData
         .filter((u) => u.userLevel === level.name)
-        .map(
-          (u) => usernameToLabel.get(String(u.username)) ?? String(u.username)
-        );
+        .map((u) => usernameToLabel.get(String(u.username)) ?? String(u.username));
       return {
         levelName: String(level.name),
         order: Number(level.order),
@@ -359,22 +365,15 @@ export default function Users() {
         <h1 className="text-2xl font-bold tracking-wide">{getPageTitle()}</h1>
         {shouldShowAddButton() && (
           <button
-            onClick={handleAddUser}
-            className="flex items-center cursor-pointer  gap-1 text-sm  bg-[#4E8476] text-white px-2 py-1.5 rounded-md hover:bg-[#4E8476] transition"
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            onClick={activeTab === "users" ? handleAddUser : handleAddUserLevel}
+            className="flex items-center cursor-pointer  gap-1 text-sm  bg-[#4E8476] text-white px-2 py-1.5 rounded-md hover:bg-[#4E8476] transition">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M18 12.998H13V17.998C13 18.2633 12.8946 18.5176 12.7071 18.7052C12.5196 18.8927 12.2652 18.998 12 18.998C11.7348 18.998 11.4804 18.8927 11.2929 18.7052C11.1054 18.5176 11 18.2633 11 17.998V12.998H6C5.73478 12.998 5.48043 12.8927 5.29289 12.7052C5.10536 12.5176 5 12.2633 5 11.998C5 11.7328 5.10536 11.4785 5.29289 11.2909C5.48043 11.1034 5.73478 10.998 6 10.998H11V5.99805C11 5.73283 11.1054 5.47848 11.2929 5.29094C11.4804 5.1034 11.7348 4.99805 12 4.99805C12.2652 4.99805 12.5196 5.1034 12.7071 5.29094C12.8946 5.47848 13 5.73283 13 5.99805V10.998H18C18.2652 10.998 18.5196 11.1034 18.7071 11.2909C18.8946 11.4785 19 11.7328 19 11.998C19 12.2633 18.8946 12.5176 18.7071 12.7052C18.5196 12.8927 18.2652 12.998 18 12.998Z"
                 fill="white"
               />
             </svg>
-            {t("users.addUser")}
+            {t(activeTab === "users" ? "users.addUser" : "users.addUserLevel")}
           </button>
         )}
       </div>
@@ -389,8 +388,7 @@ export default function Users() {
                 activeTab === "users"
                   ? "border-blue-500 text-blue-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
-            >
+              }`}>
               {t("users.usersTab")}
             </button>
             <button
@@ -399,8 +397,7 @@ export default function Users() {
                 activeTab === "userLevels"
                   ? "border-blue-500 text-blue-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
-            >
+              }`}>
               {t("users.userLevelsTab")}
             </button>
             <button
@@ -409,8 +406,7 @@ export default function Users() {
                 activeTab === "assignment"
                   ? "border-blue-500 text-blue-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
-            >
+              }`}>
               {t("users.assignmentTab")}
             </button>
           </nav>
@@ -423,11 +419,7 @@ export default function Users() {
           {/* Search Bar */}
           <div className="p-4 bg-white rounded-2xl mb-6">
             <SearchBar
-              placeholder={
-                activeTab === "users"
-                  ? t("users.searchUsers")
-                  : t("users.searchUserLevels")
-              }
+              placeholder={activeTab === "users" ? t("users.searchUsers") : t("users.searchUserLevels")}
               value={searchQuery}
               onChange={handleSearchChange}
               onSubmit={handleSearchSubmit}
@@ -440,37 +432,21 @@ export default function Users() {
             {isLoading || isDeleting ? (
               <div className="flex justify-center items-center h-64 bg-white rounded-lg">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-gray-600">
-                  {t("users.loadingTransfers")}
-                </span>
+                <span className="ml-2 text-gray-600">{t("users.loadingTransfers")}</span>
               </div>
             ) : (
               <SharedTable
-                title={
-                  activeTab === "users"
-                    ? t("users.usersTab")
-                    : t("users.userLevelsTab")
-                }
-                columns={
-                  activeTab === "users" ? usersColumns : userLevelsColumns
-                }
-                data={
-                  activeTab === "users"
-                    ? filteredUsersData
-                    : filteredUserLevelsData
-                }
+                title={activeTab === "users" ? t("users.usersTab") : t("users.userLevelsTab")}
+                columns={activeTab === "users" ? usersColumns : userLevelsColumns}
+                data={activeTab === "users" ? filteredUsersData : filteredUserLevelsData}
                 maxHeight="600px"
                 className="shadow-lg"
                 showPagination={false}
-                showActions={activeTab === "users" ? true : false}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
+                showActions={activeTab === "users" || activeTab === "userLevels"}
+                onEdit={activeTab === "users" ? handleEdit : handleEditUserLevel}
+                onDelete={activeTab === "users" ? handleDelete : handleDeleteUserLevel}
                 showFooter={false}
-                filterLabel={
-                  activeTab === "userLevels"
-                    ? t("users.addUserLevel")
-                    : undefined
-                }
+                filterLabel={activeTab === "userLevels" ? t("users.addUserLevel") : undefined}
               />
             )}
           </div>
@@ -483,12 +459,8 @@ export default function Users() {
           {/* Assign User Level */}
           <div className="w-1/2 p-6 bg-white rounded-2xl shadow-sm">
             <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
-                {t("users.assignUserLevel")}
-              </h2>
-              <p className="text-sm text-gray-600">
-                {t("users.assignNewLevel")}
-              </p>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">{t("users.assignUserLevel")}</h2>
+              <p className="text-sm text-gray-600">{t("users.assignNewLevel")}</p>
             </div>
 
             <div className="space-y-4">
@@ -526,11 +498,8 @@ export default function Users() {
 
               <button
                 onClick={handleAssignLevel}
-                disabled={
-                  !assignmentForm.selectedUser || !assignmentForm.selectedLevel
-                }
-                className="w-full px-4 py-2 bg-[#4E8476] text-white rounded-md hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
+                disabled={!assignmentForm.selectedUser || !assignmentForm.selectedLevel}
+                className="w-full px-4 py-2 bg-[#4E8476] text-white rounded-md hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed">
                 {t("users.assign")}
               </button>
             </div>
@@ -540,37 +509,24 @@ export default function Users() {
           {/* Users by Level (New Design) */}
           <div className="w-1/2 p-6 bg-white rounded-2xl shadow-sm">
             <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
-                {t("users.usersByLevel")}
-              </h2>
-              <p className="text-sm text-gray-600">
-                {t("users.userDistribution")}
-              </p>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">{t("users.usersByLevel")}</h2>
+              <p className="text-sm text-gray-600">{t("users.userDistribution")}</p>
             </div>
 
             <div className="space-y-4 max-h-[520px] overflow-y-auto custom-scrollbar pr-2">
               {groupedUsersByLevel.map((group, idx) => (
-                <div
-                  key={idx}
-                  className="relative rounded-2xl bg-[#F6F6F6] p-4"
-                >
+                <div key={idx} className="relative rounded-2xl bg-[#F6F6F6] p-4">
                   {/* count badge on the left */}
                   <div className="flex justify-between items-center mb-3">
                     <div className=" flex flex-col items-start justify-between">
-                      <h3 className="text-[14px] font-bold text-[#276EF1]">
-                        {t("users.planningAndBudgeting")}{" "}
-                      </h3>
+                      <h3 className="text-[14px] font-bold text-[#276EF1]">{t("users.planningAndBudgeting")} </h3>
                       <span className="text-xs text-gray-500">
                         {t("users.orderLabel")} {group.order}
                       </span>
                     </div>
                     <div className="flex flex-col items-center justify-center h-12 w-12 rounded-xl bg-white shadow ring-1 ring-black/5">
-                      <span className="text-[15px] font-semibold">
-                        {group.count}
-                      </span>
-                      <span className="text-[8px] tracking-wide text-gray-500">
-                        {t("users.users")}
-                      </span>
+                      <span className="text-[15px] font-semibold">{group.count}</span>
+                      <span className="text-[8px] tracking-wide text-gray-500">{t("users.users")}</span>
                     </div>
                   </div>
 
@@ -579,13 +535,9 @@ export default function Users() {
                   {/* chips */}
                   <div className=" flex flex-wrap gap-2">
                     {group.members.length > 0 ? (
-                      group.members.map((name, i) => (
-                        <UserChip key={i} name={name} />
-                      ))
+                      group.members.map((name, i) => <UserChip key={i} name={name} />)
                     ) : (
-                      <span className="text-sm text-gray-500">
-                        {t("users.noUsersInLevel")}
-                      </span>
+                      <span className="text-sm text-gray-500">{t("users.noUsersInLevel")}</span>
                     )}
                   </div>
                 </div>
@@ -600,19 +552,14 @@ export default function Users() {
         isOpen={isUserModalOpen}
         onClose={() => setIsUserModalOpen(false)}
         title={editingUser ? t("users.editUser") : t("users.addUser")}
-        size="md"
-      >
+        size="md">
         <div className="p-4 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#282828] mb-2">
-              {t("users.username")}
-            </label>
+            <label className="block text-xs font-semibold text-[#282828] mb-2">{t("users.username")}</label>
             <input
               type="text"
               value={userForm.username}
-              onChange={(e) =>
-                setUserForm((prev) => ({ ...prev, username: e.target.value }))
-              }
+              onChange={(e) => setUserForm((prev) => ({ ...prev, username: e.target.value }))}
               className="w-full px-3 py-2 border border-[#E2E2E2] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={t("users.enterUsername")}
             />
@@ -620,15 +567,11 @@ export default function Users() {
 
           {!editingUser && (
             <div>
-              <label className="block text-xs  font-semibold  text-[#282828] mb-2">
-                {t("users.password")}
-              </label>
+              <label className="block text-xs  font-semibold  text-[#282828] mb-2">{t("users.password")}</label>
               <input
                 type="password"
                 value={userForm.password}
-                onChange={(e) =>
-                  setUserForm((prev) => ({ ...prev, password: e.target.value }))
-                }
+                onChange={(e) => setUserForm((prev) => ({ ...prev, password: e.target.value }))}
                 className="w-full px-3 py-2 border border-[#E2E2E2] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t("users.enterPassword")}
               />
@@ -654,8 +597,7 @@ export default function Users() {
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={() => setIsUserModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
-            >
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors">
               {t("users.cancel")}
             </button>
             <button
@@ -667,16 +609,11 @@ export default function Users() {
                 !userForm.role.trim() ||
                 (!editingUser && !userForm.password.trim())
               }
-              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-            >
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-blue-600 rounded-md hover:bg-blue-700 transition-colors">
               {(isCreating || isUpdating) && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               )}
-              {!isCreating && !isUpdating && (
-                <span>
-                  {editingUser ? t("users.updateUser") : t("users.addUser")}
-                </span>
-              )}
+              {!isCreating && !isUpdating && <span>{editingUser ? t("users.updateUser") : t("users.addUser")}</span>}
             </button>
           </div>
         </div>
@@ -686,31 +623,22 @@ export default function Users() {
       <SharedModal
         isOpen={isUserLevelModalOpen}
         onClose={() => setIsUserLevelModalOpen(false)}
-        title={
-          editingUserLevel ? t("users.editUserLevel") : t("users.addUserLevel")
-        }
-        size="md"
-      >
+        title={editingUserLevel ? t("users.editUserLevel") : t("users.addUserLevel")}
+        size="md">
         <div className="p-4 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-[#282828] mb-2">
-              {t("users.name")} *
-            </label>
+            <label className="block text-xs font-bold text-[#282828] mb-2">{t("users.name")} *</label>
             <input
               type="text"
               value={userLevelForm.name}
-              onChange={(e) =>
-                setUserLevelForm((prev) => ({ ...prev, name: e.target.value }))
-              }
+              onChange={(e) => setUserLevelForm((prev) => ({ ...prev, name: e.target.value }))}
               className="w-full px-3 py-3 border border-[#E2E2E2] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={t("users.enterLevelName")}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#282828] mb-2">
-              {t("users.description")} *
-            </label>
+            <label className="block text-xs font-bold text-[#282828] mb-2">{t("users.description")} *</label>
             <textarea
               value={userLevelForm.description}
               onChange={(e) =>
@@ -726,15 +654,11 @@ export default function Users() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#282828] mb-2">
-              {t("users.order")} *
-            </label>
+            <label className="block text-xs font-bold text-[#282828] mb-2">{t("users.order")} *</label>
             <input
               type="number"
               value={userLevelForm.order}
-              onChange={(e) =>
-                setUserLevelForm((prev) => ({ ...prev, order: e.target.value }))
-              }
+              onChange={(e) => setUserLevelForm((prev) => ({ ...prev, order: e.target.value }))}
               className="w-full px-3 py-3 border border-[#E2E2E2] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={t("users.enterOrderNumber")}
             />
@@ -743,14 +667,12 @@ export default function Users() {
           <div className="flex justify-end gap-3 pt-4 border-t">
             <button
               onClick={() => setIsUserLevelModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
-            >
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors">
               {t("users.cancel")}
             </button>
             <button
               onClick={handleSaveUserLevel}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-            >
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-blue-600 rounded-md hover:bg-blue-700 transition-colors">
               {editingUserLevel ? t("users.updateLevel") : t("users.addLevel")}
             </button>
           </div>
