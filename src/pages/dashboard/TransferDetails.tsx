@@ -1602,9 +1602,15 @@ export default function TransferDetails() {
       render: (_, row) => {
         const transferRow = row as unknown as TransferTableRow;
         const apiValidationErrors = apiData?.validation_errors || [];
-        console.log("apiValidationErrors", apiValidationErrors);
 
-        const hasErrors = apiValidationErrors.length > 0;
+        // Filter errors to only show transfer_line errors for this specific row
+        const rowErrors = apiValidationErrors.filter(
+          (error) =>
+            error.scope === "transfer_line" &&
+            error.transfer_id?.toString() === transferRow.id
+        );
+
+        const hasErrors = rowErrors.length > 0;
 
         return (
           <div className="flex items-center  gap-3 justify-center">
@@ -1636,12 +1642,9 @@ export default function TransferDetails() {
             {hasErrors ? (
               <button
                 onClick={() => {
-                  // Extract messages from validation errors
-                  const errorMessages = apiValidationErrors
-                    .map((error) => {
-                      console.log(error.message);
-                      return error.message;
-                    })
+                  // Extract messages from row-specific validation errors
+                  const errorMessages = rowErrors
+                    .map((error) => error.message)
                     .filter((msg): msg is string => !!msg);
                   handleValidationErrorClick(errorMessages);
                 }}
@@ -2354,6 +2357,51 @@ export default function TransferDetails() {
       )}
 
       <div>
+        {/* Global Transaction-Level Validation Errors Banner */}
+        {apiData?.validation_errors && apiData.validation_errors.length > 0 && (
+          <>
+            {apiData.validation_errors
+              .filter((error) => error.scope === "transaction")
+              .map((error, index) => (
+                <div
+                  key={`transaction-error-${index}`}
+                  className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-red-100 border border-red-300 rounded-full flex items-center justify-center">
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M6 1L11 10H1L6 1Z"
+                          stroke="#dc2626"
+                          strokeWidth="1.5"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M6 4V6.5"
+                          stroke="#dc2626"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                        <circle cx="6" cy="8.5" r="0.5" fill="#dc2626" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-red-700 mb-1">
+                        {error.message}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+          </>
+        )}
+
         <SharedTable
           columns={columnsDetails}
           data={rows as unknown as SharedTableRow[]}

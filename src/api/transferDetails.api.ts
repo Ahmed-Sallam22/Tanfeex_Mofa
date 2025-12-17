@@ -114,6 +114,7 @@ export interface TransferDetailsResponse {
   validation_errors?: Array<{
     scope?: string;
     transaction_id?: string;
+    transfer_id?: number;
     workflow?: string;
     step?: string;
     message?: string;
