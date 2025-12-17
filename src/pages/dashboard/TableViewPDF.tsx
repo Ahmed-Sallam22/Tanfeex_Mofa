@@ -81,13 +81,19 @@ const transformApiDataToTableData = (apiData: TransactionReportData[]): TableRow
   return apiData.map((transaction, index) => {
     // Get first transfer's segment data for program/classification if available
     const firstTransfer = transaction.transfers?.[0];
-    const programSegment = firstTransfer?.segments?.["5"]; // Segment 5 is typically program
-    const economicSegment = firstTransfer?.segments?.["4"]; // Segment 4 is typically economic classification
+    // Use segment_11 (عنصر الميزانية) for program/project column
+    const segment11 = firstTransfer?.segments?.segment_11;
+    // Use segment_5 (الموقع الجغرافي) for economic classification
+    const segment5 = firstTransfer?.segments?.segment_5;
+
+    // Get from_code and from_name, fallback to to_code and to_name if from is empty
+    const programCode = segment11?.from_code || segment11?.to_code || "";
+    const programName = segment11?.from_name || segment11?.to_name || "-";
 
     return {
       id: transaction.transaction_id || index + 1,
-      program: programSegment?.from_name || programSegment?.to_name || "-",
-      economicClassification: economicSegment?.from_name || economicSegment?.to_name || "-",
+      program: programCode ? `${programCode} - ${programName}` : programName,
+      economicClassification: "-",
       documentNumber: transaction.code || transaction.transaction_id?.toString() || "-",
       discussionType: transaction.transfer_type || transaction.type || "-",
       amountFrom: transaction.summary?.total_from_center?.toString() || "0",
