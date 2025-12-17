@@ -1368,7 +1368,7 @@ export default function Transfer() {
               {/* Overall Status */}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-600">Transfer Status:</span>
+                  <span className="text-sm font-medium text-gray-600">{t("TransferStatus")}:</span>
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       statusData.transfer_status === "approved"

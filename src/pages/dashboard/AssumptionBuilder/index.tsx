@@ -758,183 +758,53 @@ export default function AssumptionBuilder() {
     setSelectedNode(null);
   }, [selectedNode, edges, setNodes, setEdges, deleteValidationStep, t]);
 
-  // Helper function to find the next step connected via edges
-  const findNextStepFromNode = useCallback(
-    (conditionNodeId: string, isTrue: boolean): { action: string; actionData: Record<string, unknown> } => {
-      const handleId = isTrue ? "true" : "false";
-
-      // Current condition node and its stored data (may contain custom messages)
-      const currentCondition = nodes.find((n) => n.id === conditionNodeId);
-      const currentCondData = (currentCondition?.data || {}) as Record<string, unknown>;
-
-      // Helper to safely read fields from unknown record
-      const getStringField = (src: Record<string, unknown> | undefined, key: string): string | undefined => {
-        if (!src) return undefined;
-        const val = src[key];
-        return typeof val === "string" ? val : undefined;
-      };
-
-      // First: direct connection from condition handle to another condition
-      const directEdgeToCondition = edges.find((e) => e.source === conditionNodeId && e.sourceHandle === handleId);
-      if (directEdgeToCondition) {
-        const targetNode = nodes.find((n) => n.id === directEdgeToCondition.target);
-        if (targetNode && targetNode.type === "condition") {
-          const targetData = (targetNode.data || {}) as Record<string, unknown>;
-          if (typeof targetData.id === "number") {
-            // prefer note from current condition data, then fallback
-            const note =
-              getStringField(currentCondData as Record<string, unknown>, "note") ||
-              getStringField(currentCondData as Record<string, unknown>, "message") ||
-              (isTrue ? "Condition passed" : "Condition failed");
-
-            return {
-              action: "proceed_to_step_by_id",
-              actionData: { next_step_id: targetData.id as number, note },
-            };
-          } else {
-            const message =
-              getStringField(currentCondData as Record<string, unknown>, "message") ||
-              (isTrue ? "Proceeding to next step" : "Moving to fallback step");
-            return { action: "proceed_to_step", actionData: { message } };
-          }
-        }
-      }
-
-      // Next: check for an action node (success/fail) coming from this condition
-      // Find the edge with the matching handle (true or false)
-      const edgeFromCondition = edges.find((e) => e.source === conditionNodeId && e.sourceHandle === handleId);
-
-      console.log(`🔗 Looking for ${isTrue ? "TRUE" : "FALSE"} edge from ${conditionNodeId}:`, edgeFromCondition);
-
-      let actionNodeId: string | undefined;
-      if (edgeFromCondition) {
-        const targetNode = nodes.find((n) => n.id === edgeFromCondition.target);
-        console.log(`🎯 Target node:`, targetNode);
-        // Accept success or fail nodes, we'll determine action by node type
-        if (targetNode && (targetNode.type === "success" || targetNode.type === "fail")) {
-          actionNodeId = edgeFromCondition.target;
-        }
-      }
-
-      // If we have an action node, prefer reading its message/error and whether it links further
-      if (actionNodeId) {
-        const actionNode = nodes.find((n) => n.id === actionNodeId);
-        const actionData = (actionNode?.data || {}) as Record<string, unknown>;
-
-        // If the action node links to another condition, handle proceed_to_step_by_id/proceed_to_step
-        const edgeToNextStep = edges.find((e) => e.source === actionNodeId);
-        if (edgeToNextStep) {
-          const targetNode = nodes.find((n) => n.id === edgeToNextStep.target);
-          if (targetNode && targetNode.type === "condition") {
-            const targetData = (targetNode.data || {}) as Record<string, unknown>;
-            if (typeof targetData.id === "number") {
-              // use action node message as note if present
-              const note =
-                getStringField(actionData, "message") ||
-                getStringField(actionData, "error") ||
-                getStringField(currentCondData as Record<string, unknown>, "note") ||
-                (isTrue ? "Condition passed" : "Condition failed");
-              return {
-                action: "proceed_to_step_by_id",
-                actionData: { next_step_id: targetData.id as number, note },
-              };
-            } else {
-              const message =
-                getStringField(actionData, "message") ||
-                getStringField(actionData, "error") ||
-                getStringField(currentCondData as Record<string, unknown>, "message") ||
-                (isTrue ? "Proceeding to next step" : "Moving to fallback step");
-              return { action: "proceed_to_step", actionData: { message } };
-            }
-          }
-        }
-
-        // Otherwise, return the action indicated by the action node type
-        // Success node = complete_success, Fail node = complete_failure
-        const actionNodeType = actionNode?.type;
-
-        console.log(`📍 Action node for ${isTrue ? "TRUE" : "FALSE"} path:`, {
-          actionNodeId,
-          actionNodeType,
-          actionData,
-          message: getStringField(actionData, "message"),
-          error: getStringField(actionData, "error"),
-        });
-
-        if (actionNodeType === "success") {
-          const finalMessage =
-            getStringField(actionData, "message") ||
-            getStringField(currentCondData as Record<string, unknown>, "message") ||
-            "";
-          return {
-            action: "complete_success",
-            actionData: { message: finalMessage },
-          };
-        }
-        if (actionNodeType === "fail") {
-          // allow error or message field (flexible)
-          const error =
-            getStringField(actionData, "error") ||
-            getStringField(actionData, "message") ||
-            getStringField(currentCondData as Record<string, unknown>, "error") ||
-            "";
-          return { action: "complete_failure", actionData: { error } };
-        }
-      }
-
-      // Fallback: use stored condition data (allow swapped actions/messages)
-      const storedTrue = currentCondData?.ifTrueAction || (isTrue ? "complete_success" : "complete_failure");
-      const storedFalse = currentCondData?.ifFalseAction || (isTrue ? "complete_failure" : "complete_success");
-
-      if (isTrue) {
-        if (storedTrue === "complete_success") {
-          const msg =
-            getStringField(currentCondData as Record<string, unknown>, "message") ||
-            getStringField(currentCondData as Record<string, unknown>, "ifTrueActionData") ||
-            "";
-          return { action: "complete_success", actionData: { message: msg } };
-        }
-        if (storedTrue === "complete_failure") {
-          const err =
-            getStringField(currentCondData as Record<string, unknown>, "error") ||
-            getStringField(currentCondData as Record<string, unknown>, "message") ||
-            "";
-          return { action: "complete_failure", actionData: { error: err } };
-        }
-      } else {
-        if (storedFalse === "complete_success") {
-          const msg = getStringField(currentCondData as Record<string, unknown>, "message") || "";
-          return { action: "complete_success", actionData: { message: msg } };
-        }
-        if (storedFalse === "complete_failure") {
-          const err =
-            getStringField(currentCondData as Record<string, unknown>, "error") ||
-            getStringField(currentCondData as Record<string, unknown>, "message") ||
-            "";
-          return { action: "complete_failure", actionData: { error: err } };
-        }
-      }
-
-      // final fallback
-      return isTrue
-        ? { action: "complete_success", actionData: { message: "" } }
-        : { action: "complete_failure", actionData: { error: "" } };
-    },
-    [edges, nodes]
-  );
-
   // Build workflow JSON and save to API
   const buildWorkflowJSON = useCallback(async () => {
     if (!workflowData.workflowId) {
-      toast.error(t("assumptionBuilder.workflowIdRequired"));
+      toast.error("Workflow ID is required. Please create a workflow first.");
       return;
     }
+
+    // Get new_step_id from workflow data (from API response)
+    const newStepId = workflowApiData?.new_step_id || 1;
 
     // Filter only condition nodes (not success/fail nodes)
     const conditionNodes = nodes.filter((node) => node.type === "condition");
 
-    // Separate new steps (no id) from existing steps (has id)
+    // FIRST PASS: Assign IDs to all new nodes that don't have one
+    const nodeIdAssignments = new Map<string, number>();
+    let nextAvailableId = newStepId;
+
+    conditionNodes.forEach((node) => {
+      const nodeData = node.data as { id?: number };
+      if (!nodeData.id || nodeData.id >= newStepId) {
+        // This is a new node, assign it an ID
+        const assignedId = nodeData.id || nextAvailableId++;
+        nodeIdAssignments.set(node.id, assignedId);
+      }
+    });
+
+    // Update nodes with assigned IDs (temporarily, for this save operation)
+    const updatedNodes = nodes.map((node) => {
+      const assignedId = nodeIdAssignments.get(node.id);
+      if (assignedId) {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            id: assignedId,
+          },
+        };
+      }
+      return node;
+    });
+
+    // Update the nodes state temporarily so findNextStepFromNode can see the IDs
+    setNodes(updatedNodes);
+
+    // Separate new steps (no id or id >= new_step_id) from existing steps (has id < new_step_id)
     const newSteps: Array<{
+      id: number;
       name: string;
       description: string;
       order: number;
@@ -954,7 +824,122 @@ export default function AssumptionBuilder() {
       [key: string]: unknown;
     }> = [];
 
-    conditionNodes.forEach((node, index) => {
+    // Track order counter for all steps
+    let orderCounter = 1;
+
+    // Helper function to find next step using updatedNodes (with assigned IDs)
+    const findNextStepWithAssignedIds = (
+      conditionNodeId: string,
+      isTrue: boolean
+    ): { action: string; actionData: Record<string, unknown> } => {
+      const handleId = isTrue ? "true" : "false";
+
+      // Current condition node
+      const currentCondition = updatedNodes.find(
+        (n) => n.id === conditionNodeId
+      );
+      const currentCondData = (currentCondition?.data || {}) as Record<
+        string,
+        unknown
+      >;
+
+      // Helper to safely read fields
+      const getStringField = (
+        src: Record<string, unknown> | undefined,
+        key: string
+      ): string | undefined => {
+        if (!src) return undefined;
+        const val = src[key];
+        return typeof val === "string" ? val : undefined;
+      };
+
+      // Check for direct connection from condition handle to another condition
+      const directEdgeToCondition = edges.find(
+        (e) => e.source === conditionNodeId && e.sourceHandle === handleId
+      );
+
+      if (directEdgeToCondition) {
+        const targetNode = updatedNodes.find(
+          (n) => n.id === directEdgeToCondition.target
+        );
+
+        if (targetNode && targetNode.type === "condition") {
+          const targetData = (targetNode.data || {}) as Record<string, unknown>;
+
+          if (typeof targetData.id === "number") {
+            const note =
+              getStringField(currentCondData, "note") ||
+              getStringField(currentCondData, "message") ||
+              (isTrue ? "Condition passed" : "Condition failed");
+
+            return {
+              action: "proceed_to_step_by_id",
+              actionData: { next_step_id: targetData.id, note },
+            };
+          }
+        }
+      }
+
+      // Check for action node connection
+      const edgeFromCondition = edges.find(
+        (e) => e.source === conditionNodeId && e.sourceHandle === handleId
+      );
+
+      if (edgeFromCondition) {
+        const targetNode = updatedNodes.find(
+          (n) => n.id === edgeFromCondition.target
+        );
+
+        if (
+          targetNode &&
+          (targetNode.type === "success" || targetNode.type === "fail")
+        ) {
+          const actionData = (targetNode.data || {}) as Record<string, unknown>;
+
+          // Check if action node links to another condition
+          const edgeToNextStep = edges.find((e) => e.source === targetNode.id);
+          if (edgeToNextStep) {
+            const nextCondition = updatedNodes.find(
+              (n) => n.id === edgeToNextStep.target
+            );
+            if (nextCondition && nextCondition.type === "condition") {
+              const nextData = (nextCondition.data || {}) as Record<
+                string,
+                unknown
+              >;
+
+              if (typeof nextData.id === "number") {
+                const note =
+                  getStringField(actionData, "message") ||
+                  getStringField(actionData, "error") ||
+                  (isTrue ? "Condition passed" : "Condition failed");
+
+                return {
+                  action: "proceed_to_step_by_id",
+                  actionData: { next_step_id: nextData.id, note },
+                };
+              }
+            }
+          }
+
+          // Return action based on node type
+          if (targetNode.type === "success") {
+            const message = getStringField(actionData, "message") || "";
+            return { action: "complete_success", actionData: { message } };
+          } else {
+            const error = getStringField(actionData, "error") || "";
+            return { action: "complete_failure", actionData: { error } };
+          }
+        }
+      }
+
+      // Fallback
+      return isTrue
+        ? { action: "complete_success", actionData: { message: "" } }
+        : { action: "complete_failure", actionData: { error: "" } };
+    };
+
+    conditionNodes.forEach((node) => {
       const nodeData = node.data as {
         id?: number;
         label?: string;
@@ -968,9 +953,9 @@ export default function AssumptionBuilder() {
         failureMessage?: string;
       };
 
-      // Determine actions based on edge connections
-      const truePathResult = findNextStepFromNode(node.id, true);
-      const falsePathResult = findNextStepFromNode(node.id, false);
+      // Determine actions based on edge connections (using nodes with assigned IDs)
+      const truePathResult = findNextStepWithAssignedIds(node.id, true);
+      const falsePathResult = findNextStepWithAssignedIds(node.id, false);
 
       console.log("🔍 Node:", node.id);
       console.log("✅ True path:", truePathResult);
@@ -982,8 +967,14 @@ export default function AssumptionBuilder() {
       const ifFalseActionData = falsePathResult.actionData;
       const failureMessage = nodeData.failureMessage || `${nodeData.label || "Step"} validation failed`;
 
-      if (nodeData.id) {
-        // Existing step - only send changed fields
+      // Current order for this step
+      const currentOrder = orderCounter++;
+
+      // Check if this is a new step (no id OR id >= new_step_id)
+      const isNewStep = !nodeData.id || nodeData.id >= newStepId;
+
+      if (!isNewStep && nodeData.id) {
+        // Existing step (id < new_step_id) - only send changed fields
         const originalData = originalNodesDataRef.current.get(node.id);
         const changes: { step_id: number; [key: string]: unknown } = {
           step_id: nodeData.id,
@@ -994,6 +985,9 @@ export default function AssumptionBuilder() {
           if (nodeData.label !== originalData.label) {
             changes.name = nodeData.label;
           }
+          // Always include order to maintain position
+          changes.order = currentOrder;
+
           if (nodeData.leftSide !== originalData.leftSide) {
             changes.left_expression = nodeData.leftSide;
           }
@@ -1019,15 +1013,17 @@ export default function AssumptionBuilder() {
             changes.failure_message = failureMessage;
           }
 
-          // Only add to updates if there are actual changes (more than just step_id)
-          if (Object.keys(changes).length > 1) {
+          // Only add to updates if there are actual changes (more than just step_id and order)
+          if (Object.keys(changes).length > 2) {
+            changes.workflow_id = workflowData.workflowId;
             existingStepsUpdates.push(changes);
           }
-
+        } else {
           // No original data found, send all fields
           existingStepsUpdates.push({
             step_id: nodeData.id,
-            name: nodeData.label || `Step ${index + 1}`,
+            name: nodeData.label || `Step ${currentOrder}`,
+            order: currentOrder,
             left_expression: nodeData.leftSide || "",
             operation: nodeData.operator || "==",
             right_expression: nodeData.rightSide || "",
@@ -1036,14 +1032,17 @@ export default function AssumptionBuilder() {
             if_false_action: ifFalseAction,
             if_false_action_data: ifFalseActionData,
             failure_message: failureMessage,
+            workflow_id: workflowData.workflowId,
           });
         }
       } else {
-        // New step - include all fields
+        // New step (no id OR id >= new_step_id) - include all fields with ID
+        const stepId = nodeData.id || newStepId + newSteps.length;
         newSteps.push({
-          name: nodeData.label || `Step ${index + 1}`,
+          id: stepId,
+          name: nodeData.label || `Step ${currentOrder}`,
           description: `Validation step: ${nodeData.label || ""}`,
-          order: index + 1,
+          order: currentOrder,
           left_expression: nodeData.leftSide || "",
           operation: nodeData.operator || "==",
           right_expression: nodeData.rightSide || "",
@@ -1062,8 +1061,15 @@ export default function AssumptionBuilder() {
 
       // Create new steps if any
       if (newSteps.length > 0) {
+        console.log("📦 Creating new steps with payload:", {
+          workflow_id: workflowData.workflowId!,
+          new_step_id: newStepId,
+          steps: newSteps,
+        });
+
         const createPromise = bulkCreateSteps({
           workflow_id: workflowData.workflowId!,
+          new_step_id: newStepId,
           steps: newSteps,
         })
           .unwrap()
@@ -1117,7 +1123,15 @@ export default function AssumptionBuilder() {
 
       // Update existing steps if any have changes
       if (existingStepsUpdates.length > 0) {
-        const updatePromise = bulkUpdateSteps({ updates: existingStepsUpdates })
+        console.log("🔄 Updating existing steps with payload:", {
+          new_step_id: newStepId,
+          updates: existingStepsUpdates,
+        });
+
+        const updatePromise = bulkUpdateSteps({
+          new_step_id: newStepId,
+          updates: existingStepsUpdates,
+        })
           .unwrap()
           .then((result) => {
             const count = result.updated_count || result.steps?.length || existingStepsUpdates.length;
@@ -1178,7 +1192,15 @@ export default function AssumptionBuilder() {
       console.error("Error saving workflow steps:", error);
       toast.error(t("assumptionBuilder.failedToSaveSteps"));
     }
-  }, [workflowData, nodes, bulkCreateSteps, bulkUpdateSteps, setNodes, findNextStepFromNode, t]);
+  }, [
+    workflowData,
+    nodes,
+    edges,
+    bulkCreateSteps,
+    bulkUpdateSteps,
+    setNodes,
+    workflowApiData?.new_step_id,
+  ]);
 
   // Show loading overlay while fetching workflow
   if (isLoadingWorkflow) {
@@ -1245,4 +1267,3 @@ export default function AssumptionBuilder() {
   );
 }
 
-// https://youtube.com/shorts/p0kjVrGME9g?si=jvm4M0yyu8UyaUqW
