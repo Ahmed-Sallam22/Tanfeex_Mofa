@@ -36,6 +36,8 @@ interface OriginalNodeData {
   ifFalseAction: string;
   ifFalseActionData: Record<string, unknown>;
   failureMessage: string;
+  x: number;
+  y: number;
 }
 
 // Initial nodes and edges
@@ -188,12 +190,13 @@ export default function AssumptionBuilder() {
         const initialStepId =
           workflowApiData.initial_step || workflowApiData.steps[0]?.id;
 
-        // Layout constants - significantly increased spacing
-        const CONDITION_NODE_HEIGHT = 0; // Approximate height of condition node
-        const ACTION_NODE_HEIGHT = 180; // Approximate height of action node
-        const ACTION_NODE_OFFSET_Y = 220; // Vertical offset for action nodes from condition
-        const ACTION_NODE_OFFSET_X = 220; // Horizontal offset for action nodes from condition
-        const MIN_VERTICAL_GAP = 0; // Minimum gap between nodes
+        // Layout constants - increased spacing to prevent overlap
+        const CONDITION_NODE_HEIGHT = 160; // Approximate height of condition node
+        const ACTION_NODE_HEIGHT = 100; // Approximate height of action node
+        const ACTION_NODE_OFFSET_Y = 180; // Vertical offset for action nodes from condition
+        const ACTION_NODE_OFFSET_X = 280; // Horizontal offset for action nodes from condition
+        const MIN_VERTICAL_GAP = 120; // Minimum gap between nodes
+        const HORIZONTAL_BRANCH_SPACING = 350; // Horizontal spacing between branches
 
         // Calculate vertical spacing: if previous node has action children, add extra space
         const getVerticalSpacing = (prevStepId: number | null) => {
@@ -251,14 +254,17 @@ export default function AssumptionBuilder() {
           }
 
           // Calculate position
-          const x = 400 + xOffset;
+          const x = 500 + xOffset;
           const y = currentY;
 
           nodePositions.set(stepId, { x, y, level });
 
-          // Add connected steps to queue
+          // Add connected steps to queue with proper horizontal spacing
           const connections = stepConnections.get(stepId);
           if (connections) {
+            // Calculate dynamic spacing based on level to create a tree-like spread
+            const levelSpacing = Math.max(HORIZONTAL_BRANCH_SPACING * Math.pow(0.7, level), 200);
+            
             if (
               connections.trueTarget &&
               !processedSteps.has(connections.trueTarget)
@@ -266,7 +272,7 @@ export default function AssumptionBuilder() {
               queue.push({
                 stepId: connections.trueTarget,
                 level: level + 1,
-                xOffset: xOffset - 100,
+                xOffset: xOffset - levelSpacing,
                 prevStepId: stepId,
               });
             }
@@ -277,7 +283,7 @@ export default function AssumptionBuilder() {
               queue.push({
                 stepId: connections.falseTarget,
                 level: level + 1,
-                xOffset: xOffset + 100,
+                xOffset: xOffset + levelSpacing,
                 prevStepId: stepId,
               });
             }
@@ -286,6 +292,7 @@ export default function AssumptionBuilder() {
 
         // Process any unprocessed steps (disconnected nodes)
         let lastY = Math.max(...Array.from(levelYPositions.values())) || 80;
+        let disconnectedX = 500;
         workflowApiData.steps.forEach((step) => {
           if (!processedSteps.has(step.id)) {
             lastY +=
@@ -294,10 +301,11 @@ export default function AssumptionBuilder() {
               ACTION_NODE_HEIGHT +
               MIN_VERTICAL_GAP;
             nodePositions.set(step.id, {
-              x: 400,
+              x: disconnectedX,
               y: lastY,
               level: maxLevel + 1,
             });
+            disconnectedX += 400; // Space out disconnected nodes horizontally
           }
         });
 
@@ -305,9 +313,9 @@ export default function AssumptionBuilder() {
         workflowApiData.steps.forEach((step) => {
           const conditionNodeId = `condition-${step.id}`;
 
-          // Use position from API if available, otherwise calculate position
+          // Use position from API if available (not null/undefined), otherwise calculate position
           let position;
-          if (step.x !== undefined && step.y !== undefined) {
+          if (step.x !== null && step.x !== undefined && step.y !== null && step.y !== undefined) {
             // Use saved position from backend
             position = {
               x: step.x,
@@ -323,7 +331,7 @@ export default function AssumptionBuilder() {
             };
           }
 
-          // Store original data for tracking changes
+          // Store original data for tracking changes (including position)
           originalNodesDataRef.current.set(conditionNodeId, {
             id: step.id,
             label: step.name,
@@ -341,6 +349,8 @@ export default function AssumptionBuilder() {
               unknown
             >,
             failureMessage: step.failure_message || "",
+            x: position.x,
+            y: position.y,
           });
 
           // Create condition node
@@ -1112,49 +1122,69 @@ export default function AssumptionBuilder() {
 
         // Compare each field and only add if changed
         if (originalData) {
+          let hasChanges = false;
+          
           if (nodeData.label !== originalData.label) {
             changes.name = nodeData.label;
+            hasChanges = true;
           }
           // Always include order to maintain position
           changes.order = currentOrder;
 
+          // Check if position changed (compare with original)
+          const positionChanged = 
+            Math.abs(positionX - originalData.x) > 0.01 || 
+            Math.abs(positionY - originalData.y) > 0.01;
+          
           // Always include position (x, y coordinates)
           changes.x = positionX;
           changes.y = positionY;
+          
+          if (positionChanged) {
+            hasChanges = true;
+          }
 
           if (nodeData.leftSide !== originalData.leftSide) {
             changes.left_expression = nodeData.leftSide;
+            hasChanges = true;
           }
           if (nodeData.operator !== originalData.operator) {
             changes.operation = nodeData.operator;
+            hasChanges = true;
           }
           if (nodeData.rightSide !== originalData.rightSide) {
             changes.right_expression = nodeData.rightSide;
+            hasChanges = true;
           }
           if (ifTrueAction !== originalData.ifTrueAction) {
             changes.if_true_action = ifTrueAction;
+            hasChanges = true;
           }
           if (
             JSON.stringify(ifTrueActionData) !==
             JSON.stringify(originalData.ifTrueActionData)
           ) {
             changes.if_true_action_data = ifTrueActionData;
+            hasChanges = true;
           }
           if (ifFalseAction !== originalData.ifFalseAction) {
             changes.if_false_action = ifFalseAction;
+            hasChanges = true;
           }
           if (
             JSON.stringify(ifFalseActionData) !==
             JSON.stringify(originalData.ifFalseActionData)
           ) {
             changes.if_false_action_data = ifFalseActionData;
+            hasChanges = true;
           }
           if (failureMessage !== originalData.failureMessage) {
             changes.failure_message = failureMessage;
+            hasChanges = true;
           }
 
-          // Only add to updates if there are actual changes (more than just step_id, order, x, y)
-          if (Object.keys(changes).length > 4) {
+          // Add to updates if there are any actual changes (including position)
+          if (hasChanges) {
             changes.workflow_id = workflowData.workflowId;
             existingStepsUpdates.push(changes);
           }
@@ -1242,7 +1272,7 @@ export default function AssumptionBuilder() {
                   const createdStep = createdSteps[newStepIndex];
                   const nodeData = node.data as Record<string, unknown>;
 
-                  // Store original data for future change detection
+                  // Store original data for future change detection (including position)
                   if (createdStep.id !== undefined) {
                     originalNodesDataRef.current.set(node.id, {
                       id: createdStep.id,
@@ -1266,6 +1296,8 @@ export default function AssumptionBuilder() {
                           unknown
                         >) || {},
                       failureMessage: (nodeData.failureMessage as string) || "",
+                      x: node.position.x,
+                      y: node.position.y,
                     });
                   }
 
@@ -1351,6 +1383,13 @@ export default function AssumptionBuilder() {
                     }),
                     ...(update.failure_message !== undefined && {
                       failureMessage: update.failure_message as string,
+                    }),
+                    // Update position in original data
+                    ...(update.x !== undefined && {
+                      x: update.x as number,
+                    }),
+                    ...(update.y !== undefined && {
+                      y: update.y as number,
                     }),
                   });
                 }
