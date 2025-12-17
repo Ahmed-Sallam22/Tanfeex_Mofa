@@ -49,7 +49,9 @@ export default function AssumptionBuilder() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const [activeTab, setActiveTab] = useState<"properties" | "settings">("settings");
+  const [activeTab, setActiveTab] = useState<"properties" | "settings">(
+    "settings"
+  );
   const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState(false);
   const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -58,9 +60,12 @@ export default function AssumptionBuilder() {
   const originalNodesDataRef = useRef<Map<string, OriginalNodeData>>(new Map());
 
   // API Mutations
-  const [bulkCreateSteps, { isLoading: isCreating }] = useBulkCreateStepsMutation();
-  const [bulkUpdateSteps, { isLoading: isUpdating }] = useBulkUpdateStepsMutation();
-  const [deleteValidationStep, { isLoading: isDeleting }] = useDeleteValidationStepMutation();
+  const [bulkCreateSteps, { isLoading: isCreating }] =
+    useBulkCreateStepsMutation();
+  const [bulkUpdateSteps, { isLoading: isUpdating }] =
+    useBulkUpdateStepsMutation();
+  const [deleteValidationStep, { isLoading: isDeleting }] =
+    useDeleteValidationStepMutation();
 
   // Workflow settings
   const [workflowData, setWorkflowData] = useState<WorkflowData>({
@@ -72,8 +77,11 @@ export default function AssumptionBuilder() {
   });
 
   // Get workflow ID from URL params or location state
-  const workflowIdFromState = (location.state as { workflowId?: number })?.workflowId;
-  const currentWorkflowId = urlWorkflowId ? parseInt(urlWorkflowId) : workflowIdFromState;
+  const workflowIdFromState = (location.state as { workflowId?: number })
+    ?.workflowId;
+  const currentWorkflowId = urlWorkflowId
+    ? parseInt(urlWorkflowId)
+    : workflowIdFromState;
 
   // Fetch workflow data if we have a workflow ID
   const {
@@ -85,12 +93,10 @@ export default function AssumptionBuilder() {
   });
 
   // Fetch datasources based on execution point
-  const { data: datasourcesData, isLoading: isDatasourcesLoading } = useGetDatasourcesQuery(
-    workflowData.executionPoint,
-    {
+  const { data: datasourcesData, isLoading: isDatasourcesLoading } =
+    useGetDatasourcesQuery(workflowData.executionPoint, {
       skip: !workflowData.executionPoint, // Skip if no execution point selected
-    }
-  );
+    });
 
   // Show loading state while fetching workflow
   const isLoadingWorkflow = isWorkflowLoading && currentWorkflowId;
@@ -123,25 +129,47 @@ export default function AssumptionBuilder() {
         const allEdges: Edge[] = [];
 
         // Track which steps connect to which (for layout calculation)
-        const stepConnections = new Map<number, { trueTarget?: number; falseTarget?: number }>();
+        const stepConnections = new Map<
+          number,
+          { trueTarget?: number; falseTarget?: number }
+        >();
 
         // Track which steps have action nodes (not proceed_to_step)
-        const stepHasActionNodes = new Map<number, { hasTrue: boolean; hasFalse: boolean }>();
+        const stepHasActionNodes = new Map<
+          number,
+          { hasTrue: boolean; hasFalse: boolean }
+        >();
 
         // First pass: build connection map and check for action nodes
         workflowApiData.steps.forEach((step) => {
           const connections: { trueTarget?: number; falseTarget?: number } = {};
           const hasActions = { hasTrue: false, hasFalse: false };
 
-          if (step.if_true_action === "proceed_to_step" || step.if_true_action === "proceed_to_step_by_id") {
-            connections.trueTarget = (step.if_true_action_data as { next_step_id?: number })?.next_step_id;
-          } else if (step.if_true_action === "complete_success" || step.if_true_action === "complete_failure") {
+          if (
+            step.if_true_action === "proceed_to_step" ||
+            step.if_true_action === "proceed_to_step_by_id"
+          ) {
+            connections.trueTarget = (
+              step.if_true_action_data as { next_step_id?: number }
+            )?.next_step_id;
+          } else if (
+            step.if_true_action === "complete_success" ||
+            step.if_true_action === "complete_failure"
+          ) {
             hasActions.hasTrue = true;
           }
 
-          if (step.if_false_action === "proceed_to_step" || step.if_false_action === "proceed_to_step_by_id") {
-            connections.falseTarget = (step.if_false_action_data as { next_step_id?: number })?.next_step_id;
-          } else if (step.if_false_action === "complete_success" || step.if_false_action === "complete_failure") {
+          if (
+            step.if_false_action === "proceed_to_step" ||
+            step.if_false_action === "proceed_to_step_by_id"
+          ) {
+            connections.falseTarget = (
+              step.if_false_action_data as { next_step_id?: number }
+            )?.next_step_id;
+          } else if (
+            step.if_false_action === "complete_success" ||
+            step.if_false_action === "complete_failure"
+          ) {
             hasActions.hasFalse = true;
           }
 
@@ -150,11 +178,15 @@ export default function AssumptionBuilder() {
         });
 
         // Calculate positions based on flow - use tree layout
-        const nodePositions = new Map<number, { x: number; y: number; level: number }>();
+        const nodePositions = new Map<
+          number,
+          { x: number; y: number; level: number }
+        >();
         const processedSteps = new Set<number>();
 
         // Find root step (initial_step or first step)
-        const initialStepId = workflowApiData.initial_step || workflowApiData.steps[0]?.id;
+        const initialStepId =
+          workflowApiData.initial_step || workflowApiData.steps[0]?.id;
 
         // Layout constants - significantly increased spacing
         const CONDITION_NODE_HEIGHT = 0; // Approximate height of condition node
@@ -169,7 +201,12 @@ export default function AssumptionBuilder() {
           const prevActions = stepHasActionNodes.get(prevStepId);
           if (prevActions && (prevActions.hasTrue || prevActions.hasFalse)) {
             // Previous node has action children, need more space
-            return CONDITION_NODE_HEIGHT + ACTION_NODE_OFFSET_Y + ACTION_NODE_HEIGHT + MIN_VERTICAL_GAP;
+            return (
+              CONDITION_NODE_HEIGHT +
+              ACTION_NODE_OFFSET_Y +
+              ACTION_NODE_HEIGHT +
+              MIN_VERTICAL_GAP
+            );
           }
           // No action children, just normal spacing
           return CONDITION_NODE_HEIGHT + MIN_VERTICAL_GAP;
@@ -222,7 +259,10 @@ export default function AssumptionBuilder() {
           // Add connected steps to queue
           const connections = stepConnections.get(stepId);
           if (connections) {
-            if (connections.trueTarget && !processedSteps.has(connections.trueTarget)) {
+            if (
+              connections.trueTarget &&
+              !processedSteps.has(connections.trueTarget)
+            ) {
               queue.push({
                 stepId: connections.trueTarget,
                 level: level + 1,
@@ -230,7 +270,10 @@ export default function AssumptionBuilder() {
                 prevStepId: stepId,
               });
             }
-            if (connections.falseTarget && !processedSteps.has(connections.falseTarget)) {
+            if (
+              connections.falseTarget &&
+              !processedSteps.has(connections.falseTarget)
+            ) {
               queue.push({
                 stepId: connections.falseTarget,
                 level: level + 1,
@@ -245,7 +288,11 @@ export default function AssumptionBuilder() {
         let lastY = Math.max(...Array.from(levelYPositions.values())) || 80;
         workflowApiData.steps.forEach((step) => {
           if (!processedSteps.has(step.id)) {
-            lastY += CONDITION_NODE_HEIGHT + ACTION_NODE_OFFSET_Y + ACTION_NODE_HEIGHT + MIN_VERTICAL_GAP;
+            lastY +=
+              CONDITION_NODE_HEIGHT +
+              ACTION_NODE_OFFSET_Y +
+              ACTION_NODE_HEIGHT +
+              MIN_VERTICAL_GAP;
             nodePositions.set(step.id, {
               x: 400,
               y: lastY,
@@ -257,11 +304,24 @@ export default function AssumptionBuilder() {
         // Second pass: create nodes and edges
         workflowApiData.steps.forEach((step) => {
           const conditionNodeId = `condition-${step.id}`;
-          const position = nodePositions.get(step.id) || {
-            x: 400,
-            y: 100,
-            level: 0,
-          };
+
+          // Use position from API if available, otherwise calculate position
+          let position;
+          if (step.x !== undefined && step.y !== undefined) {
+            // Use saved position from backend
+            position = {
+              x: step.x,
+              y: step.y,
+              level: 0, // Level not needed when using saved positions
+            };
+          } else {
+            // Fallback to calculated position
+            position = nodePositions.get(step.id) || {
+              x: 400,
+              y: 100,
+              level: 0,
+            };
+          }
 
           // Store original data for tracking changes
           originalNodesDataRef.current.set(conditionNodeId, {
@@ -271,9 +331,15 @@ export default function AssumptionBuilder() {
             operator: step.operation,
             rightSide: step.right_expression,
             ifTrueAction: step.if_true_action,
-            ifTrueActionData: step.if_true_action_data as Record<string, unknown>,
+            ifTrueActionData: step.if_true_action_data as Record<
+              string,
+              unknown
+            >,
             ifFalseAction: step.if_false_action,
-            ifFalseActionData: step.if_false_action_data as Record<string, unknown>,
+            ifFalseActionData: step.if_false_action_data as Record<
+              string,
+              unknown
+            >,
             failureMessage: step.failure_message || "",
           });
 
@@ -305,7 +371,8 @@ export default function AssumptionBuilder() {
 
           // Handle if_true_action
           if (step.if_true_action === "complete_success") {
-            const message = (step.if_true_action_data as { message?: string })?.message || "";
+            const message =
+              (step.if_true_action_data as { message?: string })?.message || "";
             const successNodeId = `success-${step.id}-true`;
 
             // Create success node - position to the left and below
@@ -337,7 +404,8 @@ export default function AssumptionBuilder() {
               markerEnd: { type: MarkerType.ArrowClosed, color: "#22C55E" },
             });
           } else if (step.if_true_action === "complete_failure") {
-            const error = (step.if_true_action_data as { error?: string })?.error || "";
+            const error =
+              (step.if_true_action_data as { error?: string })?.error || "";
             const failNodeId = `fail-${step.id}-true`;
 
             // Create fail node for true action - position to the left and below
@@ -368,8 +436,13 @@ export default function AssumptionBuilder() {
               labelStyle: { fill: "#22C55E", fontWeight: 500 },
               markerEnd: { type: MarkerType.ArrowClosed, color: "#22C55E" },
             });
-          } else if (step.if_true_action === "proceed_to_step" || step.if_true_action === "proceed_to_step_by_id") {
-            const nextStepId = (step.if_true_action_data as { next_step_id?: number })?.next_step_id;
+          } else if (
+            step.if_true_action === "proceed_to_step" ||
+            step.if_true_action === "proceed_to_step_by_id"
+          ) {
+            const nextStepId = (
+              step.if_true_action_data as { next_step_id?: number }
+            )?.next_step_id;
             if (nextStepId) {
               allEdges.push({
                 id: `edge-${step.id}-true-${nextStepId}`,
@@ -387,7 +460,8 @@ export default function AssumptionBuilder() {
 
           // Handle if_false_action
           if (step.if_false_action === "complete_failure") {
-            const error = (step.if_false_action_data as { error?: string })?.error || "";
+            const error =
+              (step.if_false_action_data as { error?: string })?.error || "";
             const failNodeId = `fail-${step.id}-false`;
 
             // Create fail node - position to the right and below
@@ -419,7 +493,9 @@ export default function AssumptionBuilder() {
               markerEnd: { type: MarkerType.ArrowClosed, color: "#EF4444" },
             });
           } else if (step.if_false_action === "complete_success") {
-            const message = (step.if_false_action_data as { message?: string })?.message || "";
+            const message =
+              (step.if_false_action_data as { message?: string })?.message ||
+              "";
             const successNodeId = `success-${step.id}-false`;
 
             // Create success node for false action - position to the right and below
@@ -450,8 +526,13 @@ export default function AssumptionBuilder() {
               labelStyle: { fill: "#EF4444", fontWeight: 500 },
               markerEnd: { type: MarkerType.ArrowClosed, color: "#EF4444" },
             });
-          } else if (step.if_false_action === "proceed_to_step" || step.if_false_action === "proceed_to_step_by_id") {
-            const nextStepId = (step.if_false_action_data as { next_step_id?: number })?.next_step_id;
+          } else if (
+            step.if_false_action === "proceed_to_step" ||
+            step.if_false_action === "proceed_to_step_by_id"
+          ) {
+            const nextStepId = (
+              step.if_false_action_data as { next_step_id?: number }
+            )?.next_step_id;
             if (nextStepId) {
               allEdges.push({
                 id: `edge-${step.id}-false-${nextStepId}`,
@@ -479,7 +560,8 @@ export default function AssumptionBuilder() {
   // Load workflow data from navigation state if available (fallback for creating new workflow)
   useEffect(() => {
     if (location.state && !currentWorkflowId) {
-      const { name, executionPoint, description, isDefault } = location.state as WorkflowData;
+      const { name, executionPoint, description, isDefault } =
+        location.state as WorkflowData;
       if (name || executionPoint) {
         setWorkflowData({
           name: name || "",
@@ -561,33 +643,46 @@ export default function AssumptionBuilder() {
       // Rule 1: Each condition handle can only have ONE outgoing edge
       if (isSourceCondition) {
         const existingEdgeFromHandle = edges.find(
-          (edge) => edge.source === params.source && edge.sourceHandle === params.sourceHandle
+          (edge) =>
+            edge.source === params.source &&
+            edge.sourceHandle === params.sourceHandle
         );
 
         if (existingEdgeFromHandle) {
-          const oldTargetNode = nodes.find((n) => n.id === existingEdgeFromHandle.target);
+          const oldTargetNode = nodes.find(
+            (n) => n.id === existingEdgeFromHandle.target
+          );
 
           // Delete old target if it's success/fail and different from new target
           if (
             oldTargetNode &&
-            (oldTargetNode.type === "success" || oldTargetNode.type === "fail") &&
+            (oldTargetNode.type === "success" ||
+              oldTargetNode.type === "fail") &&
             existingEdgeFromHandle.target !== params.target
           ) {
-            setNodes((nds) => nds.filter((node) => node.id !== existingEdgeFromHandle.target));
+            setNodes((nds) =>
+              nds.filter((node) => node.id !== existingEdgeFromHandle.target)
+            );
           }
 
           // Remove old edge
-          setEdges((eds) => eds.filter((edge) => edge.id !== existingEdgeFromHandle.id));
+          setEdges((eds) =>
+            eds.filter((edge) => edge.id !== existingEdgeFromHandle.id)
+          );
         }
       }
 
       // Rule 2: Each node can only have ONE incoming edge
       // Find any existing edge that goes TO the same target
-      const existingEdgeToTarget = edges.find((edge) => edge.target === params.target);
+      const existingEdgeToTarget = edges.find(
+        (edge) => edge.target === params.target
+      );
 
       if (existingEdgeToTarget) {
         // Just remove the old incoming edge, don't delete any nodes
-        setEdges((eds) => eds.filter((edge) => edge.id !== existingEdgeToTarget.id));
+        setEdges((eds) =>
+          eds.filter((edge) => edge.id !== existingEdgeToTarget.id)
+        );
       }
 
       // Add the new edge
@@ -618,7 +713,9 @@ export default function AssumptionBuilder() {
   const onEdgesDelete = useCallback(
     (edgesToDelete: Edge[]) => {
       // Just delete the edges, don't touch the nodes
-      setEdges((eds) => eds.filter((edge) => !edgesToDelete.some((e) => e.id === edge.id)));
+      setEdges((eds) =>
+        eds.filter((edge) => !edgesToDelete.some((e) => e.id === edge.id))
+      );
     },
     [setEdges]
   );
@@ -635,14 +732,26 @@ export default function AssumptionBuilder() {
         rightSide: (node.data.rightSide as string) || "",
         rightDataType: (node.data.rightDataType as string) || "text",
         ifTrueAction: (node.data.ifTrueAction as string) || "complete_success",
-        ifTrueActionData: (node.data.ifTrueActionData as Record<string, unknown>) || { message: "" },
-        ifFalseAction: (node.data.ifFalseAction as string) || "complete_failure",
-        ifFalseActionData: (node.data.ifFalseActionData as Record<string, unknown>) || { error: "" },
+        ifTrueActionData: (node.data.ifTrueActionData as Record<
+          string,
+          unknown
+        >) || { message: "" },
+        ifFalseAction:
+          (node.data.ifFalseAction as string) || "complete_failure",
+        ifFalseActionData: (node.data.ifFalseActionData as Record<
+          string,
+          unknown
+        >) || { error: "" },
         failureMessage: (node.data.failureMessage as string) || "",
         // For success/fail nodes, load message/error/actionType (auto-determined by node type)
         message: (node.data.message as string) || "",
         error: (node.data.error as string) || "",
-        actionType: node.type === "success" ? "complete_success" : node.type === "fail" ? "complete_failure" : "",
+        actionType:
+          node.type === "success"
+            ? "complete_success"
+            : node.type === "fail"
+            ? "complete_failure"
+            : "",
       });
     }
   }, []);
@@ -691,7 +800,11 @@ export default function AssumptionBuilder() {
     [setNodes]
   );
 
-  const onDragStart = (event: React.DragEvent, nodeType: string, label: string) => {
+  const onDragStart = (
+    event: React.DragEvent,
+    nodeType: string,
+    label: string
+  ) => {
     event.dataTransfer.setData("application/reactflow", nodeType);
     event.dataTransfer.setData("application/label", label);
     event.dataTransfer.effectAllowed = "move";
@@ -724,7 +837,9 @@ export default function AssumptionBuilder() {
       } else {
         // For manually created condition nodes (without step ID pattern)
         // Find all nodes connected to this condition via edges
-        const connectedNodeIds = edges.filter((edge) => edge.source === nodeIdToDelete).map((edge) => edge.target);
+        const connectedNodeIds = edges
+          .filter((edge) => edge.source === nodeIdToDelete)
+          .map((edge) => edge.target);
 
         nodeIdsToDelete = [nodeIdToDelete, ...connectedNodeIds];
       }
@@ -752,7 +867,11 @@ export default function AssumptionBuilder() {
 
     // Filter out edges connected to any of the deleted nodes
     setEdges((eds) =>
-      eds.filter((edge) => !nodeIdsToDelete.includes(edge.source) && !nodeIdsToDelete.includes(edge.target))
+      eds.filter(
+        (edge) =>
+          !nodeIdsToDelete.includes(edge.source) &&
+          !nodeIdsToDelete.includes(edge.target)
+      )
     );
 
     setSelectedNode(null);
@@ -808,6 +927,8 @@ export default function AssumptionBuilder() {
       name: string;
       description: string;
       order: number;
+      x: number;
+      y: number;
       left_expression: string;
       operation: string;
       right_expression: string;
@@ -967,7 +1088,14 @@ export default function AssumptionBuilder() {
       const ifTrueActionData = truePathResult.actionData;
       const ifFalseAction = falsePathResult.action;
       const ifFalseActionData = falsePathResult.actionData;
-      const failureMessage = nodeData.failureMessage || `${nodeData.label || "Step"} validation failed`;
+      const failureMessage =
+        nodeData.failureMessage ||
+        `${nodeData.label || "Step"} validation failed`;
+
+      // Get node position (x, y coordinates)
+      const nodePosition = node.position;
+      const positionX = Math.round(nodePosition.x * 100) / 100; // Round to 2 decimal places
+      const positionY = Math.round(nodePosition.y * 100) / 100;
 
       // Current order for this step
       const currentOrder = orderCounter++;
@@ -990,6 +1118,10 @@ export default function AssumptionBuilder() {
           // Always include order to maintain position
           changes.order = currentOrder;
 
+          // Always include position (x, y coordinates)
+          changes.x = positionX;
+          changes.y = positionY;
+
           if (nodeData.leftSide !== originalData.leftSide) {
             changes.left_expression = nodeData.leftSide;
           }
@@ -1002,21 +1134,27 @@ export default function AssumptionBuilder() {
           if (ifTrueAction !== originalData.ifTrueAction) {
             changes.if_true_action = ifTrueAction;
           }
-          if (JSON.stringify(ifTrueActionData) !== JSON.stringify(originalData.ifTrueActionData)) {
+          if (
+            JSON.stringify(ifTrueActionData) !==
+            JSON.stringify(originalData.ifTrueActionData)
+          ) {
             changes.if_true_action_data = ifTrueActionData;
           }
           if (ifFalseAction !== originalData.ifFalseAction) {
             changes.if_false_action = ifFalseAction;
           }
-          if (JSON.stringify(ifFalseActionData) !== JSON.stringify(originalData.ifFalseActionData)) {
+          if (
+            JSON.stringify(ifFalseActionData) !==
+            JSON.stringify(originalData.ifFalseActionData)
+          ) {
             changes.if_false_action_data = ifFalseActionData;
           }
           if (failureMessage !== originalData.failureMessage) {
             changes.failure_message = failureMessage;
           }
 
-          // Only add to updates if there are actual changes (more than just step_id and order)
-          if (Object.keys(changes).length > 2) {
+          // Only add to updates if there are actual changes (more than just step_id, order, x, y)
+          if (Object.keys(changes).length > 4) {
             changes.workflow_id = workflowData.workflowId;
             existingStepsUpdates.push(changes);
           }
@@ -1026,6 +1164,8 @@ export default function AssumptionBuilder() {
             step_id: nodeData.id,
             name: nodeData.label || `Step ${currentOrder}`,
             order: currentOrder,
+            x: positionX,
+            y: positionY,
             left_expression: nodeData.leftSide || "",
             operation: nodeData.operator || "==",
             right_expression: nodeData.rightSide || "",
@@ -1045,6 +1185,8 @@ export default function AssumptionBuilder() {
           name: nodeData.label || `Step ${currentOrder}`,
           description: `Validation step: ${nodeData.label || ""}`,
           order: currentOrder,
+          x: positionX,
+          y: positionY,
           left_expression: nodeData.leftSide || "",
           operation: nodeData.operator || "==",
           right_expression: nodeData.rightSide || "",
@@ -1080,14 +1222,22 @@ export default function AssumptionBuilder() {
             const createdSteps = result.created_steps || result.steps || [];
             const stepCount = result.created_count || createdSteps.length;
 
-            toast.success(t("assumptionBuilder.successfullyCreatedSteps", { count: stepCount }));
+            toast.success(
+              t("assumptionBuilder.successfullyCreatedSteps", {
+                count: stepCount,
+              })
+            );
             console.log("Created steps:", result);
 
             // Update nodes with the returned IDs and store original data
-            const newStepNodes = conditionNodes.filter((node) => !(node.data as { id?: number }).id);
+            const newStepNodes = conditionNodes.filter(
+              (node) => !(node.data as { id?: number }).id
+            );
             setNodes((nds) =>
               nds.map((node) => {
-                const newStepIndex = newStepNodes.findIndex((n) => n.id === node.id);
+                const newStepIndex = newStepNodes.findIndex(
+                  (n) => n.id === node.id
+                );
                 if (newStepIndex !== -1 && createdSteps[newStepIndex]) {
                   const createdStep = createdSteps[newStepIndex];
                   const nodeData = node.data as Record<string, unknown>;
@@ -1100,10 +1250,21 @@ export default function AssumptionBuilder() {
                       leftSide: (nodeData.leftSide as string) || "",
                       operator: (nodeData.operator as string) || "==",
                       rightSide: (nodeData.rightSide as string) || "",
-                      ifTrueAction: (nodeData.ifTrueAction as string) || "complete_success",
-                      ifTrueActionData: (nodeData.ifTrueActionData as Record<string, unknown>) || {},
-                      ifFalseAction: (nodeData.ifFalseAction as string) || "complete_failure",
-                      ifFalseActionData: (nodeData.ifFalseActionData as Record<string, unknown>) || {},
+                      ifTrueAction:
+                        (nodeData.ifTrueAction as string) || "complete_success",
+                      ifTrueActionData:
+                        (nodeData.ifTrueActionData as Record<
+                          string,
+                          unknown
+                        >) || {},
+                      ifFalseAction:
+                        (nodeData.ifFalseAction as string) ||
+                        "complete_failure",
+                      ifFalseActionData:
+                        (nodeData.ifFalseActionData as Record<
+                          string,
+                          unknown
+                        >) || {},
                       failureMessage: (nodeData.failureMessage as string) || "",
                     });
                   }
@@ -1136,15 +1297,24 @@ export default function AssumptionBuilder() {
         })
           .unwrap()
           .then((result) => {
-            const count = result.updated_count || result.steps?.length || existingStepsUpdates.length;
-            toast.success(t("assumptionBuilder.successfullyUpdatedSteps", { count }));
+            const count =
+              result.updated_count ||
+              result.steps?.length ||
+              existingStepsUpdates.length;
+            toast.success(
+              t("assumptionBuilder.successfullyUpdatedSteps", { count })
+            );
             console.log("Updated steps:", result);
 
             // Update original data ref with new values
             existingStepsUpdates.forEach((update) => {
-              const node = conditionNodes.find((n) => (n.data as { id?: number }).id === update.step_id);
+              const node = conditionNodes.find(
+                (n) => (n.data as { id?: number }).id === update.step_id
+              );
               if (node) {
-                const currentOriginal = originalNodesDataRef.current.get(node.id);
+                const currentOriginal = originalNodesDataRef.current.get(
+                  node.id
+                );
                 if (currentOriginal) {
                   // Merge updates into original data
                   originalNodesDataRef.current.set(node.id, {
@@ -1165,13 +1335,19 @@ export default function AssumptionBuilder() {
                       ifTrueAction: update.if_true_action as string,
                     }),
                     ...(update.if_true_action_data !== undefined && {
-                      ifTrueActionData: update.if_true_action_data as Record<string, unknown>,
+                      ifTrueActionData: update.if_true_action_data as Record<
+                        string,
+                        unknown
+                      >,
                     }),
                     ...(update.if_false_action !== undefined && {
                       ifFalseAction: update.if_false_action as string,
                     }),
                     ...(update.if_false_action_data !== undefined && {
-                      ifFalseActionData: update.if_false_action_data as Record<string, unknown>,
+                      ifFalseActionData: update.if_false_action_data as Record<
+                        string,
+                        unknown
+                      >,
                     }),
                     ...(update.failure_message !== undefined && {
                       failureMessage: update.failure_message as string,
@@ -1213,14 +1389,25 @@ export default function AssumptionBuilder() {
             className="animate-spin h-10 w-10 text-[#00B7AD]"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
-            viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
             <path
               className="opacity-75"
               fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
           </svg>
-          <p className="text-gray-500">{t("assumptionBuilder.loadingWorkflow")}</p>
+          <p className="text-gray-500">
+            {t("assumptionBuilder.loadingWorkflow")}
+          </p>
         </div>
       </div>
     );
@@ -1232,7 +1419,9 @@ export default function AssumptionBuilder() {
         <BlocksSidebar
           onDragStart={onDragStart}
           isCollapsed={isLeftSidebarCollapsed}
-          onToggleCollapse={() => setIsLeftSidebarCollapsed(!isLeftSidebarCollapsed)}
+          onToggleCollapse={() =>
+            setIsLeftSidebarCollapsed(!isLeftSidebarCollapsed)
+          }
         />
 
         <WorkflowCanvas
@@ -1259,7 +1448,9 @@ export default function AssumptionBuilder() {
           deleteSelectedNode={deleteSelectedNode}
           buildWorkflowJSON={buildWorkflowJSON}
           isCollapsed={isRightSidebarCollapsed}
-          onToggleCollapse={() => setIsRightSidebarCollapsed(!isRightSidebarCollapsed)}
+          onToggleCollapse={() =>
+            setIsRightSidebarCollapsed(!isRightSidebarCollapsed)
+          }
           isSaving={isCreating || isUpdating || isDeleting}
           datasources={datasourcesData?.datasources || []}
           isDatasourcesLoading={isDatasourcesLoading}

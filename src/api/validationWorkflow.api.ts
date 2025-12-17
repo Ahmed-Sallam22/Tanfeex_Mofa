@@ -22,6 +22,8 @@ export interface ValidationStepDetail {
   created_by_username: string;
   created_at: string;
   updated_at: string;
+  x?: number;
+  y?: number;
 }
 
 // Types for Validation Workflow
@@ -96,6 +98,8 @@ export interface ValidationStep {
   failure_message?: string;
   is_active?: boolean;
   workflow_id?: number;
+  x?: number;
+  y?: number;
 }
 
 export interface BulkCreateStepsRequest {
