@@ -17,7 +17,13 @@ import {
   useDeleteUserMutation,
   type UserListItem,
 } from "@/api/user.api";
-import { useGetLevelsQuery, type LevelItem } from "@/api/level.api";
+import {
+  useGetLevelsQuery,
+  useCreateLevelMutation,
+  useUpdateLevelMutation,
+  useDeleteLevelMutation,
+  type LevelItem,
+} from "@/api/level.api";
 
 const toApiRole = (uiRole: string) =>
   (uiRole || "").toLowerCase() === "admin" ? "admin" : "user";
@@ -56,6 +62,9 @@ export default function Users() {
   >("users");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const { data: serverLevels } = useGetLevelsQuery();
+  const [createLevel] = useCreateLevelMutation();
+  const [updateLevel] = useUpdateLevelMutation();
+  const [deleteLevel] = useDeleteLevelMutation();
 
   const userLevelsData: TableRow[] = useMemo(() => {
     const list = serverLevels ?? [];
@@ -71,7 +80,9 @@ export default function Users() {
   const [isUserLevelModalOpen, setIsUserLevelModalOpen] =
     useState<boolean>(false);
   const [editingUser, setEditingUser] = useState<TableRow | null>(null);
-  const [editingUserLevel] = useState<TableRow | null>(null);
+  const [editingUserLevel, setEditingUserLevel] = useState<TableRow | null>(
+    null
+  );
 
   const { data: serverUsers, isLoading } = useGetUsersQuery();
   const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
@@ -286,36 +297,55 @@ export default function Users() {
   //   }
   // };
 
-  // const handleAddUserLevel = () => {
-  //   setEditingUserLevel(null);
-  //   setUserLevelForm({ name: '', description: '', order: '' });
-  //   setIsUserLevelModalOpen(true);
-  // };
+  const handleAddUserLevel = () => {
+    setEditingUserLevel(null);
+    setUserLevelForm({ name: "", description: "", order: "" });
+    setIsUserLevelModalOpen(true);
+  };
 
-  // const handleEditUserLevel = (level: TableRow) => {
-  //   setEditingUserLevel(level);
-  //   setUserLevelForm({
-  //     name: String(level.name),
-  //     description: String(level.description),
-  //     order: String(level.order)
-  //   });
-  //   setIsUserLevelModalOpen(true);
-  // };
+  const handleEditUserLevel = (level: TableRow) => {
+    setEditingUserLevel(level);
+    setUserLevelForm({
+      name: String(level.name),
+      description: String(level.description),
+      order: String(level.order),
+    });
+    setIsUserLevelModalOpen(true);
+  };
 
-  // const handleDeleteUserLevel = (level: TableRow) => {
-  //   if (confirm(`Are you sure you want to delete level "${level.name}"?`)) {
-  //     console.log("Deleting user level:", level);
-  //     // Add delete logic here
-  //   }
-  // };
+  const handleDeleteUserLevel = async (level: TableRow) => {
+    try {
+      await deleteLevel({ pk: Number(level.id) }).unwrap();
+      toast.success(t("users.userLevelDeleted"));
+    } catch (e: any) {
+      toast.error(e?.data?.message || t("users.deleteFailed"));
+    }
+  };
 
-  const handleSaveUserLevel = () => {
-    console.log(
-      editingUserLevel ? "Updating user level:" : "Creating user level:",
-      userLevelForm
-    );
-    setIsUserLevelModalOpen(false);
-    // Add save logic here
+  const handleSaveUserLevel = async () => {
+    try {
+      if (editingUserLevel) {
+        await updateLevel({
+          pk: Number(editingUserLevel.id),
+          data: {
+            name: userLevelForm.name,
+            description: userLevelForm.description,
+            level_order: Number(userLevelForm.order),
+          },
+        }).unwrap();
+        toast.success(t("users.userLevelUpdated"));
+      } else {
+        await createLevel({
+          name: userLevelForm.name,
+          description: userLevelForm.description,
+          level_order: Number(userLevelForm.order),
+        }).unwrap();
+        toast.success(t("users.userLevelCreated"));
+      }
+      setIsUserLevelModalOpen(false);
+    } catch (e: any) {
+      toast.error(e?.data?.message || t("users.operationFailed"));
+    }
   };
 
   const handleAssignLevel = () => {
@@ -329,7 +359,8 @@ export default function Users() {
   };
 
   const shouldShowAddButton = () => {
-    return activeTab === "users";
+    console.log(activeTab);
+    return activeTab === "users" || activeTab === "userLevels";
   };
   // map لاسم العرض من الليست الجاهزة
   const usernameToLabel = new Map(userOptions.map((o) => [o.value, o.label]));
@@ -359,7 +390,7 @@ export default function Users() {
         <h1 className="text-2xl font-bold tracking-wide">{getPageTitle()}</h1>
         {shouldShowAddButton() && (
           <button
-            onClick={handleAddUser}
+            onClick={activeTab === "users" ? handleAddUser : handleAddUserLevel}
             className="flex items-center cursor-pointer  gap-1 text-sm  bg-[#4E8476] text-white px-2 py-1.5 rounded-md hover:bg-[#4E8476] transition"
           >
             <svg
@@ -374,7 +405,7 @@ export default function Users() {
                 fill="white"
               />
             </svg>
-            {t("users.addUser")}
+            {t(activeTab === "users" ? "users.addUser" : "users.addUserLevel")}
           </button>
         )}
       </div>
@@ -462,9 +493,15 @@ export default function Users() {
                 maxHeight="600px"
                 className="shadow-lg"
                 showPagination={false}
-                showActions={activeTab === "users" ? true : false}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
+                showActions={
+                  activeTab === "users" || activeTab === "userLevels"
+                }
+                onEdit={
+                  activeTab === "users" ? handleEdit : handleEditUserLevel
+                }
+                onDelete={
+                  activeTab === "users" ? handleDelete : handleDeleteUserLevel
+                }
                 showFooter={false}
                 filterLabel={
                   activeTab === "userLevels"
