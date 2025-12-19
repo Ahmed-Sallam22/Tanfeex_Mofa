@@ -9,8 +9,20 @@ import tanfeezLogo from "../../assets/Tanfeezletter.png";
 // Table columns configuration
 const tableColumns = [
   {
-    key: "program",
-    label: "البرنامج/المشروع",
+    key: "budgetItem",
+    label: "عنصر الميزانية",
+    rowSpan: 2,
+    align: "center" as const,
+  },
+  {
+    key: "costCenter",
+    label: "مراكز التكلفة",
+    rowSpan: 2,
+    align: "center" as const,
+  },
+  {
+    key: "geographicLocation",
+    label: "الموقع الجغرافي",
     rowSpan: 2,
     align: "center" as const,
   },
@@ -58,7 +70,9 @@ const tableColumns = [
 // Type for table row data
 interface TableRowData {
   id: number;
-  program: string;
+  budgetItem: string;
+  costCenter: string;
+  geographicLocation: string;
   economicClassification: string;
   documentNumber: string;
   discussionType: string;
@@ -76,32 +90,65 @@ interface MultipleTransactionsResponse {
   transactions: TransactionReportData[];
 }
 
+const formatSegment = (segment?: {
+  from_code?: string;
+  to_code?: string;
+  from_name?: string;
+  to_name?: string;
+}) => {
+  if (!segment) return "-";
+  const code = segment.from_code || segment.to_code || "";
+  const name = segment.from_name || segment.to_name || "";
+  if (code && name) return `${code} - ${name}`;
+  return code || name || "-";
+};
+
+const formatNumber = (value?: number | null) => {
+  if (value === null || value === undefined) return "-";
+  const numeric = Number(value);
+  if (Number.isNaN(numeric)) return "-";
+  return numeric.toLocaleString("en-US");
+};
+
 // Helper function to transform API data to table format
 const transformApiDataToTableData = (apiData: TransactionReportData[]): TableRowData[] => {
-  return apiData.map((transaction, index) => {
-    // Get first transfer's segment data for program/classification if available
-    const firstTransfer = transaction.transfers?.[0];
-    // Use segment_11 (عنصر الميزانية) for program/project column
-    const segment11 = firstTransfer?.segments?.segment_11;
-    // Use segment_5 (الموقع الجغرافي) for economic classification
-    // const segment5 = firstTransfer?.segments?.segment_5;
+  const rows: TableRowData[] = [];
 
-    // Get from_code and from_name, fallback to to_code and to_name if from is empty
-    const programCode = segment11?.from_code || segment11?.to_code || "";
-    const programName = segment11?.from_name || segment11?.to_name || "-";
-
-    return {
-      id: transaction.transaction_id || index + 1,
-      program: programCode ? `${programCode} - ${programName}` : programName,
-      economicClassification: "-",
-      documentNumber: transaction.code || transaction.transaction_id?.toString() || "-",
-      discussionType: transaction.transfer_type || transaction.type || "-",
-      amountFrom: transaction.summary?.total_from_center?.toString() || "0",
-      amountTo: transaction.summary?.total_to_center?.toString() || "0",
-      description: transaction.notes || "-",
-      justifications: transaction.notes || "-",
-    };
+  apiData.forEach((transaction, transactionIndex) => {
+    if (transaction.transfers && transaction.transfers.length > 0) {
+      transaction.transfers.forEach((transfer, transferIndex) => {
+        rows.push({
+          id: transfer.transfer_id || transaction.transaction_id || transactionIndex * 10 + transferIndex + 1,
+          budgetItem: formatSegment(transfer.segments?.segment_11),
+          costCenter: formatSegment(transfer.segments?.segment_9),
+          geographicLocation: formatSegment(transfer.segments?.segment_5),
+          economicClassification: formatNumber(transfer.gfs_code),
+          documentNumber: transaction.code || transaction.transaction_id?.toString() || "-",
+          discussionType: transaction.transfer_type || transaction.type || "-",
+          amountFrom: formatNumber(transfer.from_center),
+          amountTo: formatNumber(transfer.to_center),
+          description: transaction.notes ?? "-",
+          justifications: transfer.reason ?? "-",
+        });
+      });
+    } else {
+      rows.push({
+        id: transaction.transaction_id || transactionIndex + 1,
+        budgetItem: "-",
+        costCenter: "-",
+        geographicLocation: "-",
+        economicClassification: "-",
+        documentNumber: transaction.code || transaction.transaction_id?.toString() || "-",
+        discussionType: transaction.transfer_type || transaction.type || "-",
+        amountFrom: formatNumber(transaction.summary?.total_from_center),
+        amountTo: formatNumber(transaction.summary?.total_to_center),
+        description: transaction.notes ?? "-",
+        justifications: "-",
+      });
+    }
   });
+
+  return rows;
 };
 
 // Page Header Component - will repeat on each printed page

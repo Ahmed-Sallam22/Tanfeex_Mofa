@@ -150,6 +150,7 @@ export interface PdfTransfer {
   segments: {
     [key: string]: PdfSegment;
   };
+  gfs_code?: number;
   from_center: number;
   to_center: number;
   reason: string;
