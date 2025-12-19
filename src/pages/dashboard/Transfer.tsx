@@ -18,7 +18,10 @@ import {
   useGetOracleStatusQuery,
 } from "@/api/transfer.api";
 import type { TransferItem } from "@/api/transfer.api";
-import { useGetAttachmentsQuery, useUploadAttachmentMutation } from "@/api/attachments.api";
+import {
+  useGetAttachmentsQuery,
+  useUploadAttachmentMutation,
+} from "@/api/attachments.api";
 import type { Attachment } from "@/api/attachments.api";
 
 export default function Transfer() {
@@ -30,7 +33,9 @@ export default function Transfer() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
-  const [selectedTransfer, setSelectedTransfer] = useState<TransferItem | null>(null);
+  const [selectedTransfer, setSelectedTransfer] = useState<TransferItem | null>(
+    null
+  );
   const [time_period, settime_period] = useState<string>("");
   const [reason, setreason] = useState<string>("");
   const [budget_control, setBudgetControl] = useState<string>("");
@@ -40,14 +45,19 @@ export default function Transfer() {
   // Attachments state
   const [isAttachmentsModalOpen, setIsAttachmentsModalOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [selectedTransactionId, setSelectedTransactionId] = useState<string>("");
+  const [selectedTransactionId, setSelectedTransactionId] =
+    useState<string>("");
 
   // Status pipeline modal state
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-  const [statusTransactionId, setStatusTransactionId] = useState<number | null>(null);
+  const [statusTransactionId, setStatusTransactionId] = useState<number | null>(
+    null
+  );
 
   // Selection state for export
-  const [selectedRows, setSelectedRows] = useState<Set<number | string>>(new Set());
+  const [selectedRows, setSelectedRows] = useState<Set<number | string>>(
+    new Set()
+  );
   const [showExportUI, setShowExportUI] = useState(false);
 
   // Validation states
@@ -66,8 +76,10 @@ export default function Transfer() {
     code: "FAR",
   });
 
-  const [createTransfer, { isLoading: isCreating }] = useCreateTransferMutation();
-  const [updateTransfer, { isLoading: isUpdating }] = useUpdateTransferMutation();
+  const [createTransfer, { isLoading: isCreating }] =
+    useCreateTransferMutation();
+  const [updateTransfer, { isLoading: isUpdating }] =
+    useUpdateTransferMutation();
   const [deleteTransfer] = useDeleteTransferMutation();
 
   // Attachments API calls
@@ -79,7 +91,8 @@ export default function Transfer() {
     skip: !selectedTransactionId || !isAttachmentsModalOpen,
   });
 
-  const [uploadAttachment, { isLoading: isUploading }] = useUploadAttachmentMutation();
+  const [uploadAttachment, { isLoading: isUploading }] =
+    useUploadAttachmentMutation();
 
   // State for managing edit mode opening
   const [shouldOpenModal, setShouldOpenModal] = useState(false);
@@ -101,14 +114,15 @@ export default function Transfer() {
     return String(value);
   };
 
-
   const transformedData: TableRow[] =
     transferResponse?.results?.map((item: TransferItem) => ({
       id: item.transaction_id,
       code: safeValue(item.code),
       requested_by: safeValue(item.requested_by),
       description: safeValue(item.notes, t("common.noData")),
-      request_date: item.request_date ? new Date(item.request_date).toLocaleDateString() : "-",
+      request_date: item.request_date
+        ? new Date(item.request_date).toLocaleDateString()
+        : "-",
       transaction_date: safeValue(item.transaction_date, t("common.noData")),
       track: item.transaction_id,
       status: safeValue(item.status, t("common.pending")),
@@ -127,7 +141,8 @@ export default function Transfer() {
       render: (value, row) => (
         <span
           className="font-medium bg-[#F6F6F6] p-2  rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
-          onClick={() => handleCodeClick(row)}>
+          onClick={() => handleCodeClick(row)}
+        >
           {safeValue(value)}
         </span>
       ),
@@ -136,7 +151,9 @@ export default function Transfer() {
       id: "requested_by",
       header: t("tableColumns.requestedBy"),
       accessor: "requested_by",
-      render: (value) => <span className="font-medium text-[#282828]">{safeValue(value)}</span>,
+      render: (value) => (
+        <span className="font-medium text-[#282828]">{safeValue(value)}</span>
+      ),
     },
     {
       id: "description",
@@ -160,13 +177,19 @@ export default function Transfer() {
       id: "request_date",
       header: t("tableColumns.requestDate"),
       accessor: "request_date",
-      render: (value) => <span className="text-[#282828]">{safeValue(value)}</span>,
+      render: (value) => (
+        <span className="text-[#282828]">{safeValue(value)}</span>
+      ),
     },
     {
       id: "transaction_date",
       header: t("tableColumns.transactionDate"),
       accessor: "transaction_date",
-      render: (value) => <span className="text-[#282828]">{safeValue(value, t("common.noData"))}</span>,
+      render: (value) => (
+        <span className="text-[#282828]">
+          {safeValue(value, t("common.noData"))}
+        </span>
+      ),
     },
     {
       id: "track",
@@ -175,7 +198,8 @@ export default function Transfer() {
       render: (_value, row) => (
         <span
           className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
-          onClick={() => handleTrackClick(row)}>
+          onClick={() => handleTrackClick(row)}
+        >
           {t("common.view")}
         </span>
       ),
@@ -220,7 +244,8 @@ export default function Transfer() {
         return (
           <span
             className={`px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition ${bgClass}`}
-            onClick={() => handleStatusClick(row)}>
+            onClick={() => handleStatusClick(row)}
+          >
             {translateStatus(value)}
           </span>
         );
@@ -233,7 +258,8 @@ export default function Transfer() {
       render: (_value, row) => (
         <span
           className="font-medium bg-[#F6F6F6] p-2 rounded-md cursor-pointer hover:bg-[#e8f2ef] transition"
-          onClick={() => handleAttachmentsClick(row)}>
+          onClick={() => handleAttachmentsClick(row)}
+        >
           {t("common.attachments")}
         </span>
       ),
@@ -294,7 +320,10 @@ export default function Transfer() {
     try {
       // Decode base64 data
       const byteCharacters = atob(attachment.file_data);
-      const byteNumbers = Array.from({ length: byteCharacters.length }, (_, i) => byteCharacters.charCodeAt(i));
+      const byteNumbers = Array.from(
+        { length: byteCharacters.length },
+        (_, i) => byteCharacters.charCodeAt(i)
+      );
       const byteArray = new Uint8Array(byteNumbers);
 
       // Create blob and download
@@ -332,10 +361,12 @@ export default function Transfer() {
     const files = Array.from(e.dataTransfer.files);
     const validFile = files.find(
       (file) =>
-        file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+        file.type ===
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
         file.type === "application/pdf" ||
         file.type === "application/msword" ||
-        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        file.type ===
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
         file.name.endsWith(".xlsx") ||
         file.name.endsWith(".pdf") ||
         file.name.endsWith(".doc") ||
@@ -351,8 +382,12 @@ export default function Transfer() {
 
   // Handler for track click
   const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
-  const [trackTransactionId, setTrackTransactionId] = useState<number | null>(null);
-  const [activeOracleTab, setActiveOracleTab] = useState<"submit" | "journal">("submit");
+  const [trackTransactionId, setTrackTransactionId] = useState<number | null>(
+    null
+  );
+  const [activeOracleTab, setActiveOracleTab] = useState<"submit" | "journal">(
+    "submit"
+  );
 
   // Oracle Status API call
   const {
@@ -417,7 +452,10 @@ export default function Transfer() {
     let transactionDate = originalTransfer.transaction_date || "";
 
     // If the transaction_date is a date string, try to extract month name
-    if (transactionDate && !accountOptions.some((option) => option.value === transactionDate)) {
+    if (
+      transactionDate &&
+      !accountOptions.some((option) => option.value === transactionDate)
+    ) {
       try {
         const date = new Date(transactionDate);
         if (!isNaN(date.getTime())) {
@@ -443,7 +481,9 @@ export default function Transfer() {
       }
     }
 
-    const isValidOption = accountOptions.some((option) => option.value === transactionDate);
+    const isValidOption = accountOptions.some(
+      (option) => option.value === transactionDate
+    );
     const finalDateValue = isValidOption ? transactionDate : "";
 
     // Handle notes/reason - use notes field as HTML directly for rich text editor
@@ -584,7 +624,10 @@ export default function Transfer() {
 
     try {
       // Combine transfer_type with sub-type if "مخصصات" is selected
-      const finalTransferType = transfer_type === "مخصصات" ? `${transfer_type}-${allocation_sub_type}` : transfer_type;
+      const finalTransferType =
+        transfer_type === "مخصصات"
+          ? `${transfer_type}-${allocation_sub_type}`
+          : transfer_type;
 
       // Use HTML directly from the rich text editor (no conversion needed)
       const transferData = {
@@ -670,7 +713,9 @@ export default function Transfer() {
     <div>
       {/* Header with Create Button and Export Toggle */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold tracking-wide">{t("transfer.title")}</h1>
+        <h1 className="text-2xl font-bold tracking-wide">
+          {t("transfer.title")}
+        </h1>
         <div className="flex gap-3">
           <button
             onClick={() => {
@@ -681,13 +726,17 @@ export default function Transfer() {
               }
             }}
             className={`px-4 py-2 rounded-md transition-colors font-medium ${
-              showExportUI ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-            }`}>
+              showExportUI
+                ? "bg-red-500 hover:bg-red-600 text-white"
+                : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+            }`}
+          >
             {showExportUI ? t("common.cancel") : t("common.exportPDF")}
           </button>
           <button
             onClick={handleCreateRequest}
-            className="px-4 py-2 bg-[#4E8476] hover:bg-[#3d6b5f] text-white rounded-md transition-colors font-medium">
+            className="px-4 py-2 bg-[#4E8476] hover:bg-[#3d6b5f] text-white rounded-md transition-colors font-medium"
+          >
             {t("transfer.createTransfer")}
           </button>
         </div>
@@ -708,7 +757,9 @@ export default function Transfer() {
       {isLoading ? (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4E8476]"></div>
-          <span className="ml-2 text-gray-600">{t("messages.loadingTransfers")}</span>
+          <span className="ml-2 text-gray-600">
+            {t("messages.loadingTransfers")}
+          </span>
         </div>
       ) : transformedData.length === 0 ? (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
@@ -752,12 +803,17 @@ export default function Transfer() {
       <SharedModal
         isOpen={isCreateModalOpen}
         onClose={handleCloseModal}
-        title={isEditMode ? t("transfer.editTransfer") : t("transfer.createTransfer")}
-        size="md">
+        title={
+          isEditMode ? t("transfer.editTransfer") : t("transfer.createTransfer")
+        }
+        size="md"
+      >
         <div className="p-4 space-y-4 overflow-y-auto max-h-[600px]">
           <div>
             <SharedSelect
-              key={`budget-control-${isEditMode ? selectedTransfer?.transaction_id : "create"}`}
+              key={`budget-control-${
+                isEditMode ? selectedTransfer?.transaction_id : "create"
+              }`}
               title={t("tableColumns.budgetControl")}
               options={budgetControlOptions}
               value={budget_control}
@@ -766,13 +822,17 @@ export default function Transfer() {
               required
             />
             {validationErrors.budget_control && (
-              <p className="mt-1 text-sm text-red-600">{validationErrors.budget_control}</p>
+              <p className="mt-1 text-sm text-red-600">
+                {validationErrors.budget_control}
+              </p>
             )}
           </div>
 
           <div>
             <SharedSelect
-              key={`transfer-type-${isEditMode ? selectedTransfer?.transaction_id : "create"}`}
+              key={`transfer-type-${
+                isEditMode ? selectedTransfer?.transaction_id : "create"
+              }`}
               title={t("transfer.transferType")}
               options={transferTypeOptions}
               value={transfer_type}
@@ -787,7 +847,9 @@ export default function Transfer() {
               required
             />
             {validationErrors.transfer_type && (
-              <p className="mt-1 text-sm text-red-600">{validationErrors.transfer_type}</p>
+              <p className="mt-1 text-sm text-red-600">
+                {validationErrors.transfer_type}
+              </p>
             )}
           </div>
 
@@ -795,7 +857,9 @@ export default function Transfer() {
           {transfer_type === "مخصصات" && (
             <div>
               <SharedSelect
-                key={`allocation-sub-type-${isEditMode ? selectedTransfer?.transaction_id : "create"}`}
+                key={`allocation-sub-type-${
+                  isEditMode ? selectedTransfer?.transaction_id : "create"
+                }`}
                 title={t("transfer.allocationSubType")}
                 options={allocationSubTypeOptions}
                 value={allocation_sub_type}
@@ -804,14 +868,18 @@ export default function Transfer() {
                 required
               />
               {validationErrors.allocation_sub_type && (
-                <p className="mt-1 text-sm text-red-600">{validationErrors.allocation_sub_type}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {validationErrors.allocation_sub_type}
+                </p>
               )}
             </div>
           )}
 
           <div>
             <SharedSelect
-              key={`transaction-date-${isEditMode ? selectedTransfer?.transaction_id : "create"}`}
+              key={`transaction-date-${
+                isEditMode ? selectedTransfer?.transaction_id : "create"
+              }`}
               title={t("tableColumns.transactionDate")}
               options={accountOptions}
               value={time_period}
@@ -820,12 +888,16 @@ export default function Transfer() {
               required
             />
             {validationErrors.time_period && (
-              <p className="mt-1 text-sm text-red-600">{validationErrors.time_period}</p>
+              <p className="mt-1 text-sm text-red-600">
+                {validationErrors.time_period}
+              </p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#282828] mb-2">{t("common.notes")} *</label>
+            <label className="block text-xs font-bold text-[#282828] mb-2">
+              {t("common.notes")} *
+            </label>
             <RichTextEditor
               value={reason}
               onChange={(value) => setreason(value)}
@@ -833,14 +905,19 @@ export default function Transfer() {
               height={200}
               className={validationErrors.reason ? "border-red-500" : ""}
             />
-            {validationErrors.reason && <p className="mt-1 text-sm text-red-600">{validationErrors.reason}</p>}
+            {validationErrors.reason && (
+              <p className="mt-1 text-sm text-red-600">
+                {validationErrors.reason}
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={handleCloseModal}
               disabled={isCreating || isUpdating}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {t("common.cancel")}
             </button>
             <button
@@ -854,7 +931,8 @@ export default function Transfer() {
                 !reason.trim() ||
                 (transfer_type === "مخصصات" && !allocation_sub_type.trim())
               }
-              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#4E8476] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#4E8476] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
               {(isCreating || isUpdating) && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               )}
@@ -869,18 +947,28 @@ export default function Transfer() {
         isOpen={isAttachmentsModalOpen}
         onClose={() => setIsAttachmentsModalOpen(false)}
         title={t("common.manageAttachments")}
-        size="lg">
+        size="lg"
+      >
         <div className="p-4">
           {/* Upload section */}
           <div
             className={`w-full flex flex-col py-8 gap-4 items-center transition-colors mb-6 ${
-              isDragOver ? "bg-[#9ce1de] border-2 border-dashed border-[#2d5147]" : "bg-[#F6F6F6]"
+              isDragOver
+                ? "bg-[#9ce1de] border-2 border-dashed border-[#2d5147]"
+                : "bg-[#F6F6F6]"
             } rounded-lg`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
-            onDrop={handleDrop}>
+            onDrop={handleDrop}
+          >
             <div className="rounded-full p-2">
-              <svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg
+                width="50"
+                height="50"
+                viewBox="0 0 50 50"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
                 <path
                   d="M35.417 18.7542C39.9483 18.7794 42.4023 18.9803 44.0031 20.5811C45.8337 22.4117 45.8337 25.358 45.8337 31.2505V33.3339C45.8337 39.2264 45.8337 42.1727 44.0031 44.0033C42.1725 45.8339 39.2262 45.8339 33.3337 45.8339H16.667C10.7744 45.8339 7.82816 45.8339 5.99757 44.0033C4.16699 42.1727 4.16699 39.2264 4.16699 33.3339L4.16699 31.2505C4.16699 25.358 4.16699 22.4117 5.99757 20.5811C7.59837 18.9803 10.0524 18.7794 14.5837 18.7542"
                   stroke="#282828"
@@ -900,13 +988,18 @@ export default function Transfer() {
               <div className="font-semibold text-base mb-1">
                 {t("common.dragDrop")}{" "}
                 <button
-                  onClick={() => document.getElementById("file-upload")?.click()}
+                  onClick={() =>
+                    document.getElementById("file-upload")?.click()
+                  }
                   className="text-[#4E8476] underline hover:text-blue-700 transition-colors"
-                  disabled={isUploading}>
+                  disabled={isUploading}
+                >
                   {t("common.browse")}
                 </button>
               </div>
-              <div className="text-xs text-[#757575] mb-2">{t("validation.supportedFormats")}</div>
+              <div className="text-xs text-[#757575] mb-2">
+                {t("validation.supportedFormats")}
+              </div>
               <input
                 id="file-upload"
                 type="file"
@@ -932,39 +1025,63 @@ export default function Transfer() {
 
           {/* Attachments list */}
           <div className="space-y-3">
-            <h4 className="font-semibold text-gray-800">{t("common.existingAttachments")}</h4>
+            <h4 className="font-semibold text-gray-800">
+              {t("common.existingAttachments")}
+            </h4>
 
             {isLoadingAttachments ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-gray-600">{t("messages.loadingAttachments")}</span>
+                <span className="ml-2 text-gray-600">
+                  {t("messages.loadingAttachments")}
+                </span>
               </div>
-            ) : attachmentsData && attachmentsData.attachments && attachmentsData.attachments.length > 0 ? (
+            ) : attachmentsData &&
+              attachmentsData.attachments &&
+              attachmentsData.attachments.length > 0 ? (
               <div className="space-y-2">
                 {attachmentsData.attachments.map((attachment) => (
                   <div
                     key={attachment.attachment_id}
-                    className="flex items-center justify-between gap-3 bg-white rounded-lg px-4 py-3 border border-gray-200">
+                    className="flex items-center justify-between gap-3 bg-white rounded-lg px-4 py-3 border border-gray-200"
+                  >
                     <div className="flex items-center gap-2 flex-1">
-                      <svg width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <svg
+                        width="24"
+                        height="25"
+                        viewBox="0 0 24 25"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
                         <path
                           d="M16 2.5H8C4.5 2.5 3 4.5 3 7.5V17.5C3 20.5 4.5 22.5 8 22.5H16C19.5 22.5 21 20.5 21 17.5V7.5C21 4.5 19.5 2.5 16 2.5ZM8 12.75H12C12.41 12.75 12.75 13.09 12.75 13.5C12.75 13.91 12.41 14.25 12 14.25H8C7.59 14.25 7.25 13.91 7.25 13.5C7.25 13.09 7.59 12.75 8 12.75ZM16 18.25H8C7.59 18.25 7.25 17.91 7.25 17.5C7.25 17.09 7.59 16.75 8 16.75H16C16.41 16.75 16.75 17.09 16.75 17.5C16.75 17.91 16.41 18.25 16 18.25ZM18.5 9.75H16.5C14.98 9.75 13.75 8.52 13.75 7V5C13.75 4.59 14.09 4.25 14.5 4.25C14.91 4.25 15.25 4.59 15.25 5V7C15.25 7.69 15.81 8.25 16.5 8.25H18.5C18.91 8.25 19.25 8.59 19.25 9C19.25 9.41 18.91 9.75 18.5 9.75Z"
                           fill="#545454"
                         />
                       </svg>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-[#545454] truncate">{attachment.file_name}</div>
+                        <div className="text-sm font-medium text-[#545454] truncate">
+                          {attachment.file_name}
+                        </div>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3 text-xs text-[#545454]">
                       <span>{(attachment.file_size / 1024).toFixed(1)} KB</span>
-                      <span>{new Date(attachment.upload_date).toLocaleDateString()}</span>
+                      <span>
+                        {new Date(attachment.upload_date).toLocaleDateString()}
+                      </span>
                       <button
                         className="bg-[#EEEEEE] p-1 rounded-md hover:bg-gray-300 transition-colors"
                         title="Download"
-                        onClick={() => handleDownloadFile(attachment)}>
-                        <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        onClick={() => handleDownloadFile(attachment)}
+                      >
+                        <svg
+                          width="16"
+                          height="17"
+                          viewBox="0 0 16 17"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
                           <path
                             d="M8.36902 11.5041C8.27429 11.6077 8.14038 11.6667 8 11.6667C7.85962 11.6667 7.72571 11.6077 7.63099 11.5041L4.96432 8.58738C4.77799 8.38358 4.79215 8.06732 4.99595 7.88099C5.19975 7.69465 5.51602 7.70881 5.70235 7.91262L7.5 9.8788V2.5C7.5 2.22386 7.72386 2 8 2C8.27614 2 8.5 2.22386 8.5 2.5V9.8788L10.2977 7.91262C10.484 7.70881 10.8003 7.69465 11.0041 7.88099C11.2079 8.06732 11.222 8.38358 11.0357 8.58738L8.36902 11.5041Z"
                             fill="#282828"
@@ -991,7 +1108,8 @@ export default function Transfer() {
           <div className="flex justify-end gap-3 pt-6">
             <button
               onClick={() => setIsAttachmentsModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors">
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+            >
               {t("common.close")}
             </button>
           </div>
@@ -1006,7 +1124,8 @@ export default function Transfer() {
           setActiveOracleTab("submit"); // Reset to default tab
         }}
         title={t("transfer.oracleStatus")}
-        size="lg">
+        size="lg"
+      >
         <div className="flex flex-col" style={{ maxHeight: "80vh" }}>
           {/* Tabs */}
           <div className="flex border-b border-gray-200 px-6 pt-4">
@@ -1016,9 +1135,15 @@ export default function Transfer() {
                 activeOracleTab === "submit"
                   ? "border-[#4E8476] text-[#4E8476]"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}>
+              }`}
+            >
               <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -1035,9 +1160,15 @@ export default function Transfer() {
                 activeOracleTab === "journal"
                   ? "border-[#4E8476] text-[#4E8476]"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}>
+              }`}
+            >
               <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -1058,7 +1189,10 @@ export default function Transfer() {
                 <div className="relative">
                   <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
                   {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="relative flex items-start gap-4 pb-8 last:pb-0">
+                    <div
+                      key={i}
+                      className="relative flex items-start gap-4 pb-8 last:pb-0"
+                    >
                       <div className="relative z-10 w-12 h-12 bg-gray-300 rounded-full animate-pulse"></div>
                       <div className="flex-1 pt-2 space-y-2">
                         <div className="h-4 bg-gray-300 rounded w-3/4 animate-pulse"></div>
@@ -1071,8 +1205,12 @@ export default function Transfer() {
             ) : oracleStatusError ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="text-red-500 text-4xl mb-4">⚠️</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t("oracle.loadError")}</h3>
-                <p className="text-sm text-gray-600 text-center max-w-md">{t("oracle.loadErrorMessage")}</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  {t("oracle.loadError")}
+                </h3>
+                <p className="text-sm text-gray-600 text-center max-w-md">
+                  {t("oracle.loadErrorMessage")}
+                </p>
               </div>
             ) : oracleStatusData ? (
               <div>
@@ -1087,7 +1225,9 @@ export default function Transfer() {
                       return (
                         <div className="flex flex-col items-center justify-center py-12">
                           <div className="text-gray-400 text-4xl mb-4">📋</div>
-                          <p className="text-sm text-gray-600">{t("oracle.noSubmitSteps")}</p>
+                          <p className="text-sm text-gray-600">
+                            {t("oracle.noSubmitSteps")}
+                          </p>
                         </div>
                       );
                     }
@@ -1099,11 +1239,19 @@ export default function Transfer() {
 
                         {submitGroup.steps.map((step, index) => {
                           // Check if this is an error/failed/warning status
-                          const isErrorStatus = ["error", "failed", "warning"].includes(step.status.toLowerCase());
-                          const isSuccessStatus = step.status.toLowerCase() === "success";
+                          const isErrorStatus = [
+                            "error",
+                            "failed",
+                            "warning",
+                          ].includes(step.status.toLowerCase());
+                          const isSuccessStatus =
+                            step.status.toLowerCase() === "success";
 
                           return (
-                            <div key={index} className="relative flex items-start gap-4 pb-8 last:pb-0">
+                            <div
+                              key={index}
+                              className="relative flex items-start gap-4 pb-8 last:pb-0"
+                            >
                               {/* Timeline dot with icon */}
                               <div
                                 className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
@@ -1112,9 +1260,14 @@ export default function Transfer() {
                                     : isErrorStatus
                                     ? "bg-red-500 border-red-200"
                                     : "bg-gray-400 border-gray-200"
-                                }`}>
+                                }`}
+                              >
                                 {isSuccessStatus ? (
-                                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <svg
+                                    className="w-6 h-6 text-white"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
                                     <path
                                       fillRule="evenodd"
                                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -1122,7 +1275,11 @@ export default function Transfer() {
                                     />
                                   </svg>
                                 ) : isErrorStatus ? (
-                                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <svg
+                                    className="w-6 h-6 text-white"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
                                     <path
                                       fillRule="evenodd"
                                       d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -1130,14 +1287,18 @@ export default function Transfer() {
                                     />
                                   </svg>
                                 ) : (
-                                  <span className="text-white font-bold">{step.step_number}</span>
+                                  <span className="text-white font-bold">
+                                    {step.step_number}
+                                  </span>
                                 )}
                               </div>
 
                               {/* Step content */}
                               <div className="flex-1 min-w-0 pt-1">
                                 <div className="flex items-center justify-between mb-1">
-                                  <h4 className="text-sm font-semibold text-gray-900">{step.step_name}</h4>
+                                  <h4 className="text-sm font-semibold text-gray-900">
+                                    {step.step_name}
+                                  </h4>
                                   <span
                                     className={`text-xs font-medium px-2 py-1 rounded-full ${
                                       isSuccessStatus
@@ -1145,27 +1306,40 @@ export default function Transfer() {
                                         : isErrorStatus
                                         ? "bg-red-100 text-red-800"
                                         : "bg-gray-100 text-gray-800"
-                                    }`}>
+                                    }`}
+                                  >
                                     {step.status}
                                   </span>
                                 </div>
-                                <p className="text-sm text-gray-600 mb-2">{step.message}</p>
-                                {(step.request_id || step.document_id || step.group_id) && (
+                                <p className="text-sm text-gray-600 mb-2">
+                                  {step.message}
+                                </p>
+                                {(step.request_id ||
+                                  step.document_id ||
+                                  step.group_id) && (
                                   <div className="flex flex-wrap gap-3 text-xs text-gray-500">
                                     {step.request_id && (
                                       <span>
-                                        <span className="font-medium">{t("oracle.requestId")}:</span> {step.request_id}
+                                        <span className="font-medium">
+                                          {t("oracle.requestId")}:
+                                        </span>{" "}
+                                        {step.request_id}
                                       </span>
                                     )}
                                     {step.document_id && (
                                       <span>
-                                        <span className="font-medium">{t("oracle.documentId")}:</span>{" "}
+                                        <span className="font-medium">
+                                          {t("oracle.documentId")}:
+                                        </span>{" "}
                                         {step.document_id}
                                       </span>
                                     )}
                                     {step.group_id && (
                                       <span>
-                                        <span className="font-medium">{t("oracle.groupId")}:</span> {step.group_id}
+                                        <span className="font-medium">
+                                          {t("oracle.groupId")}:
+                                        </span>{" "}
+                                        {step.group_id}
                                       </span>
                                     )}
                                   </div>
@@ -1189,7 +1363,9 @@ export default function Transfer() {
                       return (
                         <div className="flex flex-col items-center justify-center py-12">
                           <div className="text-gray-400 text-4xl mb-4">📋</div>
-                          <p className="text-sm text-gray-600">{t("oracle.noJournalSteps")}</p>
+                          <p className="text-sm text-gray-600">
+                            {t("oracle.noJournalSteps")}
+                          </p>
                         </div>
                       );
                     }
@@ -1213,13 +1389,19 @@ export default function Transfer() {
 
                               {group.steps.map((step, index) => {
                                 // Check if this is an error/failed/warning status
-                                const isErrorStatus = ["error", "failed", "warning"].includes(
-                                  step.status.toLowerCase()
-                                );
-                                const isSuccessStatus = step.status.toLowerCase() === "success";
+                                const isErrorStatus = [
+                                  "error",
+                                  "failed",
+                                  "warning",
+                                ].includes(step.status.toLowerCase());
+                                const isSuccessStatus =
+                                  step.status.toLowerCase() === "success";
 
                                 return (
-                                  <div key={index} className="relative flex items-start gap-4 pb-8 last:pb-0">
+                                  <div
+                                    key={index}
+                                    className="relative flex items-start gap-4 pb-8 last:pb-0"
+                                  >
                                     {/* Timeline dot with icon */}
                                     <div
                                       className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
@@ -1228,9 +1410,14 @@ export default function Transfer() {
                                           : isErrorStatus
                                           ? "bg-red-500 border-red-200"
                                           : "bg-gray-400 border-gray-200"
-                                      }`}>
+                                      }`}
+                                    >
                                       {isSuccessStatus ? (
-                                        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <svg
+                                          className="w-6 h-6 text-white"
+                                          fill="currentColor"
+                                          viewBox="0 0 20 20"
+                                        >
                                           <path
                                             fillRule="evenodd"
                                             d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -1238,7 +1425,11 @@ export default function Transfer() {
                                           />
                                         </svg>
                                       ) : isErrorStatus ? (
-                                        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <svg
+                                          className="w-6 h-6 text-white"
+                                          fill="currentColor"
+                                          viewBox="0 0 20 20"
+                                        >
                                           <path
                                             fillRule="evenodd"
                                             d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -1246,14 +1437,18 @@ export default function Transfer() {
                                           />
                                         </svg>
                                       ) : (
-                                        <span className="text-white font-bold">{step.step_number}</span>
+                                        <span className="text-white font-bold">
+                                          {step.step_number}
+                                        </span>
                                       )}
                                     </div>
 
                                     {/* Step content */}
                                     <div className="flex-1 min-w-0 pt-1">
                                       <div className="flex items-center justify-between mb-1">
-                                        <h4 className="text-sm font-semibold text-gray-900">{step.step_name}</h4>
+                                        <h4 className="text-sm font-semibold text-gray-900">
+                                          {step.step_name}
+                                        </h4>
                                         <span
                                           className={`text-xs font-medium px-2 py-1 rounded-full ${
                                             isSuccessStatus
@@ -1261,28 +1456,39 @@ export default function Transfer() {
                                               : isErrorStatus
                                               ? "bg-red-100 text-red-800"
                                               : "bg-gray-100 text-gray-800"
-                                          }`}>
+                                          }`}
+                                        >
                                           {step.status}
                                         </span>
                                       </div>
-                                      <p className="text-sm text-gray-600 mb-2">{step.message}</p>
-                                      {(step.request_id || step.document_id || step.group_id) && (
+                                      <p className="text-sm text-gray-600 mb-2">
+                                        {step.message}
+                                      </p>
+                                      {(step.request_id ||
+                                        step.document_id ||
+                                        step.group_id) && (
                                         <div className="flex flex-wrap gap-3 text-xs text-gray-500">
                                           {step.request_id && (
                                             <span>
-                                              <span className="font-medium">{t("oracle.requestId")}:</span>{" "}
+                                              <span className="font-medium">
+                                                {t("oracle.requestId")}:
+                                              </span>{" "}
                                               {step.request_id}
                                             </span>
                                           )}
                                           {step.document_id && (
                                             <span>
-                                              <span className="font-medium">{t("oracle.documentId")}:</span>{" "}
+                                              <span className="font-medium">
+                                                {t("oracle.documentId")}:
+                                              </span>{" "}
                                               {step.document_id}
                                             </span>
                                           )}
                                           {step.group_id && (
                                             <span>
-                                              <span className="font-medium">{t("oracle.groupId")}:</span>{" "}
+                                              <span className="font-medium">
+                                                {t("oracle.groupId")}:
+                                              </span>{" "}
                                               {step.group_id}
                                             </span>
                                           )}
@@ -1317,7 +1523,8 @@ export default function Transfer() {
                 }
               }}
               disabled={isLoadingOracleStatus}
-              className="px-4 py-2 text-sm font-medium text-[#4E8476] bg-[#4E8476]/10 border border-[#4E8476] rounded-md hover:bg-[#4E8476]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+              className="px-4 py-2 text-sm font-medium text-[#4E8476] bg-[#4E8476]/10 border border-[#4E8476] rounded-md hover:bg-[#4E8476]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
               {isLoadingOracleStatus ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#4E8476]"></div>
@@ -1325,7 +1532,12 @@ export default function Transfer() {
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -1343,7 +1555,8 @@ export default function Transfer() {
                 setTrackTransactionId(null);
                 setActiveOracleTab("submit"); // Reset to default tab
               }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors">
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+            >
               {t("common.close")}
             </button>
           </div>
@@ -1358,14 +1571,17 @@ export default function Transfer() {
           setStatusTransactionId(null); // Clear the transaction ID when closing
         }}
         title={t("transfer.statusPipeline")}
-        size="lg">
+        size="lg"
+      >
         <div className="p-6">
           {isLoadingStatus ? (
             <>
               {console.log("[MODAL] Rendering LOADING state")}
               <div className="flex justify-center items-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-gray-600">{t("messages.loadingStatus")}</span>
+                <span className="ml-2 text-gray-600">
+                  {t("messages.loadingStatus")}
+                </span>
               </div>
             </>
           ) : statusError ? (
@@ -1374,7 +1590,9 @@ export default function Transfer() {
               <div className="flex justify-center items-center py-12">
                 <div className="text-center">
                   <div className="text-red-500 text-lg mb-2">⚠️</div>
-                  <p className="text-gray-600">{t("messages.errorLoadingStatus")}</p>
+                  <p className="text-gray-600">
+                    {t("messages.errorLoadingStatus")}
+                  </p>
                 </div>
               </div>
             </>
@@ -1383,7 +1601,9 @@ export default function Transfer() {
               {/* Overall Status */}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-600">{t("TransferStatus")}:</span>
+                  <span className="text-sm font-medium text-gray-600">
+                    {t("TransferStatus")}:
+                  </span>
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       statusData.transfer_status === "approved"
@@ -1391,8 +1611,11 @@ export default function Transfer() {
                         : statusData.transfer_status === "rejected"
                         ? "bg-red-100 text-red-800"
                         : "bg-blue-100 text-blue-800"
-                    }`}>
-                    {statusData.transfer_status}
+                    }`}
+                  >
+                    {t(`status.${statusData.transfer_status}`) ||
+                      statusData.transfer_status}
+
                   </span>
                 </div>
               </div>
@@ -1400,7 +1623,9 @@ export default function Transfer() {
               {statusData.workflows?.map((workflow) => (
                 <div key={workflow.execution_order} className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-md font-semibold text-gray-800">{workflow.workflow_name}</h4>
+                    <h4 className="text-md font-semibold text-gray-800">
+                      {workflow.workflow_name}
+                    </h4>
                     <span
                       className={`px-2 py-1 rounded text-xs font-medium ${
                         workflow.workflow_status === "approved"
@@ -1408,8 +1633,10 @@ export default function Transfer() {
                           : workflow.workflow_status === "rejected"
                           ? "bg-red-100 text-red-800"
                           : "bg-blue-100 text-blue-800"
-                      }`}>
-                      {workflow.workflow_status}
+                      }`}
+                    >
+                      {t(`status.${workflow.workflow_status}`) ||
+                        workflow.workflow_status}
                     </span>
                   </div>
 
@@ -1418,20 +1645,30 @@ export default function Transfer() {
                     <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
 
                     {workflow.stages?.map((stage) => (
-                      <div key={stage.order_index} className="relative flex items-start space-x-4 pb-8 last:pb-0">
+                      <div
+                        key={stage.order_index}
+                        className="relative flex items-start space-x-4 pb-8 last:pb-0"
+                      >
                         {/* Timeline dot */}
                         <div
                           className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 ${
-                            stage.status === "approved" || stage.status === "active"
+                            stage.status === "approved" ||
+                            stage.status === "active"
                               ? "bg-green-500 border-green-200"
                               : stage.status === "pending"
                               ? "bg-yellow-500 border-yellow-200"
                               : stage.status === "rejected"
                               ? "bg-red-500 border-red-200"
                               : "bg-[#4E8476] border-blue-200"
-                          }`}>
-                          {stage.status === "approved" || stage.status === "active" ? (
-                            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          }`}
+                        >
+                          {stage.status === "approved" ||
+                          stage.status === "active" ? (
+                            <svg
+                              className="w-6 h-6 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
                               <path
                                 fillRule="evenodd"
                                 d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -1439,7 +1676,11 @@ export default function Transfer() {
                               />
                             </svg>
                           ) : stage.status === "pending" ? (
-                            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <svg
+                              className="w-6 h-6 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
                               <path
                                 fillRule="evenodd"
                                 d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
@@ -1447,7 +1688,11 @@ export default function Transfer() {
                               />
                             </svg>
                           ) : stage.status === "rejected" ? (
-                            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <svg
+                              className="w-6 h-6 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
                               <path
                                 fillRule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -1460,9 +1705,17 @@ export default function Transfer() {
                               viewBox="0 0 20 20"
                               fill="none"
                               role="status"
-                              aria-label="In progress">
+                              aria-label="In progress"
+                            >
                               {/* faint full ring */}
-                              <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" opacity="0.25" />
+                              <circle
+                                cx="10"
+                                cy="10"
+                                r="8"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                opacity="0.25"
+                              />
                               {/* leading arc */}
                               <path
                                 d="M10 2 A 8 8 0 0 1 18 10"
@@ -1478,7 +1731,9 @@ export default function Transfer() {
                         <div className="flex-1 min-w-0">
                           <div className="bg-white rounded-lg ">
                             <div className="flex items-center justify-between mb-2">
-                              <h5 className="text-sm font-semibold text-gray-900">{stage.name}</h5>
+                              <h5 className="text-sm font-semibold text-gray-900">
+                                {stage.name}
+                              </h5>
                               <span className="text-xs text-gray-500">
                                 {t("status.stage")} {stage.order_index}
                               </span>
@@ -1486,50 +1741,77 @@ export default function Transfer() {
 
                             <div className="flex items-center justify-between text-sm text-gray-600">
                               <span>
-                                <span className="font-medium">{t("status.decisionPolicy")}:</span>{" "}
+                                <span className="font-medium">
+                                  {t("status.decisionPolicy")}:
+                                </span>{" "}
                                 {stage.decision_policy}
                               </span>
                             </div>
 
                             {/* Stage Status Icon */}
                             <div className="flex items-center mt-3 text-sm">
-                              {stage.status === "approved" || stage.status === "active" ? (
+                              {stage.status === "approved" ||
+                              stage.status === "active" ? (
                                 <div className="flex items-center text-green-600">
-                                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
                                     <path
                                       fillRule="evenodd"
                                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                                       clipRule="evenodd"
                                     />
                                   </svg>
-                                  <span className="font-medium">{t("common.approved")}</span>
+                                  <span className="font-medium">
+                                    {t(`status.${stage.status}`) ||
+                                      stage.status}
+                                  </span>
                                 </div>
                               ) : stage.status === "pending" ? (
                                 <div className="flex items-center text-yellow-600">
-                                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
                                     <path
                                       fillRule="evenodd"
                                       d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
                                       clipRule="evenodd"
                                     />
                                   </svg>
-                                  <span className="font-medium">{t("status.awaitingApproval")}</span>
+                                  <span className="font-medium">
+                                    {t(`status.${stage.status}`) ||
+                                      stage.status}
+                                  </span>
                                 </div>
                               ) : stage.status === "rejected" ? (
                                 <div className="flex items-center text-red-600">
-                                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
                                     <path
                                       fillRule="evenodd"
                                       d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                       clipRule="evenodd"
                                     />
                                   </svg>
-                                  <span className="font-medium">{t("common.rejected")}</span>
+                                  <span className="font-medium">
+                                    {t(`status.${stage.status}`) ||
+                                      stage.status}
+                                  </span>
                                 </div>
                               ) : (
                                 <div className="flex items-center text-[#4E8476]">
                                   <div className="w-4 h-4 bg-[#4E8476] rounded-full mr-1"></div>
-                                  <span className="font-medium">{t("status.inProgress")}</span>
+                                  <span className="font-medium">
+                                    {t(`status.${stage.status}`) ||
+                                      stage.status}
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -1555,7 +1837,8 @@ export default function Transfer() {
                 setIsStatusModalOpen(false);
                 setStatusTransactionId(null); // Clear the transaction ID when closing
               }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors">
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+            >
               {t("common.close")}
             </button>
           </div>

@@ -1803,6 +1803,13 @@
     "decisionPolicy": "سياسة القرار",
     "awaitingApproval": "في انتظار الموافقة",
     "inProgress": "قيد التنفيذ",
+  "approved": "تمت الموافقة",
+  "Pending": "معلق",
+    "pending": "معلق",
+
+  "rejected": "مرفوض",
+  "in_progress": "قيد التنفيذ",
+  "active": "نشط",
     "stage": "مرحلة",
     "noData": "لا توجد معلومات حالة متاحة"
   },

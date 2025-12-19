@@ -1805,6 +1805,13 @@
     "decisionPolicy": "Decision Policy",
     "awaitingApproval": "Awaiting Approval",
     "inProgress": "In Progress",
+  "approved": "Approved",
+  "pending": "Pending",
+      "Pending": "معلق",
+
+  "rejected": "Rejected",
+  "in_progress": "In Progress",
+  "active": "Active",
     "stage": "Stage",
     "noData": "No status information available"
   },
