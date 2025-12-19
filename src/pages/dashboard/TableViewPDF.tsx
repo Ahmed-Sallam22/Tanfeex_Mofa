@@ -84,7 +84,7 @@ const transformApiDataToTableData = (apiData: TransactionReportData[]): TableRow
     // Use segment_11 (عنصر الميزانية) for program/project column
     const segment11 = firstTransfer?.segments?.segment_11;
     // Use segment_5 (الموقع الجغرافي) for economic classification
-    const segment5 = firstTransfer?.segments?.segment_5;
+    // const segment5 = firstTransfer?.segments?.segment_5;
 
     // Get from_code and from_name, fallback to to_code and to_name if from is empty
     const programCode = segment11?.from_code || segment11?.to_code || "";

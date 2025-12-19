@@ -12,7 +12,7 @@ import {
   type WorkflowStage,
   type CreateWorkflowRequest,
 } from "@/api/workflow.api";
-import { useGetSecurityGroupsQuery } from "@/api/securityGroups.api";
+// import { useGetSecurityGroupsQuery } from "@/api/securityGroups.api";
 
 export default function AddWorkFlow() {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ export default function AddWorkFlow() {
 
   // API hooks
   const { data: securityGroupRolesData } = useGetSecurityGroupRolesQuery();
-  const { data: securityGroupsData } = useGetSecurityGroupsQuery();
+  // const { data: securityGroupsData } = useGetSecurityGroupsQuery();
   const [createWorkflowTemplate, { isLoading: isCreating }] =
     useCreateWorkflowTemplateMutation();
   const [updateWorkflowTemplate, { isLoading: isUpdating }] =
@@ -142,11 +142,11 @@ export default function AddWorkFlow() {
     })) || [];
 
   // Security group options from API
-  const securityGroupOptions: SelectOption[] =
-    securityGroupsData?.groups?.filter(group => group.is_active).map((group) => ({
-      value: group.id.toString(),
-      label: group.group_name,
-    })) || [];
+  // const securityGroupOptions: SelectOption[] =
+  //   securityGroupsData?.groups?.filter(group => group.is_active).map((group) => ({
+  //     value: group.id.toString(),
+  //     label: group.group_name,
+  //   })) || [];
 
   const handleSelectChange = (value: string | number) => {
     setTranstype(String(value));
