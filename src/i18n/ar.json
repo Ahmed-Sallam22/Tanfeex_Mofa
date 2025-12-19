@@ -1888,5 +1888,12 @@
     "MofaCostCenter": "مراكز التكلفة",
     "MofaBudget": "عنصر الميزانية"
   },
-  "TransferStatus": "حالة التحويل"
+  "TransferStatus": "حالة التحويل",
+  "statusTransfer": {
+    "approved": "موافق عليه",
+    "pending": "قيد الانتظار",
+    "rejected": "مرفوض",
+    "in_progress": "قيد التنفيذ",
+    "draft": "مسودة"
+  }
 }

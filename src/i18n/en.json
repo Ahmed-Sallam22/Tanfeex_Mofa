@@ -1890,5 +1890,12 @@
     "MofaCostCenter": "Mofa Cost Center",
     "MofaBudget": "Mofa Budget"
   },
-  "TransferStatus": "Transfer Status"
+  "TransferStatus": "Transfer Status",
+  "statusTransfer": {
+    "approved": "Approved",
+    "pending": "Pending",
+    "rejected": "Rejected",
+    "in_progress": "In Progress",
+    "draft": "Draft"
+  }
 }

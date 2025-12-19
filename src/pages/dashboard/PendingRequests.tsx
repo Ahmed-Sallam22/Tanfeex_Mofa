@@ -273,30 +273,50 @@ export default function PendingTransfer() {
       },
       {
         id: "status",
-        header: t("common.status"),
+        header: t("tableColumns.status"),
         accessor: "status",
-        width: 110,
-        minWidth: 90,
-        sortable: true,
-        render: (value, row) => (
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition ${
-              value === "Approved" || value === "approved" || value === "active"
-                ? "bg-green-100 text-green-800"
-                : value === "Pending" || value === "pending"
-                ? "bg-yellow-100 text-yellow-800"
-                : value === "Rejected" || value === "rejected"
-                ? "bg-red-100 text-red-800"
-                : value === "In Progress" || value === "in_progress"
-                ? "bg-blue-300 text-blue-800"
-                : "bg-gray-100 text-gray-800"
-            }`}
-            onClick={() => handleStatusClick(row)}
-          >
-            {safeValue(value).charAt(0).toUpperCase() +
-              safeValue(value).slice(1)}
-          </span>
-        ),
+        render: (value, row) => {
+          // Helper to map raw status values to i18n keys
+          const translateStatus = (status: unknown) => {
+            const s = String(status || "").toLowerCase();
+            switch (s) {
+              case "approved":
+              case "active":
+                return t("statusTransfer.approved");
+              case "pending":
+                return t("statusTransfer.pending");
+              case "rejected":
+                return t("statusTransfer.rejected");
+              case "in_progress":
+              case "in-progress":
+                return t("statusTransfer.in_progress");
+              case "draft":
+                return t("statusTransfer.draft");
+              default:
+                return safeValue(status);
+            }
+          };
+
+          const bgClass =
+            value === "approved" || value === "active"
+              ? "bg-green-100 text-green-800"
+              : value === "pending"
+              ? "bg-yellow-100 text-yellow-800"
+              : value === "rejected"
+              ? "bg-red-100 text-red-800"
+              : value === "in_progress" || value === "in-progress"
+              ? "bg-blue-300 text-blue-800"
+              : "bg-gray-100 text-gray-800";
+
+          return (
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition ${bgClass}`}
+              onClick={() => handleStatusClick(row)}
+            >
+              {translateStatus(value)}
+            </span>
+          );
+        },
       },
       {
         id: "transaction_date",

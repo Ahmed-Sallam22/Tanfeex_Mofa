@@ -963,43 +963,6 @@ export default function TransferDetails() {
 
       console.log(`Row ${rowId}: Financial data fetched:`, result);
 
-      // 🧪 MOCK DATA FOR TESTING - TODO: Remove after testing
-      // Uncomment the lines below to test with mock data
-      /*
-      const mockResult = {
-        message: "Retrieved 2 segment funds",
-        count: 2,
-        data: [
-          {
-            id: 1099,
-            Control_budget_name: "MOFA_CASH",
-            Period_name: "1-25",
-            Budget: 12500688.82,
-            Encumbrance: 500688.82,
-            Funds_available: 11247398.93,
-            Commitment: 0,
-            Obligation: 0,
-            Actual: 251912.25,
-            Other: 0,
-          },
-          {
-            id: 1221,
-            Control_budget_name: "MOFA_COST_2",
-            Period_name: "1-25",
-            Budget: 12539796.42,
-            Encumbrance: 539796.42,
-            Funds_available: 10928291.33,
-            Commitment: 0,
-            Obligation: 0,
-            Actual: 531912.25,
-            Other: -300.0,
-          }
-        ]
-      };
-      // Use mock data instead of API result
-      const records = mockResult.data || [];
-      */
-
       // The API returns an array with multiple budget records
       const records = result.data || [];
 
