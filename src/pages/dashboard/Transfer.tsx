@@ -24,6 +24,17 @@ import {
 } from "@/api/attachments.api";
 import type { Attachment } from "@/api/attachments.api";
 
+const ORACLE_EXPECTED_SUBMIT_STEPS = 4;
+const ORACLE_ERROR_STATUSES = ["error", "failed", "warning"];
+const ORACLE_STATUS_PILL_STYLES: Record<
+  "approved" | "rejected" | "in_progress",
+  string
+> = {
+  approved: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  rejected: "bg-rose-50 text-rose-700 border border-rose-200",
+  in_progress: "bg-amber-50 text-amber-700 border border-amber-200",
+};
+
 export default function Transfer() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -398,6 +409,30 @@ export default function Transfer() {
   } = useGetOracleStatusQuery(trackTransactionId!, {
     skip: !trackTransactionId || !isTrackModalOpen,
   });
+
+  // Oracle submit pipeline summary (used to surface overall status)
+  const submitGroup = oracleStatusData?.action_groups?.find(
+    (group) => group.action_type?.toLowerCase() === "submit"
+  );
+  const submitSteps = submitGroup?.steps || [];
+  const submitHasError = submitSteps.some((step) =>
+    ORACLE_ERROR_STATUSES.includes((step.status || "").toLowerCase())
+  );
+  const submitAllSuccess =
+    submitSteps.length >= ORACLE_EXPECTED_SUBMIT_STEPS &&
+    submitSteps.every((step) => (step.status || "").toLowerCase() === "success");
+  const submitOverallStatus: "approved" | "rejected" | "in_progress" | null =
+    submitGroup && submitSteps.length > 0
+      ? submitHasError
+        ? "rejected"
+        : submitAllSuccess
+        ? "approved"
+        : "in_progress"
+      : null;
+  const journalGroups =
+    oracleStatusData?.action_groups?.filter(
+      (group) => group.action_type?.toLowerCase() !== "submit"
+    ) || [];
 
   // Status API call
   const {
@@ -1181,8 +1216,67 @@ export default function Transfer() {
             </button>
           </div>
 
+          {/* Overall submit status summary */}
+          {activeOracleTab === "submit" && submitOverallStatus && (
+            <div className="flex items-center justify-between px-6 py-4 my-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${ORACLE_STATUS_PILL_STYLES[submitOverallStatus]}`}
+                >
+                  {submitOverallStatus === "approved" && (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  )}
+                  {submitOverallStatus === "rejected" && (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  )}
+                  {submitOverallStatus === "in_progress" && (
+                    <div className="w-5 h-5 border-2 border-current border-b-transparent rounded-full animate-spin" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">الحالة الحالية</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {submitOverallStatus === "in_progress"
+                      ? t("status.in_progress")
+                      : t(`status.${submitOverallStatus}`)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                <span className="text-xs text-gray-500">الخطوات</span>
+                <span className="px-2 py-1 rounded-md bg-gray-100">
+                  {submitSteps.length}/{ORACLE_EXPECTED_SUBMIT_STEPS}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto ">
             {isLoadingOracleStatus ? (
               <div className="space-y-6">
                 {/* Loading Skeleton */}
@@ -1217,11 +1311,9 @@ export default function Transfer() {
                 {/* Submit Steps Tab Content */}
                 {activeOracleTab === "submit" &&
                   (() => {
-                    const submitGroup = oracleStatusData.action_groups.find(
-                      (group) => group.action_type.toLowerCase() === "submit"
-                    );
+                    const submitGroupLocal = submitGroup;
 
-                    if (!submitGroup) {
+                    if (!submitGroupLocal) {
                       return (
                         <div className="flex flex-col items-center justify-center py-12">
                           <div className="text-gray-400 text-4xl mb-4">📋</div>
@@ -1232,133 +1324,123 @@ export default function Transfer() {
                       );
                     }
 
-                    return (
-                      <div className="relative">
-                        {/* Vertical line */}
-                        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
+                    // return (
+                    //   <div className="relative">
+                    //     <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
 
-                        {submitGroup.steps.map((step, index) => {
-                          // Check if this is an error/failed/warning status
-                          const isErrorStatus = [
-                            "error",
-                            "failed",
-                            "warning",
-                          ].includes(step.status.toLowerCase());
-                          const isSuccessStatus =
-                            step.status.toLowerCase() === "success";
+                    //     {submitGroupLocal.steps.map((step, index) => {
+                    //       const isErrorStatus = ORACLE_ERROR_STATUSES.includes(
+                    //         (step.status || "").toLowerCase()
+                    //       );
+                    //       const isSuccessStatus =
+                    //         (step.status || "").toLowerCase() === "success";
 
-                          return (
-                            <div
-                              key={index}
-                              className="relative flex items-start gap-4 pb-8 last:pb-0"
-                            >
-                              {/* Timeline dot with icon */}
-                              <div
-                                className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
-                                  isSuccessStatus
-                                    ? "bg-green-500 border-green-200"
-                                    : isErrorStatus
-                                    ? "bg-red-500 border-red-200"
-                                    : "bg-gray-400 border-gray-200"
-                                }`}
-                              >
-                                {isSuccessStatus ? (
-                                  <svg
-                                    className="w-6 h-6 text-white"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                ) : isErrorStatus ? (
-                                  <svg
-                                    className="w-6 h-6 text-white"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <span className="text-white font-bold">
-                                    {step.step_number}
-                                  </span>
-                                )}
-                              </div>
+                    //       return (
+                    //         <div
+                    //           key={index}
+                    //           className="relative flex items-start gap-4 pb-8 last:pb-0"
+                    //         >
+                    //           <div
+                    //             className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
+                    //               isSuccessStatus
+                    //                 ? "bg-green-500 border-green-200"
+                    //                 : isErrorStatus
+                    //                 ? "bg-red-500 border-red-200"
+                    //                 : "bg-gray-400 border-gray-200"
+                    //             }`}
+                    //           >
+                    //             {isSuccessStatus ? (
+                    //               <svg
+                    //                 className="w-6 h-6 text-white"
+                    //                 fill="currentColor"
+                    //                 viewBox="0 0 20 20"
+                    //               >
+                    //                 <path
+                    //                   fillRule="evenodd"
+                    //                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    //                   clipRule="evenodd"
+                    //                 />
+                    //               </svg>
+                    //             ) : isErrorStatus ? (
+                    //               <svg
+                    //                 className="w-6 h-6 text-white"
+                    //                 fill="currentColor"
+                    //                 viewBox="0 0 20 20"
+                    //               >
+                    //                 <path
+                    //                   fillRule="evenodd"
+                    //                   d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    //                   clipRule="evenodd"
+                    //                 />
+                    //               </svg>
+                    //             ) : (
+                    //               <span className="text-white font-bold">
+                    //                 {step.step_number}
+                    //               </span>
+                    //             )}
+                    //           </div>
 
-                              {/* Step content */}
-                              <div className="flex-1 min-w-0 pt-1">
-                                <div className="flex items-center justify-between mb-1">
-                                  <h4 className="text-sm font-semibold text-gray-900">
-                                    {step.step_name}
-                                  </h4>
-                                  <span
-                                    className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                      isSuccessStatus
-                                        ? "bg-green-100 text-green-800"
-                                        : isErrorStatus
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-gray-100 text-gray-800"
-                                    }`}
-                                  >
-                                    {step.status}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-gray-600 mb-2">
-                                  {step.message}
-                                </p>
-                                {(step.request_id ||
-                                  step.document_id ||
-                                  step.group_id) && (
-                                  <div className="flex flex-wrap gap-3 text-xs text-gray-500">
-                                    {step.request_id && (
-                                      <span>
-                                        <span className="font-medium">
-                                          {t("oracle.requestId")}:
-                                        </span>{" "}
-                                        {step.request_id}
-                                      </span>
-                                    )}
-                                    {step.document_id && (
-                                      <span>
-                                        <span className="font-medium">
-                                          {t("oracle.documentId")}:
-                                        </span>{" "}
-                                        {step.document_id}
-                                      </span>
-                                    )}
-                                    {step.group_id && (
-                                      <span>
-                                        <span className="font-medium">
-                                          {t("oracle.groupId")}:
-                                        </span>{" "}
-                                        {step.group_id}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
+                    //           <div className="flex-1 min-w-0 pt-1">
+                    //             <div className="flex items-center justify-between mb-1">
+                    //               <h4 className="text-sm font-semibold text-gray-900">
+                    //                 {step.step_name}
+                    //               </h4>
+                    //               <span
+                    //                 className={`text-xs font-medium px-2 py-1 rounded-full ${
+                    //                   isSuccessStatus
+                    //                     ? "bg-green-100 text-green-800"
+                    //                     : isErrorStatus
+                    //                     ? "bg-red-100 text-red-800"
+                    //                     : "bg-gray-100 text-gray-800"
+                    //                 }`}
+                    //               >
+                    //                 {step.status}
+                    //               </span>
+                    //             </div>
+                    //             <p className="text-sm text-gray-600 mb-2">
+                    //               {step.message}
+                    //             </p>
+                    //             {(step.request_id ||
+                    //               step.document_id ||
+                    //               step.group_id) && (
+                    //               <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                    //                 {step.request_id && (
+                    //                   <span>
+                    //                     <span className="font-medium">
+                    //                       {t("oracle.requestId")}:
+                    //                     </span>{" "}
+                    //                     {step.request_id}
+                    //                   </span>
+                    //                 )}
+                    //                 {step.document_id && (
+                    //                   <span>
+                    //                     <span className="font-medium">
+                    //                       {t("oracle.documentId")}:
+                    //                     </span>{" "}
+                    //                     {step.document_id}
+                    //                   </span>
+                    //                 )}
+                    //                 {step.group_id && (
+                    //                   <span>
+                    //                     <span className="font-medium">
+                    //                       {t("oracle.groupId")}:
+                    //                     </span>{" "}
+                    //                     {step.group_id}
+                    //                   </span>
+                    //                 )}
+                    //               </div>
+                    //             )}
+                    //           </div>
+                    //         </div>
+                    //       );
+                    //     })}
+                    //   </div>
+                    // );
                   })()}
 
                 {/* Journal Steps Tab Content */}
                 {activeOracleTab === "journal" &&
                   (() => {
-                    const journalGroups = oracleStatusData.action_groups.filter(
-                      (group) => group.action_type.toLowerCase() !== "submit"
-                    );
-
                     if (journalGroups.length === 0) {
                       return (
                         <div className="flex flex-col items-center justify-center py-12">
