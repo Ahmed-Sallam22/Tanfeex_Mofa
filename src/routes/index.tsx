@@ -5,7 +5,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import RoleProtectedRoute from "../components/RoleProtectedRoute";
 import Transfer from "@/pages/dashboard/Transfer";
 import TransferDetails from "@/pages/dashboard/TransferDetails";
-import TransferPDFView from "@/pages/dashboard/TransferPDFView";
+// import TransferPDFView from "@/pages/dashboard/TransferPDFView";
 import Reservations from "@/pages/dashboard/Reservations";
 import ReservationsDetails from "@/pages/dashboard/ReservationsDetails";
 import FundRequests from "@/pages/dashboard/FundRequests";
@@ -372,7 +372,7 @@ export default function AppRoutes() {
         </Route>
 
         {/* PDF View Route - Outside AppLayout (no navbar/sidebar) */}
-        <Route
+        {/* <Route
           path="/app/transfer-pdf"
           element={
             <ProtectedRoute>
@@ -381,7 +381,7 @@ export default function AppRoutes() {
               </RoleProtectedRoute>
             </ProtectedRoute>
           }
-        />
+        /> */}
         <Route
           path="/app/table-view-pdf"
           element={
