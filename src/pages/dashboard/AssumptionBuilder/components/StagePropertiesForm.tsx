@@ -1,5 +1,6 @@
 import type { Node } from "@xyflow/react";
-import { GitBranch } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { GitBranch, X } from "lucide-react";
 import { Input } from "@/components/ui";
 import { SharedSelect } from "@/shared/SharedSelect";
 import { operatorOptions } from "./constants";
@@ -26,6 +27,51 @@ export const StagePropertiesForm = ({
   isDatasourcesLoading = false,
 }: StagePropertiesFormProps) => {
   const { t } = useTranslation();
+  const [arrayDraft, setArrayDraft] = useState("");
+
+  const isArrayOperator = useMemo(
+    () => stageData.operator === "in" || stageData.operator === "not_in",
+    [stageData.operator]
+  );
+
+  const parsedArrayValues = useMemo(() => {
+    if (!stageData.rightSide) return [];
+    try {
+      const parsed = JSON.parse(stageData.rightSide);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => String(item));
+      }
+    } catch {
+      // fallback below
+    }
+    return stageData.rightSide
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
+  }, [stageData.rightSide]);
+
+  useEffect(() => {
+    setArrayDraft("");
+  }, [isArrayOperator]);
+
+  const handleAddArrayValue = () => {
+    const trimmed = arrayDraft.trim();
+    if (!trimmed) return;
+    const nextValues = [...parsedArrayValues, trimmed];
+    setStageData((prev) => ({
+      ...prev,
+      rightSide: JSON.stringify(nextValues),
+    }));
+    setArrayDraft("");
+  };
+
+  const handleRemoveArrayValue = (index: number) => {
+    const nextValues = parsedArrayValues.filter((_, i) => i !== index);
+    setStageData((prev) => ({
+      ...prev,
+      rightSide: JSON.stringify(nextValues),
+    }));
+  };
 
   if (!selectedNode) {
     return (
@@ -93,18 +139,64 @@ export const StagePropertiesForm = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {t("assumptionBuilder.rightHandSide")}
             </label>
-            <ExpressionInput
-              value={stageData.rightSide}
-              onChange={(value) =>
-                setStageData((prev) => ({
-                  ...prev,
-                  rightSide: value,
-                }))
-              }
-              placeholder="e.g., 50000 * datasource:Tax_Rate"
-              datasources={datasources}
-              isLoading={isDatasourcesLoading}
-            />
+            {isArrayOperator ? (
+              <div className="border border-gray-200 rounded-xl p-4 bg-white shadow-sm">
+
+
+                <div className="flex flex-wrap gap-2 mb-3 min-h-[38px]">
+                  {parsedArrayValues.length === 0 ? (
+                    <span className="text-xs text-gray-400">أضف القيم ثم اضغط Enter</span>
+                  ) : (
+                    parsedArrayValues.map((val, idx) => (
+                      <span
+                        key={`${val}-${idx}`}
+                        className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                        {val}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveArrayValue(idx)}
+                          className="text-emerald-600 hover:text-emerald-800 focus:outline-none">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))
+                  )}
+                </div>
+
+                <div className="grid  gap-2">
+                  <Input
+                    value={arrayDraft}
+                    onChange={(e) => setArrayDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === ",") {
+                        e.preventDefault();
+                        handleAddArrayValue();
+                      }
+                    }}
+                    placeholder='مثال: 5000 ثم Enter لإضافتها (تُحفظ كـ ["5000","5100"])'
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddArrayValue}
+                    className="px-3 py-2 bg-[#00B7AD] hover:bg-[#009e96] text-white text-sm font-semibold rounded-lg transition-colors">
+                    إضافة
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <ExpressionInput
+                value={stageData.rightSide}
+                onChange={(value) =>
+                  setStageData((prev) => ({
+                    ...prev,
+                    rightSide: value,
+                  }))
+                }
+                placeholder='e.g., 50000 * datasource:Tax_Rate or ["5000","5100"]'
+                datasources={datasources}
+                isLoading={isDatasourcesLoading}
+              />
+            )}
           </div>
         </>
       )}

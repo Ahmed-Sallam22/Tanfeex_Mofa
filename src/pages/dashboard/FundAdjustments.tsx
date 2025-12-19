@@ -26,6 +26,17 @@ import {
   useGetOracleStatusQuery,
 } from "@/api/transfer.api";
 
+const ORACLE_EXPECTED_SUBMIT_STEPS = 4;
+const ORACLE_ERROR_STATUSES = ["error", "failed", "warning"];
+const ORACLE_STATUS_PILL_STYLES: Record<
+  "approved" | "rejected" | "in_progress",
+  string
+> = {
+  approved: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  rejected: "bg-rose-50 text-rose-700 border border-rose-200",
+  in_progress: "bg-amber-50 text-amber-700 border border-amber-200",
+};
+
 export default function FundAdjustments() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -86,6 +97,8 @@ export default function FundAdjustments() {
   });
 
   // Oracle Status API call
+
+  // Oracle Status API call
   const {
     data: oracleStatusData,
     isLoading: isLoadingOracleStatus,
@@ -94,6 +107,32 @@ export default function FundAdjustments() {
   } = useGetOracleStatusQuery(trackTransactionId!, {
     skip: !trackTransactionId || !isTrackModalOpen,
   });
+
+  // Oracle submit pipeline summary (used to surface overall status)
+  const submitGroup = oracleStatusData?.action_groups?.find(
+    (group) => group.action_type?.toLowerCase() === "submit"
+  );
+  const submitSteps = submitGroup?.steps || [];
+  const submitHasError = submitSteps.some((step) =>
+    ORACLE_ERROR_STATUSES.includes((step.status || "").toLowerCase())
+  );
+  const submitAllSuccess =
+    submitSteps.length >= ORACLE_EXPECTED_SUBMIT_STEPS &&
+    submitSteps.every(
+      (step) => (step.status || "").toLowerCase() === "success"
+    );
+  const submitOverallStatus: "approved" | "rejected" | "in_progress" | null =
+    submitGroup && submitSteps.length > 0
+      ? submitHasError
+        ? "rejected"
+        : submitAllSuccess
+        ? "approved"
+        : "in_progress"
+      : null;
+  const journalGroups =
+    oracleStatusData?.action_groups?.filter(
+      (group) => group.action_type?.toLowerCase() !== "submit"
+    ) || [];
 
   const [createFundAdjustment, { isLoading: isCreating }] =
     useCreateFundAdjustmentMutation();
@@ -1014,7 +1053,6 @@ export default function FundAdjustments() {
         </div>
       </SharedModal>
       {/* Oracle ERP Status Modal */}
-      {/* Oracle ERP Status Modal */}
       <SharedModal
         isOpen={isTrackModalOpen}
         onClose={() => {
@@ -1022,7 +1060,7 @@ export default function FundAdjustments() {
           setTrackTransactionId(null);
           setActiveOracleTab("submit"); // Reset to default tab
         }}
-        title="Oracle ERP Status"
+        title={t("transfer.oracleStatus")}
         size="lg"
       >
         <div className="flex flex-col" style={{ maxHeight: "80vh" }}>
@@ -1050,7 +1088,7 @@ export default function FundAdjustments() {
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                Submit Steps
+                {t("oracle.submitSteps")}
               </div>
             </button>
             <button
@@ -1075,13 +1113,72 @@ export default function FundAdjustments() {
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                Reject & Approve Steps
+                {t("oracle.approveRejectSteps")}
               </div>
             </button>
           </div>
 
+          {/* Overall submit status summary */}
+          {activeOracleTab === "submit" && submitOverallStatus && (
+            <div className="flex items-center justify-between px-6 py-4 my-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${ORACLE_STATUS_PILL_STYLES[submitOverallStatus]}`}
+                >
+                  {submitOverallStatus === "approved" && (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  )}
+                  {submitOverallStatus === "rejected" && (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  )}
+                  {submitOverallStatus === "in_progress" && (
+                    <div className="w-5 h-5 border-2 border-current border-b-transparent rounded-full animate-spin" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">الحالة الحالية</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {submitOverallStatus === "in_progress"
+                      ? t("status.in_progress")
+                      : t(`status.${submitOverallStatus}`)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                <span className="text-xs text-gray-500">الخطوات</span>
+                <span className="px-2 py-1 rounded-md bg-gray-100">
+                  {submitSteps.length}/{ORACLE_EXPECTED_SUBMIT_STEPS}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto ">
             {isLoadingOracleStatus ? (
               <div className="space-y-6">
                 {/* Loading Skeleton */}
@@ -1105,11 +1202,10 @@ export default function FundAdjustments() {
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="text-red-500 text-4xl mb-4">⚠️</div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Failed to Load Oracle Status
+                  {t("oracle.loadError")}
                 </h3>
                 <p className="text-sm text-gray-600 text-center max-w-md">
-                  Unable to retrieve status from Oracle ERP System. Please try
-                  again later.
+                  {t("oracle.loadErrorMessage")}
                 </p>
               </div>
             ) : oracleStatusData ? (
@@ -1117,154 +1213,142 @@ export default function FundAdjustments() {
                 {/* Submit Steps Tab Content */}
                 {activeOracleTab === "submit" &&
                   (() => {
-                    const submitGroup = oracleStatusData.action_groups.find(
-                      (group) => group.action_type.toLowerCase() === "submit"
-                    );
+                    const submitGroupLocal = submitGroup;
 
-                    if (!submitGroup) {
+                    if (!submitGroupLocal) {
                       return (
                         <div className="flex flex-col items-center justify-center py-12">
                           <div className="text-gray-400 text-4xl mb-4">📋</div>
                           <p className="text-sm text-gray-600">
-                            No submit steps available
+                            {t("oracle.noSubmitSteps")}
                           </p>
                         </div>
                       );
                     }
 
-                    return (
-                      <div className="relative">
-                        {/* Vertical line */}
-                        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
+                    // return (
+                    //   <div className="relative">
+                    //     <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
 
-                        {submitGroup.steps.map((step, index) => {
-                          // Check if this is an error/failed/warning status
-                          const isErrorStatus = [
-                            "error",
-                            "failed",
-                            "warning",
-                          ].includes(step.status.toLowerCase());
-                          const isSuccessStatus =
-                            step.status.toLowerCase() === "success";
+                    //     {submitGroupLocal.steps.map((step, index) => {
+                    //       const isErrorStatus = ORACLE_ERROR_STATUSES.includes(
+                    //         (step.status || "").toLowerCase()
+                    //       );
+                    //       const isSuccessStatus =
+                    //         (step.status || "").toLowerCase() === "success";
 
-                          return (
-                            <div
-                              key={index}
-                              className="relative flex items-start gap-4 pb-8 last:pb-0"
-                            >
-                              {/* Timeline dot with icon */}
-                              <div
-                                className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
-                                  isSuccessStatus
-                                    ? "bg-green-500 border-green-200"
-                                    : isErrorStatus
-                                    ? "bg-red-500 border-red-200"
-                                    : "bg-gray-400 border-gray-200"
-                                }`}
-                              >
-                                {isSuccessStatus ? (
-                                  <svg
-                                    className="w-6 h-6 text-white"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                ) : isErrorStatus ? (
-                                  <svg
-                                    className="w-6 h-6 text-white"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <span className="text-white font-bold">
-                                    {step.step_number}
-                                  </span>
-                                )}
-                              </div>
+                    //       return (
+                    //         <div
+                    //           key={index}
+                    //           className="relative flex items-start gap-4 pb-8 last:pb-0"
+                    //         >
+                    //           <div
+                    //             className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
+                    //               isSuccessStatus
+                    //                 ? "bg-green-500 border-green-200"
+                    //                 : isErrorStatus
+                    //                 ? "bg-red-500 border-red-200"
+                    //                 : "bg-gray-400 border-gray-200"
+                    //             }`}
+                    //           >
+                    //             {isSuccessStatus ? (
+                    //               <svg
+                    //                 className="w-6 h-6 text-white"
+                    //                 fill="currentColor"
+                    //                 viewBox="0 0 20 20"
+                    //               >
+                    //                 <path
+                    //                   fillRule="evenodd"
+                    //                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    //                   clipRule="evenodd"
+                    //                 />
+                    //               </svg>
+                    //             ) : isErrorStatus ? (
+                    //               <svg
+                    //                 className="w-6 h-6 text-white"
+                    //                 fill="currentColor"
+                    //                 viewBox="0 0 20 20"
+                    //               >
+                    //                 <path
+                    //                   fillRule="evenodd"
+                    //                   d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    //                   clipRule="evenodd"
+                    //                 />
+                    //               </svg>
+                    //             ) : (
+                    //               <span className="text-white font-bold">
+                    //                 {step.step_number}
+                    //               </span>
+                    //             )}
+                    //           </div>
 
-                              {/* Step content */}
-                              <div className="flex-1 min-w-0 pt-1">
-                                <div className="flex items-center justify-between mb-1">
-                                  <h4 className="text-sm font-semibold text-gray-900">
-                                    {step.step_name}
-                                  </h4>
-                                  <span
-                                    className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                      isSuccessStatus
-                                        ? "bg-green-100 text-green-800"
-                                        : isErrorStatus
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-gray-100 text-gray-800"
-                                    }`}
-                                  >
-                                    {step.status}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-gray-600 mb-2">
-                                  {step.message}
-                                </p>
-                                {(step.request_id ||
-                                  step.document_id ||
-                                  step.group_id) && (
-                                  <div className="flex flex-wrap gap-3 text-xs text-gray-500">
-                                    {step.request_id && (
-                                      <span>
-                                        <span className="font-medium">
-                                          Request ID:
-                                        </span>{" "}
-                                        {step.request_id}
-                                      </span>
-                                    )}
-                                    {step.document_id && (
-                                      <span>
-                                        <span className="font-medium">
-                                          Document ID:
-                                        </span>{" "}
-                                        {step.document_id}
-                                      </span>
-                                    )}
-                                    {step.group_id && (
-                                      <span>
-                                        <span className="font-medium">
-                                          Group ID:
-                                        </span>{" "}
-                                        {step.group_id}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
+                    //           <div className="flex-1 min-w-0 pt-1">
+                    //             <div className="flex items-center justify-between mb-1">
+                    //               <h4 className="text-sm font-semibold text-gray-900">
+                    //                 {step.step_name}
+                    //               </h4>
+                    //               <span
+                    //                 className={`text-xs font-medium px-2 py-1 rounded-full ${
+                    //                   isSuccessStatus
+                    //                     ? "bg-green-100 text-green-800"
+                    //                     : isErrorStatus
+                    //                     ? "bg-red-100 text-red-800"
+                    //                     : "bg-gray-100 text-gray-800"
+                    //                 }`}
+                    //               >
+                    //                 {step.status}
+                    //               </span>
+                    //             </div>
+                    //             <p className="text-sm text-gray-600 mb-2">
+                    //               {step.message}
+                    //             </p>
+                    //             {(step.request_id ||
+                    //               step.document_id ||
+                    //               step.group_id) && (
+                    //               <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                    //                 {step.request_id && (
+                    //                   <span>
+                    //                     <span className="font-medium">
+                    //                       {t("oracle.requestId")}:
+                    //                     </span>{" "}
+                    //                     {step.request_id}
+                    //                   </span>
+                    //                 )}
+                    //                 {step.document_id && (
+                    //                   <span>
+                    //                     <span className="font-medium">
+                    //                       {t("oracle.documentId")}:
+                    //                     </span>{" "}
+                    //                     {step.document_id}
+                    //                   </span>
+                    //                 )}
+                    //                 {step.group_id && (
+                    //                   <span>
+                    //                     <span className="font-medium">
+                    //                       {t("oracle.groupId")}:
+                    //                     </span>{" "}
+                    //                     {step.group_id}
+                    //                   </span>
+                    //                 )}
+                    //               </div>
+                    //             )}
+                    //           </div>
+                    //         </div>
+                    //       );
+                    //     })}
+                    //   </div>
+                    // );
                   })()}
 
                 {/* Journal Steps Tab Content */}
                 {activeOracleTab === "journal" &&
                   (() => {
-                    const journalGroups = oracleStatusData.action_groups.filter(
-                      (group) => group.action_type.toLowerCase() !== "submit"
-                    );
-
                     if (journalGroups.length === 0) {
                       return (
                         <div className="flex flex-col items-center justify-center py-12">
                           <div className="text-gray-400 text-4xl mb-4">📋</div>
                           <p className="text-sm text-gray-600">
-                            No journal steps available
+                            {t("oracle.noJournalSteps")}
                           </p>
                         </div>
                       );
@@ -1371,7 +1455,7 @@ export default function FundAdjustments() {
                                           {step.request_id && (
                                             <span>
                                               <span className="font-medium">
-                                                Request ID:
+                                                {t("oracle.requestId")}:
                                               </span>{" "}
                                               {step.request_id}
                                             </span>
@@ -1379,7 +1463,7 @@ export default function FundAdjustments() {
                                           {step.document_id && (
                                             <span>
                                               <span className="font-medium">
-                                                Document ID:
+                                                {t("oracle.documentId")}:
                                               </span>{" "}
                                               {step.document_id}
                                             </span>
@@ -1387,7 +1471,7 @@ export default function FundAdjustments() {
                                           {step.group_id && (
                                             <span>
                                               <span className="font-medium">
-                                                Group ID:
+                                                {t("oracle.groupId")}:
                                               </span>{" "}
                                               {step.group_id}
                                             </span>
@@ -1408,9 +1492,7 @@ export default function FundAdjustments() {
             ) : (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="text-gray-400 text-4xl mb-4">📋</div>
-                <p className="text-sm text-gray-600">
-                  No status data available
-                </p>
+                <p className="text-sm text-gray-600">{t("oracle.noData")}</p>
               </div>
             )}
           </div>
@@ -1421,7 +1503,7 @@ export default function FundAdjustments() {
               onClick={() => {
                 if (refetchOracleStatus) {
                   refetchOracleStatus();
-                  toast.success("Refreshing Oracle status...");
+                  toast.success(t("oracle.refreshing"));
                 }
               }}
               disabled={isLoadingOracleStatus}
@@ -1430,7 +1512,7 @@ export default function FundAdjustments() {
               {isLoadingOracleStatus ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#4E8476]"></div>
-                  <span>Refreshing...</span>
+                  <span>{t("oracle.refreshing")}</span>
                 </>
               ) : (
                 <>
@@ -1447,7 +1529,7 @@ export default function FundAdjustments() {
                       d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                     />
                   </svg>
-                  <span>Refresh</span>
+                  <span>{t("common.refresh")}</span>
                 </>
               )}
             </button>
@@ -1459,293 +1541,292 @@ export default function FundAdjustments() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Close
+              {t("common.close")}
             </button>
           </div>
         </div>
       </SharedModal>
 
       {/* Status Pipeline Modal */}
-       <SharedModal
-            isOpen={isStatusModalOpen}
-            onClose={() => {
-              setIsStatusModalOpen(false);
-              setStatusTransactionId(null); // Clear the transaction ID when closing
-            }}
-            title={t("transfer.statusPipeline")}
-            size="lg"
-          >
-            <div className="p-6">
-              {isLoadingStatus ? (
-                <>
-                  {console.log("[MODAL] Rendering LOADING state")}
-                  <div className="flex justify-center items-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    <span className="ml-2 text-gray-600">
-                      {t("messages.loadingStatus")}
+      <SharedModal
+        isOpen={isStatusModalOpen}
+        onClose={() => {
+          setIsStatusModalOpen(false);
+          setStatusTransactionId(null); // Clear the transaction ID when closing
+        }}
+        title={t("transfer.statusPipeline")}
+        size="lg"
+      >
+        <div className="p-6">
+          {isLoadingStatus ? (
+            <>
+              {console.log("[MODAL] Rendering LOADING state")}
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-2 text-gray-600">
+                  {t("messages.loadingStatus")}
+                </span>
+              </div>
+            </>
+          ) : statusError ? (
+            <>
+              {console.log("[MODAL] Rendering ERROR state:", statusError)}
+              <div className="flex justify-center items-center py-12">
+                <div className="text-center">
+                  <div className="text-red-500 text-lg mb-2">⚠️</div>
+                  <p className="text-gray-600">
+                    {t("messages.errorLoadingStatus")}
+                  </p>
+                </div>
+              </div>
+            </>
+          ) : statusData ? (
+            <div className="space-y-6">
+              {/* Overall Status */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-600">
+                    {t("TransferStatus")}:
+                  </span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      statusData.transfer_status === "approved"
+                        ? "bg-green-100 text-green-800"
+                        : statusData.transfer_status === "rejected"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-blue-100 text-blue-800"
+                    }`}
+                  >
+                    {t(`status.${statusData.transfer_status}`) ||
+                      statusData.transfer_status}
+                  </span>
+                </div>
+              </div>
+              {/* Workflows */}
+              {statusData.workflows?.map((workflow) => (
+                <div key={workflow.execution_order} className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-md font-semibold text-gray-800">
+                      {workflow.workflow_name}
+                    </h4>
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${
+                        workflow.workflow_status === "approved"
+                          ? "bg-green-100 text-green-800"
+                          : workflow.workflow_status === "rejected"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-blue-100 text-blue-800"
+                      }`}
+                    >
+                      {t(`status.${workflow.workflow_status}`) ||
+                        workflow.workflow_status}
                     </span>
                   </div>
-                </>
-              ) : statusError ? (
-                <>
-                  {console.log("[MODAL] Rendering ERROR state:", statusError)}
-                  <div className="flex justify-center items-center py-12">
-                    <div className="text-center">
-                      <div className="text-red-500 text-lg mb-2">⚠️</div>
-                      <p className="text-gray-600">
-                        {t("messages.errorLoadingStatus")}
-                      </p>
-                    </div>
-                  </div>
-                </>
-              ) : statusData ? (
-                <div className="space-y-6">
-                  {/* Overall Status */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-600">
-                        {t("TransferStatus")}:
-                      </span>
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          statusData.transfer_status === "approved"
-                            ? "bg-green-100 text-green-800"
-                            : statusData.transfer_status === "rejected"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-blue-100 text-blue-800"
-                        }`}
+
+                  <div className="relative">
+                    {/* Timeline line */}
+                    <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+
+                    {workflow.stages?.map((stage) => (
+                      <div
+                        key={stage.order_index}
+                        className="relative flex items-start space-x-4 pb-8 last:pb-0"
                       >
-                        {t(`status.${statusData.transfer_status}`) ||
-                          statusData.transfer_status}
-    
-                      </span>
-                    </div>
-                  </div>
-                  {/* Workflows */}
-                  {statusData.workflows?.map((workflow) => (
-                    <div key={workflow.execution_order} className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-md font-semibold text-gray-800">
-                          {workflow.workflow_name}
-                        </h4>
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            workflow.workflow_status === "approved"
-                              ? "bg-green-100 text-green-800"
-                              : workflow.workflow_status === "rejected"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-blue-100 text-blue-800"
+                        {/* Timeline dot */}
+                        <div
+                          className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 ${
+                            stage.status === "approved" ||
+                            stage.status === "active"
+                              ? "bg-green-500 border-green-200"
+                              : stage.status === "pending"
+                              ? "bg-yellow-500 border-yellow-200"
+                              : stage.status === "rejected"
+                              ? "bg-red-500 border-red-200"
+                              : "bg-[#4E8476] border-blue-200"
                           }`}
                         >
-                          {t(`status.${workflow.workflow_status}`) ||
-                            workflow.workflow_status}
-                        </span>
-                      </div>
-    
-                      <div className="relative">
-                        {/* Timeline line */}
-                        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-    
-                        {workflow.stages?.map((stage) => (
-                          <div
-                            key={stage.order_index}
-                            className="relative flex items-start space-x-4 pb-8 last:pb-0"
-                          >
-                            {/* Timeline dot */}
-                            <div
-                              className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 ${
-                                stage.status === "approved" ||
-                                stage.status === "active"
-                                  ? "bg-green-500 border-green-200"
-                                  : stage.status === "pending"
-                                  ? "bg-yellow-500 border-yellow-200"
-                                  : stage.status === "rejected"
-                                  ? "bg-red-500 border-red-200"
-                                  : "bg-[#4E8476] border-blue-200"
-                              }`}
+                          {stage.status === "approved" ||
+                          stage.status === "active" ? (
+                            <svg
+                              className="w-6 h-6 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
                             >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          ) : stage.status === "pending" ? (
+                            <svg
+                              className="w-6 h-6 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          ) : stage.status === "rejected" ? (
+                            <svg
+                              className="w-6 h-6 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="w-6 h-6 text-white animate-spin"
+                              viewBox="0 0 20 20"
+                              fill="none"
+                              role="status"
+                              aria-label="In progress"
+                            >
+                              {/* faint full ring */}
+                              <circle
+                                cx="10"
+                                cy="10"
+                                r="8"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                opacity="0.25"
+                              />
+                              {/* leading arc */}
+                              <path
+                                d="M10 2 A 8 8 0 0 1 18 10"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="bg-white rounded-lg ">
+                            <div className="flex items-center justify-between mb-2">
+                              <h5 className="text-sm font-semibold text-gray-900">
+                                {stage.name}
+                              </h5>
+                              <span className="text-xs text-gray-500">
+                                {t("status.stage")} {stage.order_index}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between text-sm text-gray-600">
+                              <span>
+                                <span className="font-medium">
+                                  {t("status.decisionPolicy")}:
+                                </span>{" "}
+                                {stage.decision_policy}
+                              </span>
+                            </div>
+
+                            {/* Stage Status Icon */}
+                            <div className="flex items-center mt-3 text-sm">
                               {stage.status === "approved" ||
                               stage.status === "active" ? (
-                                <svg
-                                  className="w-6 h-6 text-white"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
+                                <div className="flex items-center text-green-600">
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  <span className="font-medium">
+                                    {t(`status.${stage.status}`) ||
+                                      stage.status}
+                                  </span>
+                                </div>
                               ) : stage.status === "pending" ? (
-                                <svg
-                                  className="w-6 h-6 text-white"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
+                                <div className="flex items-center text-yellow-600">
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  <span className="font-medium">
+                                    {t(`status.${stage.status}`) ||
+                                      stage.status}
+                                  </span>
+                                </div>
                               ) : stage.status === "rejected" ? (
-                                <svg
-                                  className="w-6 h-6 text-white"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
+                                <div className="flex items-center text-red-600">
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  <span className="font-medium">
+                                    {t(`status.${stage.status}`) ||
+                                      stage.status}
+                                  </span>
+                                </div>
                               ) : (
-                                <svg
-                                  className="w-6 h-6 text-white animate-spin"
-                                  viewBox="0 0 20 20"
-                                  fill="none"
-                                  role="status"
-                                  aria-label="In progress"
-                                >
-                                  {/* faint full ring */}
-                                  <circle
-                                    cx="10"
-                                    cy="10"
-                                    r="8"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    opacity="0.25"
-                                  />
-                                  {/* leading arc */}
-                                  <path
-                                    d="M10 2 A 8 8 0 0 1 18 10"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                  />
-                                </svg>
+                                <div className="flex items-center text-[#4E8476]">
+                                  <div className="w-4 h-4 bg-[#4E8476] rounded-full mr-1"></div>
+                                  <span className="font-medium">
+                                    {t(`status.${stage.status}`) ||
+                                      stage.status}
+                                  </span>
+                                </div>
                               )}
                             </div>
-    
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                              <div className="bg-white rounded-lg ">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h5 className="text-sm font-semibold text-gray-900">
-                                    {stage.name}
-                                  </h5>
-                                  <span className="text-xs text-gray-500">
-                                    {t("status.stage")} {stage.order_index}
-                                  </span>
-                                </div>
-    
-                                <div className="flex items-center justify-between text-sm text-gray-600">
-                                  <span>
-                                    <span className="font-medium">
-                                      {t("status.decisionPolicy")}:
-                                    </span>{" "}
-                                    {stage.decision_policy}
-                                  </span>
-                                </div>
-    
-                                {/* Stage Status Icon */}
-                                <div className="flex items-center mt-3 text-sm">
-                                  {stage.status === "approved" ||
-                                  stage.status === "active" ? (
-                                    <div className="flex items-center text-green-600">
-                                      <svg
-                                        className="w-4 h-4 mr-1"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                      <span className="font-medium">
-                                        {t(`status.${stage.status}`) ||
-                                          stage.status}
-                                      </span>
-                                    </div>
-                                  ) : stage.status === "pending" ? (
-                                    <div className="flex items-center text-yellow-600">
-                                      <svg
-                                        className="w-4 h-4 mr-1"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                      <span className="font-medium">
-                                        {t(`status.${stage.status}`) ||
-                                          stage.status}
-                                      </span>
-                                    </div>
-                                  ) : stage.status === "rejected" ? (
-                                    <div className="flex items-center text-red-600">
-                                      <svg
-                                        className="w-4 h-4 mr-1"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                      <span className="font-medium">
-                                        {t(`status.${stage.status}`) ||
-                                          stage.status}
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center text-[#4E8476]">
-                                      <div className="w-4 h-4 bg-[#4E8476] rounded-full mr-1"></div>
-                                      <span className="font-medium">
-                                        {t(`status.${stage.status}`) ||
-                                          stage.status}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
                           </div>
-                        ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}{" "}
+                    ))}
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <div className="text-gray-400 text-2xl mb-2">📋</div>
-                  <p>{t("status.noData")}</p>
-                </div>
-              )}
-    
-              {/* Close button */}
-              <div className="flex justify-end mt-6 pt-4  border-gray-200">
-                <button
-                  onClick={() => {
-                    setIsStatusModalOpen(false);
-                    setStatusTransactionId(null); // Clear the transaction ID when closing
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
-                >
-                  {t("common.close")}
-                </button>
-              </div>
+              ))}{" "}
             </div>
-          </SharedModal>
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              <div className="text-gray-400 text-2xl mb-2">📋</div>
+              <p>{t("status.noData")}</p>
+            </div>
+          )}
+
+          {/* Close button */}
+          <div className="flex justify-end mt-6 pt-4  border-gray-200">
+            <button
+              onClick={() => {
+                setIsStatusModalOpen(false);
+                setStatusTransactionId(null); // Clear the transaction ID when closing
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              {t("common.close")}
+            </button>
+          </div>
+        </div>
+      </SharedModal>
     </div>
   );
 }
