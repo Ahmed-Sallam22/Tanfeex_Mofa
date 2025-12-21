@@ -63,13 +63,20 @@ export const AssumptionModal = ({
     <SharedModal
       isOpen={isOpen}
       onClose={onClose}
-      title={mode === "create" ? t("assumptions.createValidationWorkflow") : t("assumptions.editValidationWorkflow")}
-      size="md">
+      title={
+        mode === "create"
+          ? t("assumptions.createValidationWorkflow")
+          : t("assumptions.editValidationWorkflow")
+      }
+      size="md"
+    >
       <>
         <div className="p-6 space-y-5 max-h-[calc(100vh-200px)] overflow-y-auto">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t("assumptions.nameRequired")}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t("assumptions.nameRequired")}
+            </label>
             <Input
               placeholder={t("assumptions.enterWorkflowName")}
               value={name}
@@ -79,7 +86,9 @@ export const AssumptionModal = ({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t("assumptions.description")}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t("assumptions.description")}
+            </label>
             <textarea
               className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#00B7AD] focus:border-transparent resize-none bg-white"
               rows={4}
@@ -98,14 +107,20 @@ export const AssumptionModal = ({
               options={executionPointOptions}
               value={executionPoint}
               onChange={(value) => setExecutionPoint(String(value))}
-              placeholder={isLoadingExecutionPoints ? t("assumptions.loading") : t("assumptions.selectExecutionPoint")}
+              placeholder={
+                isLoadingExecutionPoints
+                  ? t("assumptions.loading")
+                  : t("assumptions.selectExecutionPoint")
+              }
               disabled={isLoadingExecutionPoints}
             />
           </div>
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t("assumptions.statusRequired")}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t("assumptions.statusRequired")}
+            </label>
             <SharedSelect
               options={translatedStatusOptions}
               value={status}
@@ -120,13 +135,15 @@ export const AssumptionModal = ({
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50">
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
             {t("assumptions.cancel")}
           </button>
           <button
             onClick={onSave}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-[#00B7AD] rounded-md hover:bg-[#009B92] transition-colors disabled:opacity-50 flex items-center gap-2">
+            className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476]  rounded-md hover:bg-[#3d6b5f] transition-colors disabled:opacity-50 flex items-center gap-2"
+          >
             {isLoading && (
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                 <circle
