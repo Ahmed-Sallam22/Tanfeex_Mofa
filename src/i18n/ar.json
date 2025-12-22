@@ -699,8 +699,10 @@
       "budgetAdjustments": "تعديلات الميزانية",
       "otherYtd": "أخرى حتى تاريخه",
       "period": "الفترة",
-      "costBudget50": "الحد الأقصى للطلب"
+      "costBudget50": "الحد الأقصى للطلب",
+      "reason": "السبب"
     }
+
   },
   "common": {
     "add": "إضافة",
@@ -812,7 +814,14 @@
     "filterByStatus": "تصفية حسب الحالة",
     "unhold": "إلغاء التعليق",
     "transfer": "تحويل",
-    "closeModal": "إغلاق النافذة"
+    "closeModal": "إغلاق النافذة",
+          "reason": "Reason"
+,
+        "addReason": "إضافة سبب",
+    "reasonModalTitle": "إدخال السبب",
+    "enterReason": "سبب هذا التحويل",
+    "enterReasonPlaceholder": "أدخل سبب هذا التحويل...",
+    "saveReason": "حفظ السبب"
   },
   "transfer": {
     "title": "تحويلات الميزانية",
@@ -1245,7 +1254,8 @@
     "name": "الاسم",
     "displayOrder": "ترتيب العرض",
     "accountCode": "كود الحساب",
-    "accountName": "اسم الحساب"
+    "accountName": "اسم الحساب",      "reason": "السبب"
+
   },
   "workflow": {
     "title": "إدارة سير العمل",
@@ -1393,7 +1403,14 @@
     "failedToDeleteWorkflow": "فشل في حذف سير عمل التحقق",
     "noChangesToSave": "لا توجد تغييرات للحفظ",
     "loadingValidationWorkflows": "جاري تحميل سير عمل التحقق...",
-    "errorLoadingWorkflows": "خطأ: فشل في تحميل سير عمل التحقق"
+    "errorLoadingWorkflows": "خطأ: فشل في تحميل سير عمل التحقق",
+    "exportWorkflows": "تصدير سير العمل",
+    "importWorkflows": "استيراد سير العمل",
+    "selectWorkflowsToExport": "يرجى اختيار سير العمل للتصدير",
+    "workflowsExportedSuccessfully": "تم تصدير سير العمل بنجاح",
+    "failedToExportWorkflows": "فشل في تصدير سير العمل",
+    "workflowsImportedSuccessfully": "تم استيراد سير العمل بنجاح",
+    "failedToImportWorkflows": "فشل في استيراد سير العمل"
   },
   "assumptionBuilder": {
     "title": "منشئ الافتراضات",

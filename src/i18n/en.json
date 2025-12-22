@@ -700,10 +700,18 @@
       "budgetAdjustments": "Budget Adjustments",
       "otherYtd": "Other YTD",
       "period": "Period",
-      "costBudget50": "Max Transfer Amount"
+      "costBudget50": "Max Transfer Amount",
+      "reason": "Reason"
     }
   },
   "common": {
+            "reason": "Reason"
+,
+    "addReason": "Add Reason",
+    "reasonModalTitle": "Enter Reason",
+    "enterReason": "Reason for this transfer line",
+    "enterReasonPlaceholder": "Enter the reason for this transfer...",
+    "saveReason": "Save Reason",
     "add": "Add",
     "edit": "Edit",
     "delete": "Delete",
@@ -1246,7 +1254,9 @@
     "name": "Name",
     "displayOrder": "Display Order",
     "accountCode": "Account Code",
-    "accountName": "Account Name"
+    "accountName": "Account Name",
+          "reason": "Reason"
+
   },
   "workflow": {
     "title": "Workflow Management",
@@ -1394,7 +1404,14 @@
     "failedToDeleteWorkflow": "Failed to delete validation workflow",
     "noChangesToSave": "No changes to save",
     "loadingValidationWorkflows": "Loading validation workflows...",
-    "errorLoadingWorkflows": "Error: Failed to load validation workflows"
+    "errorLoadingWorkflows": "Error: Failed to load validation workflows",
+    "exportWorkflows": "Export Workflows",
+    "importWorkflows": "Import Workflows",
+    "selectWorkflowsToExport": "Please select workflows to export",
+    "workflowsExportedSuccessfully": "Workflows exported successfully",
+    "failedToExportWorkflows": "Failed to export workflows",
+    "workflowsImportedSuccessfully": "Workflows imported successfully",
+    "failedToImportWorkflows": "Failed to import workflows"
   },
   "assumptionBuilder": {
     "title": "Assumption Builder",

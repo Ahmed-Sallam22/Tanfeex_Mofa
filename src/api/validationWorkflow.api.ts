@@ -150,6 +150,17 @@ export interface DatasourcesResponse {
   message: string;
 }
 
+// Export/Import Types
+export interface ExportWorkflowsRequest {
+  workflow_ids: number[];
+  ignore_missing?: boolean;
+  as_file?: boolean;
+}
+
+export interface ImportWorkflowsRequest {
+  file: File;
+}
+
 // Status options for the select dropdown
 export const statusOptions = [
   { value: 'draft', label: 'Draft' },
@@ -255,6 +266,28 @@ export const validationWorkflowApi = createApi({
       }),
       invalidatesTags: ['ValidationWorkflow'],
     }),
+
+    // Export validation workflows
+    exportWorkflows: builder.mutation<Blob, ExportWorkflowsRequest>({
+      query: (body) => ({
+        url: '/validations/workflows/export/',
+        method: 'POST',
+        body,
+        responseHandler: async (response) => {
+          return response.blob();
+        },
+      }),
+    }),
+
+    // Import validation workflows
+    importWorkflows: builder.mutation<void, FormData>({
+      query: (formData) => ({
+        url: '/validations/workflows/import/',
+        method: 'POST',
+        body: formData,
+      }),
+      invalidatesTags: ['ValidationWorkflow'],
+    }),
   }),
 });
 
@@ -269,4 +302,6 @@ export const {
   useBulkCreateStepsMutation,
   useBulkUpdateStepsMutation,
   useDeleteValidationStepMutation,
+  useExportWorkflowsMutation,
+  useImportWorkflowsMutation,
 } = validationWorkflowApi;

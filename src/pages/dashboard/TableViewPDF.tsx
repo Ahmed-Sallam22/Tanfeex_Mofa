@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useExportToPdfMutation, type TransactionReportData } from "@/api/transfer.api";
+import {
+  useExportToPdfMutation,
+  type TransactionReportData,
+} from "@/api/transfer.api";
 import ksaMinistryLogo from "../../assets/ksa_ministry_text.svg";
 import saudiLogo from "../../assets/saudilogotext.png";
 import tanfeezLogo from "../../assets/Tanfeezletter.png";
@@ -111,19 +114,25 @@ const formatNumber = (value?: number | null) => {
 };
 
 // Helper function to transform API data to table format
-const transformApiDataToTableData = (apiData: TransactionReportData[]): TableRowData[] => {
+const transformApiDataToTableData = (
+  apiData: TransactionReportData[]
+): TableRowData[] => {
   const rows: TableRowData[] = [];
 
   apiData.forEach((transaction, transactionIndex) => {
     if (transaction.transfers && transaction.transfers.length > 0) {
       transaction.transfers.forEach((transfer, transferIndex) => {
         rows.push({
-          id: transfer.transfer_id || transaction.transaction_id || transactionIndex * 10 + transferIndex + 1,
+          id:
+            transfer.transfer_id ||
+            transaction.transaction_id ||
+            transactionIndex * 10 + transferIndex + 1,
           budgetItem: formatSegment(transfer.segments?.segment_11),
           costCenter: formatSegment(transfer.segments?.segment_9),
           geographicLocation: formatSegment(transfer.segments?.segment_5),
           economicClassification: formatNumber(transfer.gfs_code),
-          documentNumber: transaction.code || transaction.transaction_id?.toString() || "-",
+          documentNumber:
+            transaction.code || transaction.transaction_id?.toString() || "-",
           discussionType: transaction.transfer_type || transaction.type || "-",
           amountFrom: formatNumber(transfer.from_center),
           amountTo: formatNumber(transfer.to_center),
@@ -132,14 +141,27 @@ const transformApiDataToTableData = (apiData: TransactionReportData[]): TableRow
         });
       });
     } else {
+      // Format discussionType as "transfer_type - control_budget" when both exist
+      let discussionType = "-";
+      if (transaction.transfer_type && transaction.control_budget) {
+        discussionType = `${transaction.transfer_type} - ${transaction.control_budget}`;
+      } else if (transaction.transfer_type) {
+        discussionType = transaction.transfer_type;
+      } else if (transaction.control_budget) {
+        discussionType = transaction.control_budget;
+      } else if (transaction.type) {
+        discussionType = transaction.type;
+      }
+
       rows.push({
         id: transaction.transaction_id || transactionIndex + 1,
         budgetItem: "-",
         costCenter: "-",
         geographicLocation: "-",
         economicClassification: "-",
-        documentNumber: transaction.code || transaction.transaction_id?.toString() || "-",
-        discussionType: transaction.transfer_type || transaction.type || "-",
+        documentNumber:
+          transaction.code || transaction.transaction_id?.toString() || "-",
+        discussionType,
         amountFrom: formatNumber(transaction.summary?.total_from_center),
         amountTo: formatNumber(transaction.summary?.total_to_center),
         description: transaction.notes ?? "-",
@@ -155,13 +177,25 @@ const transformApiDataToTableData = (apiData: TransactionReportData[]): TableRow
 const PageHeader = () => (
   <div className="page-header flex items-center justify-between px-10 py-6">
     <div className="flex-shrink-0">
-      <img src={saudiLogo} alt="شعار السعودية" className="h-16 w-auto object-contain" />
+      <img
+        src={saudiLogo}
+        alt="شعار السعودية"
+        className="h-16 w-auto object-contain"
+      />
     </div>
     <div className="flex-shrink-0">
-      <img src={tanfeezLogo} alt="شعار تنفيذ" className="h-40 w-auto object-contain" />
+      <img
+        src={tanfeezLogo}
+        alt="شعار تنفيذ"
+        className="h-40 w-auto object-contain"
+      />
     </div>
     <div className="flex-shrink-0">
-      <img src={ksaMinistryLogo} alt="شعار الوزارة" className="h-16 w-auto object-contain" />
+      <img
+        src={ksaMinistryLogo}
+        alt="شعار الوزارة"
+        className="h-16 w-auto object-contain"
+      />
     </div>
   </div>
 );
@@ -224,53 +258,71 @@ const TableViewPDF = () => {
     // Fetch report data from API
     exportToPdf({ transaction_ids: ids })
       .unwrap()
-      .then((response: TransactionReportData | TransactionReportData[] | MultipleTransactionsResponse) => {
-        console.log("Table PDF API Response:", response);
+      .then(
+        (
+          response:
+            | TransactionReportData
+            | TransactionReportData[]
+            | MultipleTransactionsResponse
+        ) => {
+          console.log("Table PDF API Response:", response);
 
-        // Ensure response is always an array
-        let dataArray: TransactionReportData[];
+          // Ensure response is always an array
+          let dataArray: TransactionReportData[];
 
-        // Check if response has transactions property (multiple IDs)
-        if (
-          response &&
-          typeof response === "object" &&
-          "transactions" in response &&
-          Array.isArray(response.transactions)
-        ) {
-          dataArray = response.transactions;
-          console.log("Multiple transactions response, count:", (response as MultipleTransactionsResponse).count);
-        }
-        // Check if response is directly an array
-        else if (Array.isArray(response)) {
-          dataArray = response;
-        }
-        // Single transaction object
-        else if (response && typeof response === "object" && "transaction_id" in response) {
-          dataArray = [response as TransactionReportData];
-        }
-        // Invalid response
-        else {
-          setError(t("common.noData"));
-          setTimeout(() => {
-            window.location.href = "/app/transfer";
-          }, 2000);
-          return;
-        }
+          // Check if response has transactions property (multiple IDs)
+          if (
+            response &&
+            typeof response === "object" &&
+            "transactions" in response &&
+            Array.isArray(response.transactions)
+          ) {
+            dataArray = response.transactions;
+            console.log(
+              "Multiple transactions response, count:",
+              (response as MultipleTransactionsResponse).count
+            );
+          }
+          // Check if response is directly an array
+          else if (Array.isArray(response)) {
+            dataArray = response;
+          }
+          // Single transaction object
+          else if (
+            response &&
+            typeof response === "object" &&
+            "transaction_id" in response
+          ) {
+            dataArray = [response as TransactionReportData];
+          }
+          // Invalid response
+          else {
+            setError(t("common.noData"));
+            setTimeout(() => {
+              window.location.href = "/app/transfer";
+            }, 2000);
+            return;
+          }
 
-        // Validate data array
-        if (dataArray.length === 0) {
-          setError(t("common.noData"));
-          setTimeout(() => {
-            window.location.href = "/app/transfer";
-          }, 2000);
-          return;
-        }
+          // Validate data array
+          if (dataArray.length === 0) {
+            setError(t("common.noData"));
+            setTimeout(() => {
+              window.location.href = "/app/transfer";
+            }, 2000);
+            return;
+          }
 
-        // Transform API data to table format
-        const transformedData = transformApiDataToTableData(dataArray);
-        console.log("Setting table data, length:", transformedData.length, transformedData);
-        setTableData(transformedData);
-      })
+          // Transform API data to table format
+          const transformedData = transformApiDataToTableData(dataArray);
+          console.log(
+            "Setting table data, length:",
+            transformedData.length,
+            transformedData
+          );
+          setTableData(transformedData);
+        }
+      )
       .catch((err) => {
         console.error("Error fetching table data:", err);
         setError(t("messages.exportError"));
@@ -301,7 +353,9 @@ const TableViewPDF = () => {
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center max-w-md p-8 bg-white rounded-lg shadow-lg">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t("common.error")}</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {t("common.error")}
+          </h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#4E8476]"></div>
@@ -324,18 +378,24 @@ const TableViewPDF = () => {
   }
 
   return (
-    <div dir="rtl" className="flex flex-col min-h-screen bg-white" style={{ fontFamily: "Arial, sans-serif" }}>
+    <div
+      dir="rtl"
+      className="flex flex-col min-h-screen bg-white"
+      style={{ fontFamily: "Arial, sans-serif" }}
+    >
       {/* Print Button - Hidden when printing */}
       <div className="print:hidden flex justify-end p-4">
         <button
           onClick={handlePrint}
-          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-5 w-5"
             fill="none"
             viewBox="0 0 24 24"
-            stroke="currentColor">
+            stroke="currentColor"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -364,7 +424,8 @@ const TableViewPDF = () => {
                   key={col.key}
                   className={`border border-gray-400 px-3 py-3 text-${col.align} font-bold`}
                   rowSpan={col.rowSpan}
-                  colSpan={col.colSpan}>
+                  colSpan={col.colSpan}
+                >
                   {col.label}
                 </th>
               ))}
@@ -375,7 +436,10 @@ const TableViewPDF = () => {
                 .filter((col) => col.subColumns)
                 .flatMap((col) => col.subColumns!)
                 .map((subCol) => (
-                  <th key={subCol.key} className={`border border-gray-400 px-3 py-2 text-${subCol.align} font-bold`}>
+                  <th
+                    key={subCol.key}
+                    className={`border border-gray-400 px-3 py-2 text-${subCol.align} font-bold`}
+                  >
                     {subCol.label}
                   </th>
                 ))}
@@ -388,14 +452,20 @@ const TableViewPDF = () => {
                   // Handle columns with sub-columns
                   if (col.subColumns) {
                     return col.subColumns.map((subCol) => (
-                      <td key={subCol.key} className={`border border-gray-400 px-3 py-3 text-${subCol.align}`}>
+                      <td
+                        key={subCol.key}
+                        className={`border border-gray-400 px-3 py-3 text-${subCol.align}`}
+                      >
                         {row[subCol.key as keyof typeof row]}
                       </td>
                     ));
                   }
                   // Handle regular columns
                   return (
-                    <td key={col.key} className={`border border-gray-400 px-3 py-3 text-${col.align}`}>
+                    <td
+                      key={col.key}
+                      className={`border border-gray-400 px-3 py-3 text-${col.align}`}
+                    >
                       {row[col.key as keyof typeof row]}
                     </td>
                   );

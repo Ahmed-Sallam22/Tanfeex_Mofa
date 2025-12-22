@@ -49,6 +49,8 @@ interface TransferTableRow {
   total_budget?: number;
   initial_budget?: number;
   budget_adjustments?: number;
+  // Reason field for each row
+  reason?: string;
   // Dynamic segments (segment1, segment2, etc.)
   [key: string]: string | number | string[] | undefined;
 }
@@ -474,7 +476,7 @@ export default function TransferDetails() {
           transaction: parseInt(transactionId),
           from_center: fromCenter.toString(),
           to_center: toCenter.toString(),
-          reason: "", // You can add a reason field to the row if needed
+          reason: row.reason || "", // Include reason from each row
           segments: segments,
         };
       });
@@ -1485,6 +1487,75 @@ export default function TransferDetails() {
     //     );
     //   },
     // },
+    {
+      id: "reason",
+      header: t("fundAdjustmentsDetails.columns.reason"),
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const hasReason =
+          transferRow.reason && transferRow.reason.trim() !== "";
+
+        return (
+          <button
+            onClick={() =>
+              handleOpenReasonModal(transferRow.id, transferRow.reason || "")
+            }
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+              hasReason
+                ? "bg-green-100 text-green-700 hover:bg-green-200 border border-green-300"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300"
+            }`}
+            title={
+              hasReason
+                ? transferRow.reason
+                : t("common.addReason")
+            }
+          >
+            {hasReason ? (
+              <>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M13.5 4.5L6 12L2.5 8.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="max-w-[100px] truncate">
+                  {transferRow.reason}
+                </span>
+              </>
+            ) : (
+              <>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 3V13M3 8H13"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span>{t("common.addReason")}</span>
+              </>
+            )}
+          </button>
+        );
+      },
+    },
   ];
 
   // Handler for validation error click
@@ -1500,6 +1571,35 @@ export default function TransferDetails() {
   const [selectedValidationErrors, setSelectedValidationErrors] = useState<
     string[]
   >([]);
+
+  // Reason modal state
+  const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
+  const [reasonModalRowId, setReasonModalRowId] = useState<string | null>(null);
+  const [reasonModalText, setReasonModalText] = useState("");
+
+  // Handler for opening reason modal
+  const handleOpenReasonModal = (rowId: string, currentReason: string) => {
+    setReasonModalRowId(rowId);
+    setReasonModalText(currentReason || "");
+    setIsReasonModalOpen(true);
+  };
+
+  // Handler for saving reason
+  const handleSaveReason = () => {
+    if (reasonModalRowId) {
+      updateRow(reasonModalRowId, "reason", reasonModalText);
+    }
+    setIsReasonModalOpen(false);
+    setReasonModalRowId(null);
+    setReasonModalText("");
+  };
+
+  // Handler for closing reason modal
+  const handleCloseReasonModal = () => {
+    setIsReasonModalOpen(false);
+    setReasonModalRowId(null);
+    setReasonModalText("");
+  };
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -2266,6 +2366,44 @@ export default function TransferDetails() {
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
               {t("fundAdjustmentsDetails.close")}
+            </button>
+          </div>
+        </div>
+      </SharedModal>
+
+      {/* Reason Modal */}
+      <SharedModal
+        isOpen={isReasonModalOpen}
+        onClose={handleCloseReasonModal}
+        title={t("fundAdjustmentsDetails.reasonModalTitle")}
+        size="md"
+      >
+        <div className="p-4">
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t("fundAdjustmentsDetails.reasonLabel")}
+            </label>
+            <textarea
+              value={reasonModalText}
+              onChange={(e) => setReasonModalText(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4E8476] focus:border-transparent resize-none"
+              rows={4}
+              placeholder={t("fundAdjustmentsDetails.reasonPlaceholder")}
+            />
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={handleCloseReasonModal}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              {t("fundAdjustmentsDetails.cancel")}
+            </button>
+            <button
+              onClick={handleSaveReason}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#3d6b5f] transition-colors"
+            >
+              {t("fundAdjustmentsDetails.saveReason")}
             </button>
           </div>
         </div>

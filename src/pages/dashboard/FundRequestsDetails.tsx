@@ -49,6 +49,8 @@ interface TransferTableRow {
   total_budget?: number;
   initial_budget?: number;
   budget_adjustments?: number;
+  // Reason field
+  reason?: string;
   // Dynamic segments (segment1, segment2, etc.)
   [key: string]: string | number | string[] | undefined;
 }
@@ -474,7 +476,7 @@ export default function TransferDetails() {
           transaction: parseInt(transactionId),
           from_center: fromCenter.toString(),
           to_center: toCenter.toString(),
-          reason: "", // You can add a reason field to the row if needed
+          reason: row.reason || "",
           segments: segments,
         };
       });
@@ -1485,6 +1487,31 @@ export default function TransferDetails() {
         );
       },
     },
+    {
+      id: "reason",
+      header: t("common.reason"),
+      render: (_, row) => {
+        const transferRow = row as unknown as TransferTableRow;
+        const reason = transferRow.reason || "";
+        return (
+          <button
+            onClick={() => handleOpenReasonModal(transferRow.id, reason)}
+            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+              reason
+                ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
+                : "bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100"
+            }`}
+            disabled={isSubmitted}
+          >
+            {reason ? (
+              <span className="max-w-[100px] truncate block">{reason}</span>
+            ) : (
+              t("common.addReason")
+            )}
+          </button>
+        );
+      },
+    },
   ];
 
   // Handler for validation error click
@@ -1505,6 +1532,60 @@ export default function TransferDetails() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isReopenClicked, setIsReopenClicked] = useState(false);
+
+  // Reason Modal State
+  const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
+  const [reasonModalRowId, setReasonModalRowId] = useState<string | null>(null);
+  const [reasonModalText, setReasonModalText] = useState("");
+
+  // Reason Modal Handlers
+  const handleOpenReasonModal = (rowId: string, currentReason: string = "") => {
+    setReasonModalRowId(rowId);
+    setReasonModalText(currentReason);
+    setIsReasonModalOpen(true);
+  };
+
+  const handleSaveReason = () => {
+    if (!reasonModalRowId) return;
+
+    // Check if it's a local row or API row
+    const isLocalRow = localRows.some((r) => r.id === reasonModalRowId);
+    if (isLocalRow) {
+      setLocalRows((prev) =>
+        prev.map((row) =>
+          row.id === reasonModalRowId
+            ? { ...row, reason: reasonModalText }
+            : row
+        )
+      );
+    } else {
+      setEditedRows((prev) => {
+        const existingRow = prev.find((r) => r.id === reasonModalRowId);
+        if (existingRow) {
+          return prev.map((row) =>
+            row.id === reasonModalRowId
+              ? { ...row, reason: reasonModalText }
+              : row
+          );
+        } else {
+          const apiRow = rows.find(
+            (r: TransferTableRow) => r.id === reasonModalRowId
+          );
+          if (apiRow) {
+            return [...prev, { ...apiRow, reason: reasonModalText }];
+          }
+          return prev;
+        }
+      });
+    }
+    handleCloseReasonModal();
+  };
+
+  const handleCloseReasonModal = () => {
+    setIsReasonModalOpen(false);
+    setReasonModalRowId(null);
+    setReasonModalText("");
+  };
 
   // Handler for attachments click
   const handleAttachmentsClick = () => {
@@ -2272,6 +2353,43 @@ export default function TransferDetails() {
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
               {t("pendingTransferDetails.close")}
+            </button>
+          </div>
+        </div>
+      </SharedModal>
+
+      {/* Reason Modal */}
+      <SharedModal
+        isOpen={isReasonModalOpen}
+        onClose={handleCloseReasonModal}
+        title={t("common.reason")}
+        size="md"
+      >
+        <div className="p-4">
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t("common.enterReason")}
+            </label>
+            <textarea
+              value={reasonModalText}
+              onChange={(e) => setReasonModalText(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4E8476] focus:border-transparent resize-none"
+              rows={4}
+              placeholder={t("common.enterReasonPlaceholder")}
+            />
+          </div>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={handleCloseReasonModal}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              {t("common.cancel")}
+            </button>
+            <button
+              onClick={handleSaveReason}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#3d6b5f] transition-colors"
+            >
+              {t("common.save")}
             </button>
           </div>
         </div>

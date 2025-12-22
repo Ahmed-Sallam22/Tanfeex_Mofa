@@ -1,4 +1,7 @@
-import { SharedTable, type TableRow as SharedTableRow } from "@/shared/SharedTable";
+import {
+  SharedTable,
+  type TableRow as SharedTableRow,
+} from "@/shared/SharedTable";
 import type { ValidationWorkflow } from "./types";
 import { getValidationWorkflowColumns } from "./tableColumns";
 import type { ExecutionPoint } from "@/api/validationWorkflow.api";
@@ -15,6 +18,9 @@ interface ValidationWorkflowsTableProps {
   itemsPerPage: number;
   totalCount?: number;
   executionPoints?: ExecutionPoint[];
+  showSelection?: boolean;
+  selectedRows?: Set<number | string>;
+  onSelectionChange?: (selectedIds: Set<number | string>) => void;
 }
 
 export const AssumptionsTable = ({
@@ -28,9 +34,17 @@ export const AssumptionsTable = ({
   itemsPerPage,
   totalCount,
   executionPoints,
+  showSelection = false,
+  selectedRows,
+  onSelectionChange,
 }: ValidationWorkflowsTableProps) => {
   const { t } = useTranslation();
-  const columns = getValidationWorkflowColumns(onDescriptionClick, onNameClick, executionPoints, t);
+  const columns = getValidationWorkflowColumns(
+    onDescriptionClick,
+    onNameClick,
+    executionPoints,
+    t
+  );
   const total = totalCount ?? workflows.length;
   const shouldShowPagination = total > itemsPerPage;
 
@@ -49,6 +63,9 @@ export const AssumptionsTable = ({
         currentPage={currentPage}
         onPageChange={onPageChange}
         itemsPerPage={itemsPerPage}
+        showSelection={showSelection}
+        selectedRows={selectedRows}
+        onSelectionChange={onSelectionChange}
       />
     </div>
   );
