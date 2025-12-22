@@ -509,7 +509,7 @@ export default function Reservations() {
     // Populate form with existing data
     // Handle transaction_date - check if it matches one of our select options
     let transactionDate = originalTransfer.transaction_date || "";
-
+    setBudgetControl(originalTransfer.budget_control || "");
     // If the transaction_date is a date string, try to extract month name
     if (
       transactionDate &&
@@ -561,21 +561,13 @@ export default function Reservations() {
 
     // Set the values with explicit logging
     settime_period(finalDateValue);
-    console.log("✅ Set time_period to:", finalDateValue);
 
     setreason(notes); // Use HTML directly
-    console.log("✅ Set reason to:", notes);
 
-    // Set budget control if available
-    const budgetControl = originalTransfer.budget_control || "";
+    // Set budget control if available - use control_budget from API
+    const budgetControl = originalTransfer.control_budget || "";
     setBudgetControl(budgetControl);
-    console.log("✅ Set budget_control to:", budgetControl);
-
-    console.log("AFTER setting form values:", {
-      time_period_set: finalDateValue,
-      reason_set: notes,
-      budget_control_set: budgetControl,
-    });
+    console.log("✅ Set budget_control to:", originalTransfer.control_budget);
 
     // Trigger modal opening via useEffect after state updates
     setShouldOpenModal(true);
@@ -762,7 +754,7 @@ export default function Reservations() {
     setTransferTransactionId(originalTransfer.transaction_id);
 
     // Populate form with existing data (read-only for budget_control and time_period)
-    const budgetControl = originalTransfer.budget_control || "";
+    const budgetControl = originalTransfer.control_budget || "";
     setBudgetControl(budgetControl);
 
     let transactionDate = originalTransfer.transaction_date || "";

@@ -12,6 +12,7 @@ export interface TransferItem {
   code: string;
   notes:string;
   budget_control: string;
+  control_budget: string; // Alternative field name used in some API responses
   gl_posting_status: string;
   approvel_1: string;
   approvel_2: string;
