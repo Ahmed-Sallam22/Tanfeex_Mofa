@@ -8,6 +8,7 @@ export interface FundRequestItem {
   status: string;
   requested_by: string;
   budget_control: string;
+  control_budget: string;
   user_id: number;
   request_date: string;
   code: string;

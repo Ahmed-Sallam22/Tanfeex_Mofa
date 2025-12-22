@@ -420,7 +420,9 @@ export default function Transfer() {
   );
   const submitAllSuccess =
     submitSteps.length >= ORACLE_EXPECTED_SUBMIT_STEPS &&
-    submitSteps.every((step) => (step.status || "").toLowerCase() === "success");
+    submitSteps.every(
+      (step) => (step.status || "").toLowerCase() === "success"
+    );
   const submitOverallStatus: "approved" | "rejected" | "in_progress" | null =
     submitGroup && submitSteps.length > 0
       ? submitHasError
@@ -542,8 +544,8 @@ export default function Transfer() {
     setreason(notes); // Use HTML directly
     console.log("✅ Set reason to:", notes);
 
-    // Set budget control if available
-    const budgetControl = originalTransfer.budget_control || "";
+    // Set budget control if available - use control_budget from API
+    const budgetControl = originalTransfer.control_budget || "";
     setBudgetControl(budgetControl);
     console.log("✅ Set budget_control to:", budgetControl);
 
@@ -551,6 +553,7 @@ export default function Transfer() {
       time_period_set: finalDateValue,
       reason_set: notes,
       budget_control_set: budgetControl,
+      transfer_type_set: transferTypeValue,
     });
 
     // Trigger modal opening via useEffect after state updates
@@ -1151,7 +1154,7 @@ export default function Transfer() {
         </div>
       </SharedModal>
 
-      
+
       {/* Oracle ERP Status Modal */}
       <SharedModal
         isOpen={isTrackModalOpen}
@@ -1660,7 +1663,6 @@ export default function Transfer() {
         <div className="p-6">
           {isLoadingStatus ? (
             <>
-              {console.log("[MODAL] Rendering LOADING state")}
               <div className="flex justify-center items-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 <span className="ml-2 text-gray-600">
@@ -1670,7 +1672,6 @@ export default function Transfer() {
             </>
           ) : statusError ? (
             <>
-              {console.log("[MODAL] Rendering ERROR state:", statusError)}
               <div className="flex justify-center items-center py-12">
                 <div className="text-center">
                   <div className="text-red-500 text-lg mb-2">⚠️</div>
@@ -1699,7 +1700,6 @@ export default function Transfer() {
                   >
                     {t(`status.${statusData.transfer_status}`) ||
                       statusData.transfer_status}
-
                   </span>
                 </div>
               </div>

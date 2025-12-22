@@ -508,7 +508,6 @@ export default function FundAdjustments() {
           transactionDate = monthNames[date.getMonth()];
         }
       } catch {
-        console.log("Could not parse date:", transactionDate);
         transactionDate = "";
       }
     }
@@ -539,8 +538,8 @@ export default function FundAdjustments() {
     setreason(notes); // Use HTML directly
     console.log("✅ Set reason to:", notes);
 
-    // Set budget control if available
-    const budgetControl = originalFundAdjustment.budget_control || "";
+    // Set budget control if available - use control_budget from API
+    const budgetControl = originalFundAdjustment.control_budget || "";
     setBudgetControl(budgetControl);
     console.log("✅ Set budget_control to:", budgetControl);
 

@@ -10,6 +10,7 @@ export interface FundAdjustmentItem {
   request_date: string;
   code: string;
   budget_control: string;
+  control_budget: string;
   gl_posting_status: string;
   approvel_1: string;
   approvel_2: string;

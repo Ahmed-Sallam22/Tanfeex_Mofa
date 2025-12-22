@@ -567,7 +567,10 @@ export default function Reservations() {
     // Set budget control if available - use control_budget from API
     const budgetControl = originalTransfer.control_budget || "";
     setBudgetControl(budgetControl);
-    console.log("✅ Set budget_control to:", originalTransfer.control_budget);
+
+    // Set transfer type if available
+    const transferTypeValue = originalTransfer.transfer_type || "";
+    setTransferType(transferTypeValue);
 
     // Trigger modal opening via useEffect after state updates
     setShouldOpenModal(true);
@@ -734,7 +737,6 @@ export default function Reservations() {
           reason: unholdReason ? [unholdReason] : [],
           other_user_id: [],
         }).unwrap();
-        console.log("Reservation unholded successfully:", selectedRow);
         setUnholdReason(""); // Clear reason after success
         toast.success(t("reservations.unholdSuccess"));
       } catch (error) {
@@ -1879,7 +1881,6 @@ export default function Reservations() {
                   setAllocationSubType("");
                   setValidationErrors({});
                 } catch (error) {
-                  console.error("Error creating transfer:", error);
                   toast.error(t("messages.createFailed"));
                 }
               }}
@@ -1916,7 +1917,6 @@ export default function Reservations() {
         <div className="p-6">
           {isLoadingStatus ? (
             <>
-              {console.log("[MODAL] Rendering LOADING state")}
               <div className="flex justify-center items-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 <span className="ml-2 text-gray-600">
@@ -1926,7 +1926,6 @@ export default function Reservations() {
             </>
           ) : statusError ? (
             <>
-              {console.log("[MODAL] Rendering ERROR state:", statusError)}
               <div className="flex justify-center items-center py-12">
                 <div className="text-center">
                   <div className="text-red-500 text-lg mb-2">⚠️</div>

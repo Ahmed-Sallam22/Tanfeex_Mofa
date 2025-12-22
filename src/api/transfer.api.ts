@@ -13,6 +13,7 @@ export interface TransferItem {
   notes:string;
   budget_control: string;
   control_budget: string; // Alternative field name used in some API responses
+  transfer_type: string; // Type of transfer: داخلية, خارجية, مخصصات
   gl_posting_status: string;
   approvel_1: string;
   approvel_2: string;

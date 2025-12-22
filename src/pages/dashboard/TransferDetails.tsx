@@ -2544,7 +2544,7 @@ export default function TransferDetails() {
                 {t("common.upload")}
               </button>
 
-              <button
+              {/* <button
                 onClick={() => setIsReportModalOpen(true)}
                 className="inline-flex text-sm items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
               >
@@ -2563,7 +2563,7 @@ export default function TransferDetails() {
                   />
                 </svg>
                 {t("reports.title")}
-              </button>
+              </button> */}
             </div>
 
             <button

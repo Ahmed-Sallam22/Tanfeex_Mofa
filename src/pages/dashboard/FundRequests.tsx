@@ -293,7 +293,6 @@ export default function FundRequests() {
     setTimeout(() => {
       setStatusTransactionId(transactionId);
     }, 100);
-    console.log("Opening status pipeline for transaction:", transactionId);
   };
 
   const [isAttachmentsModalOpen, setIsAttachmentsModalOpen] = useState(false);
@@ -317,7 +316,6 @@ export default function FundRequests() {
     const transactionId = String(row.id);
     setSelectedTransactionId(transactionId);
     setIsAttachmentsModalOpen(true);
-    console.log("Opening attachments modal for transaction:", transactionId);
   };
   // File upload handlers
   const handleFileSelect = async (file: File) => {
@@ -366,7 +364,6 @@ export default function FundRequests() {
 
       toast.success(t("fundRequests.fileDownloadSuccess"));
     } catch (error) {
-      console.error("Error downloading file:", error);
       toast.error(t("fundRequests.fileDownloadError"));
     }
   };
@@ -416,7 +413,6 @@ export default function FundRequests() {
     setTimeout(() => {
       setTrackTransactionId(transactionId);
     }, 100);
-    console.log("Opening Oracle status for transaction:", transactionId);
   };
 
   const handleSearchChange = (text: string) => {
@@ -433,14 +429,12 @@ export default function FundRequests() {
   };
 
   const handleFilter = () => {
-    console.log("Filter FundAdjuments");
     // Add your filter logic here
   };
 
   const handleEdit = (row: TableRow) => {
     const originalFundAdjuments = row.original as FundRequestItem;
 
-    console.log("Editing FundAdjuments:", originalFundAdjuments); // Debug log
 
     setSelectedFundAdjuments(originalFundAdjuments);
     setIsEditMode(true);
@@ -477,7 +471,6 @@ export default function FundRequests() {
           transactionDate = monthNames[date.getMonth()];
         }
       } catch {
-        console.log("Could not parse date:", transactionDate);
         transactionDate = "";
       }
     }
@@ -494,8 +487,8 @@ export default function FundRequests() {
     const textNotes = htmlToText(notes);
     setreason(textNotes);
 
-    // Set budget control if available
-    const budgetControl = originalFundAdjuments.budget_control || "";
+    // Set budget control if available - use control_budget from API
+    const budgetControl = originalFundAdjuments.control_budget || "";
     setBudgetControl(budgetControl);
 
     console.log("Setting form values:", {
@@ -559,7 +552,6 @@ export default function FundRequests() {
     // Open modal after clearing values
     setIsCreateModalOpen(true);
 
-    console.log("Creating new request - form cleared"); // Debug log
   };
 
   const handleCloseModal = () => {
@@ -677,13 +669,11 @@ export default function FundRequests() {
         }).unwrap();
 
         toast.success(t("fundRequests.updateSuccess"));
-        console.log("FundAdjuments updated successfully");
       } else {
         // Create new FundAdjuments
         await createFundAdjuments(FundAdjumentsData).unwrap();
 
         toast.success(t("fundRequests.requestSuccess"));
-        console.log("FundAdjuments created successfully");
       }
 
       handleCloseModal();

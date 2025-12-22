@@ -120,6 +120,25 @@ const transformApiDataToTableData = (
   const rows: TableRowData[] = [];
 
   apiData.forEach((transaction, transactionIndex) => {
+    // Helper to format discussionType
+    const formatDiscussionType = () => {
+      const parts: string[] = [];
+
+      if (transaction.transfer_type) {
+        parts.push(transaction.transfer_type);
+      }
+
+      if (transaction.control_budget) {
+        parts.push(transaction.control_budget);
+      }
+
+      // if (transaction.type && !parts.includes(transaction.type)) {
+      //   parts.push(transaction.type);
+      // }
+
+      return parts.length > 0 ? parts.join(" - ") : "-";
+    };
+
     if (transaction.transfers && transaction.transfers.length > 0) {
       transaction.transfers.forEach((transfer, transferIndex) => {
         rows.push({
@@ -130,10 +149,10 @@ const transformApiDataToTableData = (
           budgetItem: formatSegment(transfer.segments?.segment_11),
           costCenter: formatSegment(transfer.segments?.segment_9),
           geographicLocation: formatSegment(transfer.segments?.segment_5),
-          economicClassification: formatNumber(transfer.gfs_code),
+          economicClassification: transfer.gfs_code?.toString() || "-",
           documentNumber:
             transaction.code || transaction.transaction_id?.toString() || "-",
-          discussionType: transaction.transfer_type || transaction.type || "-",
+          discussionType: formatDiscussionType(),
           amountFrom: formatNumber(transfer.from_center),
           amountTo: formatNumber(transfer.to_center),
           description: transaction.notes ?? "-",
@@ -141,18 +160,7 @@ const transformApiDataToTableData = (
         });
       });
     } else {
-      // Format discussionType as "transfer_type - control_budget" when both exist
-      let discussionType = "-";
-      if (transaction.transfer_type && transaction.control_budget) {
-        discussionType = `${transaction.transfer_type} - ${transaction.control_budget}`;
-      } else if (transaction.transfer_type) {
-        discussionType = transaction.transfer_type;
-      } else if (transaction.control_budget) {
-        discussionType = transaction.control_budget;
-      } else if (transaction.type) {
-        discussionType = transaction.type;
-      }
-
+      // No transfers - show transaction summary row
       rows.push({
         id: transaction.transaction_id || transactionIndex + 1,
         budgetItem: "-",
@@ -161,9 +169,9 @@ const transformApiDataToTableData = (
         economicClassification: "-",
         documentNumber:
           transaction.code || transaction.transaction_id?.toString() || "-",
-        discussionType,
-        amountFrom: formatNumber(transaction.summary?.total_from_center),
-        amountTo: formatNumber(transaction.summary?.total_to_center),
+        discussionType: formatDiscussionType(),
+        amountFrom: "-",
+        amountTo: "-",
         description: transaction.notes ?? "-",
         justifications: "-",
       });
