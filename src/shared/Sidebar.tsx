@@ -760,97 +760,110 @@ const getSections = (
     ],
   });
 
-  // TRANSFER ability - show creation pages
-  if (userAbilities.includes("TRANSFER")) {
+  const hasTransfer = userAbilities.includes("TRANSFER");
+  const hasApprove = userAbilities.includes("APPROVE");
+
+  // Budget Transfers Section - combined creation and pending
+  if (hasTransfer || hasApprove) {
+    const transferItems = [];
+
+    if (hasTransfer) {
+      transferItems.push({
+        to: "/app/transfer",
+        label: t("transfer.title"),
+        icon: TransferIcon,
+      });
+    }
+
+    if (hasApprove) {
+      transferItems.push({
+        to: "/app/PendingTransfer",
+        label: t("pendingTransfers.title"),
+        icon: PendingTransferIcon,
+      });
+    }
+
     sections.push({
       title: t("transfer.title"),
-      items: [
-        {
-          to: "/app/transfer",
-          label: t("transfer.title"),
-          icon: TransferIcon,
-        },
-      ],
-    });
-
-    sections.push({
-      title: t("reservations.title"),
-      items: [
-        {
-          to: "/app/reservations",
-          label: t("reservations.title"),
-          icon: TransferIcon,
-        },
-      ],
-    });
-
-    sections.push({
-      title: t("fundRequests.title"),
-      items: [
-        {
-          to: "/app/fund-requests",
-          label: t("fundRequests.title"),
-          icon: FundRequestsIcon,
-        },
-      ],
-    });
-
-    sections.push({
-      title: t("fundAdjustments.title"),
-      items: [
-        {
-          to: "/app/FundAdjustments",
-          label: t("fundAdjustments.title"),
-          icon: FundAdjustmentsIcon,
-        },
-      ],
+      items: transferItems,
     });
   }
 
-  // APPROVE ability - show pending pages
-  if (userAbilities.includes("APPROVE")) {
-    sections.push({
-      title: t("transfer.title"),
-      items: [
-        {
-          to: "/app/PendingTransfer",
-          label: t("pendingTransfers.title"),
-          icon: PendingTransferIcon,
-        },
-      ],
-    });
+  // Reservations Section - combined creation and pending
+  if (hasTransfer || hasApprove) {
+    const reservationItems = [];
+
+    if (hasTransfer) {
+      reservationItems.push({
+        to: "/app/reservations",
+        label: t("reservations.title"),
+        icon: TransferIcon,
+      });
+    }
+
+    if (hasApprove) {
+      reservationItems.push({
+        to: "/app/pending-reservations",
+        label: t("pendingReservations.title"),
+        icon: PendingRequestsIcon,
+      });
+    }
 
     sections.push({
       title: t("reservations.title"),
-      items: [
-        {
-          to: "/app/pending-reservations",
-          label: t("pendingReservations.title"),
-          icon: PendingRequestsIcon,
-        },
-      ],
+      items: reservationItems,
     });
+  }
+
+  // Fund Requests Section - combined creation and pending
+  if (hasTransfer || hasApprove) {
+    const fundRequestItems = [];
+
+    if (hasTransfer) {
+      fundRequestItems.push({
+        to: "/app/fund-requests",
+        label: t("fundRequests.title"),
+        icon: FundRequestsIcon,
+      });
+    }
+
+    if (hasApprove) {
+      fundRequestItems.push({
+        to: "/app/PendingRequests",
+        label: t("pendingRequests.title"),
+        icon: PendingRequestsIcon,
+      });
+    }
 
     sections.push({
       title: t("fundRequests.title"),
-      items: [
-        {
-          to: "/app/PendingRequests",
-          label: t("pendingRequests.title"),
-          icon: PendingRequestsIcon,
-        },
-      ],
+      items: fundRequestItems,
     });
+  }
+
+  // Fund Adjustments Section - combined creation and pending
+  if (hasTransfer || hasApprove) {
+    const fundAdjustmentItems = [];
+
+    if (hasTransfer) {
+      fundAdjustmentItems.push({
+        to: "/app/FundAdjustments",
+        label: t("fundAdjustments.title"),
+        icon: FundAdjustmentsIcon,
+      });
+    }
+
+    if (hasApprove) {
+      fundAdjustmentItems.push({
+        to: "/app/PendingAdjustments",
+        label: t("pendingAdjustments.title"),
+        icon: PendingAdjustmentsIcon,
+      });
+    }
 
     sections.push({
       title: t("fundAdjustments.title"),
-      items: [
-        {
-          to: "/app/PendingAdjustments",
-          label: t("pendingAdjustments.title"),
-          icon: PendingAdjustmentsIcon,
-        },
-      ],
+      items: fundAdjustmentItems,
     });
   }
 
