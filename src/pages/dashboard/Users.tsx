@@ -400,7 +400,7 @@ export default function Users() {
               }`}>
               {t("users.userLevelsTab")}
             </button>
-            <button
+            {/* <button
               onClick={() => handleTabChange("assignment")}
               className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === "assignment"
@@ -408,7 +408,7 @@ export default function Users() {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}>
               {t("users.assignmentTab")}
-            </button>
+            </button> */}
           </nav>
         </div>
       </div>
