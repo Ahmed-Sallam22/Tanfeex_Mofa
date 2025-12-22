@@ -364,6 +364,8 @@ export default function FundRequests() {
 
       toast.success(t("fundRequests.fileDownloadSuccess"));
     } catch (error) {
+      console.log(error);
+      
       toast.error(t("fundRequests.fileDownloadError"));
     }
   };

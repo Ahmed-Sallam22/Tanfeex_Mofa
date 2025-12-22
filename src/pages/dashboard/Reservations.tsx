@@ -1881,6 +1881,8 @@ export default function Reservations() {
                   setAllocationSubType("");
                   setValidationErrors({});
                 } catch (error) {
+                  console.log(error);
+                  
                   toast.error(t("messages.createFailed"));
                 }
               }}
