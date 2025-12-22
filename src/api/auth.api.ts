@@ -16,6 +16,21 @@ interface RegisterResponse {
   tokens: AuthTokens;
 }
 
+export interface UserGroup {
+  group_name: string;
+  roles: string[];
+  abilities: string[];
+}
+
+export interface UserProfile {
+  user_id: number;
+  username: string;
+  role: string;
+  user_level: string;
+  groups: UserGroup[];
+  is_assigned_to_groups: boolean;
+}
+
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: customBaseQuery,
@@ -39,6 +54,9 @@ export const authApi = createApi({
     getMe: builder.query<User, void>({
       query: () => ({ url: '/auth/me', method: 'GET' }),
     }),
+    getUserProfile: builder.query<UserProfile, void>({
+      query: () => ({ url: '/auth/profile/simple', method: 'GET' }),
+    }),
     logout: builder.mutation<{ message: string }, LogoutRequest>({
       query: (body) => ({ 
         url: '/auth/logout/', 
@@ -58,6 +76,7 @@ export const {
   useRequestResetMutation,
   useResetPasswordMutation,
   useGetMeQuery,
+  useGetUserProfileQuery,
   useLogoutMutation,
   useRefreshTokenMutation,
 } = authApi;

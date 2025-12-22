@@ -3,8 +3,9 @@ import { NavLink } from "react-router-dom";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import Tanfeez from "../assets/Tanfeezletter.png";
 import { useLogout } from "../hooks/useLogout";
-import { useUserRole, useUserLevel } from "../features/auth/hooks";
+import { useUserRole } from "../features/auth/hooks";
 import { useTranslation } from "react-i18next";
+import { useGetUserProfileQuery } from "../api/auth.api";
 
 // Custom SVG Icons
 const DashboardIcon = ({ className }: { className?: string }) => (
@@ -608,233 +609,265 @@ type SidebarProps = {
 
 const getSections = (
   userRole: string | null,
-  userLevel: number | null,
+  userAbilities: string[],
   t: (key: string) => string
-) =>
-  [
-    {
-      title: "",
-      items: [
-        {
-          to: "/app",
-          label: t("dashboard"),
-          icon: DashboardIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [1, 2, 3, 4] as number[],
-        },
-        {
-          to: "/app/reports",
-          label: t("reports.title"),
-          icon: ReportsIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [] as number[],
-        },
-        {
-          to: "/app/analytical-report",
-          label: t("analyticalReport.title"),
-          icon: ReportsIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [] as number[],
-        },
-        // {
-        //   to: "/app/Document_I/O",
-        //   label: t("documentIO.title"),
-        //   icon: DocumentIOIcon,
-        //   allowedRoles: ["superadmin"],
-        //   allowedLevels: [] as number[],
-        // },
-        // {
-        //   to: "/app/envelope",
-        //   label: "Envelope",
-        //   icon: Mail,
-        //   allowedRoles: ["superadmin"],
-        //   allowedLevels: [4] as number[],
-        // },
-      ].filter((item) => {
-        const hasRoleAccess =
-          item.allowedRoles.length === 0 ||
-          (userRole && item.allowedRoles.includes(userRole));
-        const hasLevelAccess =
-          item.allowedLevels.length === 0 ||
-          (userLevel !== null && item.allowedLevels.includes(userLevel));
-        return hasRoleAccess || hasLevelAccess;
-      }),
-    },
-    {
+) => {
+  // Superadmin sees everything
+  if (userRole === "superadmin") {
+    return [
+      {
+        title: "",
+        items: [
+          {
+            to: "/app",
+            label: t("dashboard"),
+            icon: DashboardIcon,
+          },
+          {
+            to: "/app/reports",
+            label: t("reports.title"),
+            icon: ReportsIcon,
+          },
+          {
+            to: "/app/analytical-report",
+            label: t("analyticalReport.title"),
+            icon: ReportsIcon,
+          },
+        ],
+      },
+      {
+        title: t("transfer.title"),
+        items: [
+          {
+            to: "/app/transfer",
+            label: t("transfer.title"),
+            icon: TransferIcon,
+          },
+          {
+            to: "/app/PendingTransfer",
+            label: t("pendingTransfers.title"),
+            icon: PendingTransferIcon,
+          },
+        ],
+      },
+      {
+        title: t("reservations.title"),
+        items: [
+          {
+            to: "/app/reservations",
+            label: t("reservations.title"),
+            icon: TransferIcon,
+          },
+          {
+            to: "/app/pending-reservations",
+            label: t("pendingReservations.title"),
+            icon: PendingRequestsIcon,
+          },
+        ],
+      },
+      {
+        title: t("fundRequests.title"),
+        items: [
+          {
+            to: "/app/fund-requests",
+            label: t("fundRequests.title"),
+            icon: FundRequestsIcon,
+          },
+          {
+            to: "/app/PendingRequests",
+            label: t("pendingRequests.title"),
+            icon: PendingRequestsIcon,
+          },
+        ],
+      },
+      {
+        title: t("fundAdjustments.title"),
+        items: [
+          {
+            to: "/app/FundAdjustments",
+            label: t("fundAdjustments.title"),
+            icon: FundAdjustmentsIcon,
+          },
+          {
+            to: "/app/PendingAdjustments",
+            label: t("pendingAdjustments.title"),
+            icon: PendingAdjustmentsIcon,
+          },
+        ],
+      },
+      {
+        title: t("workflow.title"),
+        items: [
+          {
+            to: "/app/users",
+            label: t("users.title"),
+            icon: UserManagementIcon,
+          },
+          {
+            to: "/app/WorkFlow",
+            label: t("workflow.title"),
+            icon: WorkflowIcon,
+          },
+          {
+            to: "/app/Assumption",
+            label: t("assumptions.title"),
+            icon: AssumptionIcon,
+          },
+          {
+            to: "/app/segment-configuration",
+            label: t("segmentConfiguration.title"),
+            icon: SegmentConfigIcon,
+          },
+          {
+            to: "/app/security-groups",
+            label: t("securityGroups.title"),
+            icon: SecurityGroupsIcon,
+          },
+        ],
+      },
+      {
+        title: t("navbar.notifications"),
+        items: [
+          {
+            to: "/logout",
+            label: t("logout"),
+            icon: LogoutIcon,
+          },
+        ],
+      },
+    ];
+  }
+
+  // Regular users - based on abilities
+  const sections: Array<{
+    title: string;
+    items: Array<{
+      to: string;
+      label: string;
+      icon: React.ComponentType<{ className?: string }>;
+    }>;
+  }> = [];
+
+  // Dashboard - always visible
+  sections.push({
+    title: "",
+    items: [
+      {
+        to: "/app",
+        label: t("dashboard"),
+        icon: DashboardIcon,
+      },
+    ],
+  });
+
+  // TRANSFER ability - show creation pages
+  if (userAbilities.includes("TRANSFER")) {
+    sections.push({
       title: t("transfer.title"),
       items: [
         {
           to: "/app/transfer",
           label: t("transfer.title"),
           icon: TransferIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [1] as number[],
         },
-        {
-          to: "/app/PendingTransfer",
-          label: t("pendingTransfers.title"),
-          icon: PendingTransferIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [2, 3, 4] as number[],
-        },
-      ].filter((item) => {
-        const hasRoleAccess =
-          item.allowedRoles.length === 0 ||
-          (userRole && item.allowedRoles.includes(userRole));
-        const hasLevelAccess =
-          item.allowedLevels.length === 0 ||
-          (userLevel !== null && item.allowedLevels.includes(userLevel));
-        return hasRoleAccess || hasLevelAccess;
-      }),
-    },
-    {
+      ],
+    });
+
+    sections.push({
       title: t("reservations.title"),
       items: [
         {
           to: "/app/reservations",
           label: t("reservations.title"),
           icon: TransferIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [1] as number[],
         },
-        {
-          to: "/app/pending-reservations",
-          label: t("pendingReservations.title"),
-          icon: PendingRequestsIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [2, 3, 4] as number[],
-        },
-      ].filter((item) => {
-        const hasRoleAccess =
-          item.allowedRoles.length === 0 ||
-          (userRole && item.allowedRoles.includes(userRole));
-        const hasLevelAccess =
-          item.allowedLevels.length === 0 ||
-          (userLevel !== null && item.allowedLevels.includes(userLevel));
-        return hasRoleAccess || hasLevelAccess;
-      }),
-    },
-    {
+      ],
+    });
+
+    sections.push({
       title: t("fundRequests.title"),
       items: [
         {
           to: "/app/fund-requests",
           label: t("fundRequests.title"),
           icon: FundRequestsIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [1] as number[],
         },
-        {
-          to: "/app/PendingRequests",
-          label: t("pendingRequests.title"),
-          icon: PendingRequestsIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [2, 3, 4] as number[],
-        },
-      ].filter((item) => {
-        const hasRoleAccess =
-          item.allowedRoles.length === 0 ||
-          (userRole && item.allowedRoles.includes(userRole));
-        const hasLevelAccess =
-          item.allowedLevels.length === 0 ||
-          (userLevel !== null && item.allowedLevels.includes(userLevel));
-        return hasRoleAccess || hasLevelAccess;
-      }),
-    },
-    {
+      ],
+    });
+
+    sections.push({
       title: t("fundAdjustments.title"),
       items: [
         {
           to: "/app/FundAdjustments",
           label: t("fundAdjustments.title"),
           icon: FundAdjustmentsIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [1] as number[],
         },
+      ],
+    });
+  }
+
+  // APPROVE ability - show pending pages
+  if (userAbilities.includes("APPROVE")) {
+    sections.push({
+      title: t("transfer.title"),
+      items: [
+        {
+          to: "/app/PendingTransfer",
+          label: t("pendingTransfers.title"),
+          icon: PendingTransferIcon,
+        },
+      ],
+    });
+
+    sections.push({
+      title: t("reservations.title"),
+      items: [
+        {
+          to: "/app/pending-reservations",
+          label: t("pendingReservations.title"),
+          icon: PendingRequestsIcon,
+        },
+      ],
+    });
+
+    sections.push({
+      title: t("fundRequests.title"),
+      items: [
+        {
+          to: "/app/PendingRequests",
+          label: t("pendingRequests.title"),
+          icon: PendingRequestsIcon,
+        },
+      ],
+    });
+
+    sections.push({
+      title: t("fundAdjustments.title"),
+      items: [
         {
           to: "/app/PendingAdjustments",
           label: t("pendingAdjustments.title"),
           icon: PendingAdjustmentsIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [2, 3, 4] as number[],
-        },
-      ].filter((item) => {
-        const hasRoleAccess =
-          item.allowedRoles.length === 0 ||
-          (userRole && item.allowedRoles.includes(userRole));
-        const hasLevelAccess =
-          item.allowedLevels.length === 0 ||
-          (userLevel !== null && item.allowedLevels.includes(userLevel));
-        return hasRoleAccess || hasLevelAccess;
-      }),
-    },
-    {
-      title: t("workflow.title"),
-      items: [
-        {
-          to: "/app/users",
-          label: t("users.title"),
-          icon: UserManagementIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [] as number[],
-        },
-        // {
-        //   to: "/app/accounts-projects",
-        //   label: "Accounts & Projects",
-        //   icon: FolderKanban,
-        //   allowedRoles: ["superadmin"],
-        //   allowedLevels: [] as number[],
-        // },
-        // {
-        //   to: "/app/projects-overview",
-        //   label: "Projects Overview",
-        //   icon: KanbanSquare,
-        //   allowedRoles: ["superadmin"],
-        //   allowedLevels: [] as number[],
-        // },
-        {
-          to: "/app/WorkFlow",
-          label: t("workflow.title"),
-          icon: WorkflowIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [] as number[],
-        },
-         {
-          to: "/app/Assumption",
-          label: t("assumptions.title"),
-          icon: AssumptionIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [] as number[],
-        },
-        {
-          to: "/app/segment-configuration",
-          label: t("segmentConfiguration.title"),
-          icon: SegmentConfigIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [] as number[],
-        },
-        {
-          to: "/app/security-groups",
-          label: t("securityGroups.title"),
-          icon: SecurityGroupsIcon,
-          allowedRoles: ["superadmin"],
-          allowedLevels: [] as number[],
-        },
-      ].filter(() => userRole === "superadmin"),
-    },
-    {
-      title: t("navbar.notifications"),
-      items: [
-        {
-          to: "/logout",
-          label: t("logout"),
-          icon: LogoutIcon,
-          allowedRoles: [] as string[],
-          allowedLevels: [] as number[],
         },
       ],
-    },
-  ].filter((section) => section.items.length > 0);
+    });
+  }
+
+  // Logout - always visible
+  sections.push({
+    title: t("navbar.notifications"),
+    items: [
+      {
+        to: "/logout",
+        label: t("logout"),
+        icon: LogoutIcon,
+      },
+    ],
+  });
+
+  return sections.filter((section) => section.items.length > 0);
+};
 
 export default function Sidebar({
   onClose,
@@ -844,8 +877,16 @@ export default function Sidebar({
   const { t } = useTranslation();
   const logout = useLogout();
   const userRole = useUserRole();
-  const userLevel = useUserLevel();
-  const sections = getSections(userRole || null, userLevel, t);
+
+  // Fetch user profile to get abilities
+  const { data: userProfile } = useGetUserProfileQuery();
+
+  // Extract all abilities from user groups
+  const userAbilities: string[] = userProfile?.groups
+    ? userProfile.groups.flatMap((group) => group.abilities)
+    : [];
+
+  const sections = getSections(userRole || null, userAbilities, t);
 
   return (
     <aside className="w-full h-full bg-white rounded-2xl overflow-y-auto overflow-x-hidden flex flex-col">

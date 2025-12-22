@@ -59,7 +59,6 @@ export default function SignIn() {
 
       // Get redirect locations in order of priority
       const storedRedirect = localStorage.getItem("postLoginRedirect");
-      console.log(storedRedirect);
 
       // If there's a stored redirect from logout, prioritize it over fromState
       let target;
@@ -72,9 +71,8 @@ export default function SignIn() {
       }
 
       navigate(target, { replace: true });
-    } catch (error) {
+    } catch {
       // Error is already handled by RTK Query and shown via toast
-      console.error("Login error:", error);
     }
   };
 
