@@ -549,12 +549,7 @@ export default function Transfer() {
     setBudgetControl(budgetControl);
     console.log("✅ Set budget_control to:", budgetControl);
 
-    console.log("AFTER setting form values:", {
-      time_period_set: finalDateValue,
-      reason_set: notes,
-      budget_control_set: budgetControl,
-      transfer_type_set: transferTypeValue,
-    });
+  
 
     // Trigger modal opening via useEffect after state updates
     setShouldOpenModal(true);
