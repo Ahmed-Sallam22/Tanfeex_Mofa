@@ -4,7 +4,7 @@ import en from './en.json';
 import ar from './ar.json';
 
 export const LANGUAGE_STORAGE_KEY = 'tanfeez_locale';
-const FALLBACK_LANGUAGE = 'en';
+const FALLBACK_LANGUAGE = 'ar';
 
 const getInitialLanguage = () => {
   if (typeof window === 'undefined') {
@@ -24,8 +24,8 @@ const getInitialLanguage = () => {
 };
 
 const resources = {
-  en: { translation: en },
   ar: { translation: ar },
+  en: { translation: en },
 };
 
 i18n

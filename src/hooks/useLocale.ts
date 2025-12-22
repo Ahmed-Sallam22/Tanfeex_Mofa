@@ -11,7 +11,7 @@ const localeToLanguageMap: Record<Locale, 'en' | 'ar'> = {
 
 const getStoredLocale = (): Locale => {
   if (typeof window === 'undefined') {
-    return 'EN';
+    return 'AR';
   }
 
   try {
@@ -22,7 +22,7 @@ const getStoredLocale = (): Locale => {
     console.warn('Unable to read locale from localStorage:', error);
   }
 
-  return 'EN';
+  return 'AR';
 };
 
 export const useLocale = () => {
