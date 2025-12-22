@@ -1727,7 +1727,7 @@ export default function Reservations() {
               onChange={(value) => setBudgetControl(String(value))}
               placeholder={t("transfer.selectBudgetControl")}
               required
-              // disabled={true}
+              disabled={true}
             />
             {validationErrors.budget_control && (
               <p className="mt-1 text-sm text-red-600">
@@ -1788,7 +1788,7 @@ export default function Reservations() {
               onChange={(value) => settime_period(String(value))}
               placeholder={t("transfer.selectTimePeriod")}
               required
-              // disabled={true}
+              disabled={true}
             />
             {validationErrors.time_period && (
               <p className="mt-1 text-sm text-red-600">
