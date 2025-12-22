@@ -76,13 +76,14 @@ export default defineConfig(({ mode }) => {
           manualChunks: (id) => {
             // Split vendor chunks for better caching
             if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              // Keep all React-related packages together to avoid multiple instances
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || id.includes('react-i18next') || id.includes('react-redux') || id.includes('react-hook-form') || id.includes('react-hot-toast')) {
                 return 'vendor-react';
               }
               if (id.includes('redux') || id.includes('@reduxjs')) {
                 return 'vendor-redux';
               }
-              if (id.includes('i18next') || id.includes('react-i18next')) {
+              if (id.includes('i18next') && !id.includes('react-i18next')) {
                 return 'vendor-i18n';
               }
               if (id.includes('recharts') || id.includes('d3')) {
@@ -91,7 +92,7 @@ export default defineConfig(({ mode }) => {
               if (id.includes('lucide') || id.includes('icons')) {
                 return 'vendor-icons';
               }
-              if (id.includes('zod') || id.includes('react-hook-form')) {
+              if (id.includes('zod')) {
                 return 'vendor-forms';
               }
               // Group remaining node_modules

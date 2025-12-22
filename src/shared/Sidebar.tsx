@@ -878,15 +878,26 @@ export default function Sidebar({
   const logout = useLogout();
   const userRole = useUserRole();
 
-  // Fetch user profile to get abilities
-  const { data: userProfile } = useGetUserProfileQuery();
+  // Fetch user profile to get abilities - skip if user is not authenticated
+  const {
+    data: userProfile,
+    isError,
+    isLoading,
+  } = useGetUserProfileQuery(undefined, {
+    skip: !userRole, // Only fetch if user has a role (is authenticated)
+  });
 
   // Extract all abilities from user groups
   const userAbilities: string[] = userProfile?.groups
     ? userProfile.groups.flatMap((group) => group.abilities)
     : [];
 
-  const sections = getSections(userRole || null, userAbilities, t);
+  // If there's an error fetching profile, fallback to empty abilities
+  const sections = getSections(
+    userRole || null,
+    isError || isLoading ? [] : userAbilities,
+    t
+  );
 
   return (
     <aside className="w-full h-full bg-white rounded-2xl overflow-y-auto overflow-x-hidden flex flex-col">

@@ -2,6 +2,10 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
+
+// Initialize i18n before any component that uses it
+import "./i18n";
+
 import App from "./App.tsx";
 import { store } from "./app/store";
 import { I18nProvider } from "./app/providers/I18nProvider";
