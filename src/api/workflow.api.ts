@@ -8,6 +8,7 @@ export interface WorkflowTemplate {
   name: string;
   description: string;
   is_active: boolean;
+  affect_active_instances?: boolean;
   version: number;
   created_at: string;
   updated_at: string;
@@ -48,6 +49,7 @@ export interface CreateWorkflowRequest {
   description: string;
   version: number;
   is_active: boolean;
+  affect_active_instances: boolean;
   stages: WorkflowStage[];
 }
 

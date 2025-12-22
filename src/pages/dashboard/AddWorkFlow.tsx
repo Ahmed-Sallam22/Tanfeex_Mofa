@@ -42,6 +42,7 @@ export default function AddWorkFlow() {
     version: undefined as number | undefined,
     description: "",
     isActive: true,
+    affectActiveInstances: false,
   });
 
   // Stages state
@@ -75,6 +76,7 @@ export default function AddWorkFlow() {
         version: workflowData.version,
         description: workflowData.description,
         isActive: workflowData.is_active,
+        affectActiveInstances: workflowData.affect_active_instances || false,
       };
 
       setWorkflowForm(formData);
@@ -114,6 +116,7 @@ export default function AddWorkFlow() {
       description: workflowForm.description,
       version: workflowForm.version || 1,
       is_active: workflowForm.isActive,
+      affect_active_instances: workflowForm.affectActiveInstances,
       stages: stages,
     };
   };
@@ -136,10 +139,12 @@ export default function AddWorkFlow() {
 
   // Role options from security group roles (group-specific role assignments)
   const roleOptions: SelectOption[] =
-    securityGroupRolesData?.roles?.filter(role => role.is_active).map((role) => ({
-      value: role.id.toString(), // XX_SecurityGroupRole.id
-      label: role.display_name, // "Group Name - Role Name"
-    })) || [];
+    securityGroupRolesData?.roles
+      ?.filter((role) => role.is_active)
+      .map((role) => ({
+        value: role.id.toString(), // XX_SecurityGroupRole.id
+        label: role.display_name, // "Group Name - Role Name"
+      })) || [];
 
   // Security group options from API
   // const securityGroupOptions: SelectOption[] =
@@ -389,10 +394,7 @@ export default function AddWorkFlow() {
             </button>
             <button
               onClick={handleCreateStage}
-              disabled={
-                !stageForm.name ||
-                !stageForm.slaHours
-              }
+              disabled={!stageForm.name || !stageForm.slaHours}
               className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#4E8476] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isStageEditMode
@@ -453,17 +455,31 @@ export default function AddWorkFlow() {
         <div className="flex justify-between items-center mb-3 ">
           <h2 className="text-md ">{t("workflow.workflowInformation")}</h2>
 
-          <Toggle
-            id="workflowStatus"
-            label={t("workflow.active")}
-            checked={workflowForm.isActive}
-            onChange={(checked) =>
-              setWorkflowForm((prev) => ({
-                ...prev,
-                isActive: checked,
-              }))
-            }
-          />
+          <div className="flex items-center gap-4">
+            <Toggle
+              id="affectActiveInstances"
+              label={t("workflow.affectActiveInstances")}
+              checked={workflowForm.affectActiveInstances}
+              onChange={(checked) =>
+                setWorkflowForm((prev) => ({
+                  ...prev,
+                  affectActiveInstances: checked,
+                }))
+              }
+            />
+
+            <Toggle
+              id="workflowStatus"
+              label={t("workflow.active")}
+              checked={workflowForm.isActive}
+              onChange={(checked) =>
+                setWorkflowForm((prev) => ({
+                  ...prev,
+                  isActive: checked,
+                }))
+              }
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
@@ -574,7 +590,13 @@ export default function AddWorkFlow() {
                               ? t("workflow.yes")
                               : t("workflow.no")
                           }`,
-                          ...(stage.required_role_name ? [`${t("workflow.requiredRole")}: ${stage.required_role_name}`] : []),
+                          ...(stage.required_role_name
+                            ? [
+                                `${t("workflow.requiredRole")}: ${
+                                  stage.required_role_name
+                                }`,
+                              ]
+                            : []),
                         ]}
                       />
                       <p className="text-xs text-[#757575]">

@@ -1283,6 +1283,7 @@
     "viewDescription": "انقر لعرض الوصف الكامل",
     "noDescription": "لا يوجد وصف متاح",
     "active": "نشط",
+    "affectActiveInstances": "تأثير على الحالات النشطة",
     "inactive": "غير نشط",
     "steps": "الخطوات",
     "createSuccess": "تم إنشاء سير العمل بنجاح",

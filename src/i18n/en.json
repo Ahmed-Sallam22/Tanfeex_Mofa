@@ -1284,6 +1284,7 @@
     "viewDescription": "Click to view full description",
     "noDescription": "No description available",
     "active": "Active",
+    "affectActiveInstances": "Affect Active Instances",
     "inactive": "Inactive",
     "steps": "Steps",
     "createSuccess": "Workflow created successfully",
