@@ -221,6 +221,8 @@ export default function ReservationsDetails() {
           budget_adjustments: primaryBudget
             ? primaryBudget.Budget_adjustments || 0
             : 0,
+          // Add reason field from API
+          reason: transfer.reason || "",
         };
 
         // Add dynamic segment fields from the transfer data
