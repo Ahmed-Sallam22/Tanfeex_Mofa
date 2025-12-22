@@ -708,6 +708,7 @@
             "reason": "Reason"
 ,
     "addReason": "Add Reason",
+    "noReason": "No reason provided",
     "reasonModalTitle": "Enter Reason",
     "enterReason": "Reason for this transfer line",
     "enterReasonPlaceholder": "Enter the reason for this transfer...",

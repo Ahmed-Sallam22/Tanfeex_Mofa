@@ -1924,6 +1924,9 @@ export default function TransferDetails() {
         const hasReason =
           transferRow.reason && transferRow.reason.trim() !== "";
 
+        // Check if user can edit (only when status is "not yet sent for approval")
+        const canEdit = !isSubmitted;
+
         return (
           <button
             onClick={() =>
@@ -1932,10 +1935,16 @@ export default function TransferDetails() {
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
               hasReason
                 ? "bg-green-100 text-green-700 hover:bg-green-200 border border-green-300"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300"
+                : canEdit
+                ? "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300"
+                : "bg-gray-50 text-gray-400 border border-gray-200 cursor-default"
             }`}
             title={
-              hasReason ? transferRow.reason : t("common.addReason")
+              hasReason
+                ? transferRow.reason
+                : canEdit
+                ? t("common.addReason")
+                : t("common.noReason")
             }
           >
             {hasReason ? (
@@ -1959,7 +1968,7 @@ export default function TransferDetails() {
                   {transferRow.reason}
                 </span>
               </>
-            ) : (
+            ) : canEdit ? (
               <>
                 <svg
                   width="16"
@@ -1978,6 +1987,8 @@ export default function TransferDetails() {
                 </svg>
                 <span>{t("common.addReason")}</span>
               </>
+            ) : (
+              <span className="text-gray-400">-</span>
             )}
           </button>
         );
@@ -3062,32 +3073,63 @@ export default function TransferDetails() {
         size="md"
       >
         <div className="p-4">
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t("common.enterReason")}
-            </label>
-            <textarea
-              value={reasonModalText}
-              onChange={(e) => setReasonModalText(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4E8476] focus:border-transparent resize-none"
-              rows={4}
-              placeholder={t("common.enterReasonPlaceholder")}
-            />
-          </div>
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={handleCloseReasonModal}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
-            >
-              {t("common.cancel")}
-            </button>
-            <button
-              onClick={handleSaveReason}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#3d6b5f] transition-colors"
-            >
-              {t("common.save")}
-            </button>
-          </div>
+          {isSubmitted ? (
+            // View-only mode
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t("common.reason")}
+              </label>
+              <div className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-lg min-h-[100px]">
+                {reasonModalText ? (
+                  <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                    {reasonModalText}
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-400 italic">
+                    {t("common.noReason")}
+                  </p>
+                )}
+              </div>
+              <div className="flex justify-end mt-4">
+                <button
+                  onClick={handleCloseReasonModal}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  {t("common.close")}
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Edit mode
+            <>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("common.enterReason")}
+                </label>
+                <textarea
+                  value={reasonModalText}
+                  onChange={(e) => setReasonModalText(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4E8476] focus:border-transparent resize-none"
+                  rows={4}
+                  placeholder={t("common.enterReasonPlaceholder")}
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={handleCloseReasonModal}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  {t("common.cancel")}
+                </button>
+                <button
+                  onClick={handleSaveReason}
+                  className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#3d6b5f] transition-colors"
+                >
+                  {t("common.save")}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </SharedModal>
     </div>

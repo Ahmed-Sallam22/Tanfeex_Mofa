@@ -815,9 +815,10 @@
     "unhold": "إلغاء التعليق",
     "transfer": "تحويل",
     "closeModal": "إغلاق النافذة",
-          "reason": "Reason"
+          "reason": "السبب"
 ,
         "addReason": "إضافة سبب",
+        "noReason": "لا يوجد سبب",
     "reasonModalTitle": "إدخال السبب",
     "enterReason": "سبب هذا التحويل",
     "enterReasonPlaceholder": "أدخل سبب هذا التحويل...",
