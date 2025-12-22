@@ -111,7 +111,6 @@ export default function Transfer() {
   // Effect to open modal after state updates are complete
   useEffect(() => {
     if (shouldOpenModal && isEditMode) {
-      console.log("🚀 Opening modal with state:", { time_period, reason });
       setIsCreateModalOpen(true);
       setShouldOpenModal(false);
     }
@@ -295,7 +294,6 @@ export default function Transfer() {
     setTimeout(() => {
       setStatusTransactionId(transactionId);
     }, 100);
-    console.log("Opening status pipeline for transaction:", transactionId);
   };
 
   // Handler for attachments click
@@ -303,7 +301,6 @@ export default function Transfer() {
     const transactionId = String(row.id);
     setSelectedTransactionId(transactionId);
     setIsAttachmentsModalOpen(true);
-    console.log("Opening attachments modal for transaction:", transactionId);
   };
   // File upload handlers
   const handleFileSelect = async (file: File) => {
@@ -322,7 +319,9 @@ export default function Transfer() {
       // Refresh the attachments list
       refetchAttachments();
     } catch (error: unknown) {
-      console.error("Error uploading file:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : t("messages.uploadError");
+      toast.error(errorMessage);
     }
   };
 
@@ -349,8 +348,7 @@ export default function Transfer() {
       window.URL.revokeObjectURL(url);
 
       toast.success(t("messages.downloadSuccess"));
-    } catch (error) {
-      console.error("Error downloading file:", error);
+    } catch {
       toast.error(t("messages.downloadError"));
     }
   };
@@ -476,7 +474,6 @@ export default function Transfer() {
 
   const handleEdit = (row: TableRow) => {
     const originalTransfer = row.original as TransferItem;
-    console.log("Editing transfer:", originalTransfer); // Debug log
 
     setSelectedTransfer(originalTransfer);
     setIsEditMode(true);
@@ -513,7 +510,6 @@ export default function Transfer() {
           transactionDate = monthNames[date.getMonth()];
         }
       } catch {
-        console.log("Could not parse date:", transactionDate);
         transactionDate = "";
       }
     }
@@ -526,30 +522,27 @@ export default function Transfer() {
     // Handle notes/reason - use notes field as HTML directly for rich text editor
     const notes = originalTransfer.notes || "";
 
-    console.log("BEFORE setting form values:", {
-      originalDate: originalTransfer.transaction_date,
-      processedDate: transactionDate,
-      isValidOption,
-      finalDateValue,
-      originalNotes: originalTransfer.notes,
-      notes,
-      currentTimePeriod: time_period,
-      currentReason: reason,
-    }); // Debug log
-
-    // Set the values with explicit logging
+    // Set the values
     settime_period(finalDateValue);
-    console.log("✅ Set time_period to:", finalDateValue);
-
     setreason(notes); // Use HTML directly
-    console.log("✅ Set reason to:", notes);
 
     // Set budget control if available - use control_budget from API
     const budgetControl = originalTransfer.control_budget || "";
     setBudgetControl(budgetControl);
-    console.log("✅ Set budget_control to:", budgetControl);
 
-  
+    // Set transfer type and allocation sub-type if available
+    // The transfer_type might be in format "مخصصات-مراكز التكلفة" (combined) or just "خارجية"/"داخلية"
+    const transferTypeValue = originalTransfer.transfer_type || "";
+    if (transferTypeValue.includes("-")) {
+      // Split the combined value (e.g., "مخصصات-مراكز التكلفة")
+      const [mainType, subType] = transferTypeValue.split("-");
+      setTransferType(mainType.trim());
+      setAllocationSubType(subType.trim());
+    } else {
+      // Simple transfer type (e.g., "خارجية", "داخلية", "مخصصات")
+      setTransferType(transferTypeValue);
+      setAllocationSubType(""); // Clear sub-type if not مخصصات
+    }
 
     // Trigger modal opening via useEffect after state updates
     setShouldOpenModal(true);
@@ -679,18 +672,18 @@ export default function Transfer() {
         }).unwrap();
 
         toast.success(t("transfer.updateSuccess"));
-        console.log("Transfer updated successfully");
       } else {
         // Create new transfer
         await createTransfer(transferData).unwrap();
 
         toast.success(t("transfer.createSuccess"));
-        console.log("Transfer created successfully");
       }
 
       handleCloseModal();
     } catch (error: unknown) {
-      console.error("Error saving transfer:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : t("transfer.saveError");
+      toast.error(errorMessage);
     }
   };
 
