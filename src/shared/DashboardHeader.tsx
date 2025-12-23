@@ -71,7 +71,7 @@ export default function DashboardHeader() {
             isRTL ? "text-right" : "text-left"
           )}
         >
-          {greeting}, {userName}
+          {greeting} , {userName}
         </h2>
         <div className="flex flex-col gap-0.5">
           <p

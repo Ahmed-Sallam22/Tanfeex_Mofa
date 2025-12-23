@@ -1,23 +1,29 @@
 import type { ReactElement } from "react";
-import { useUserRole, useUserLevel } from "../features/auth/hooks";
+import { useUserRole } from "../features/auth/hooks";
 import { useTranslation } from "react-i18next";
+import { useGetUserProfileQuery } from "@/api/auth.api";
 
 interface RoleProtectedRouteProps {
   children: ReactElement;
   allowedRoles?: string[];
-  allowedLevels?: number[];
+  allowedAbilities?: string[];
   fallback?: ReactElement;
 }
 
 export default function RoleProtectedRoute({
   children,
   allowedRoles = [],
-  allowedLevels = [],
+  allowedAbilities = [],
   fallback,
 }: RoleProtectedRouteProps) {
   const { t } = useTranslation();
   const userRole = useUserRole();
-  const userLevel = useUserLevel();
+  
+  // Fetch user profile to get abilities
+  const { data: userProfile } = useGetUserProfileQuery(undefined, {
+    skip: !userRole, // Only fetch if user has a role (is authenticated)
+  });
+
   const fallbackContent =
     fallback ?? (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -36,14 +42,19 @@ export default function RoleProtectedRoute({
   const hasRoleAccess =
     allowedRoles.length === 0 || (userRole && allowedRoles.includes(userRole));
 
-  // Check level-based access
-  const hasLevelAccess =
-    allowedLevels.length === 0 ||
-    (userLevel !== null && allowedLevels.includes(userLevel));
+  // Extract all abilities from user groups
+  const userAbilities: string[] = userProfile?.groups
+    ? userProfile.groups.flatMap((group) => group.abilities)
+    : [];
 
-  // Grant access if user meets either role OR level requirements
-  // Super admin has access to everything, otherwise check level permissions
-  const hasAccess = hasRoleAccess || hasLevelAccess;
+  // Check ability-based access - user needs at least one of the allowed abilities
+  const hasAbilityAccess =
+    allowedAbilities.length === 0 ||
+    allowedAbilities.some((ability) => userAbilities.includes(ability));
+
+  // Grant access if user meets either role OR ability requirements
+  // Super admin has access to everything
+  const hasAccess = hasRoleAccess || hasAbilityAccess;
 
   if (!hasAccess) {
     return fallbackContent;

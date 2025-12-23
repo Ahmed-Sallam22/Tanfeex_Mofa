@@ -121,13 +121,13 @@ export default function AppRoutes() {
               </ProtectedRoute>
             }
           />
-          {/* Level 1: Transfer, Transfer Details, Fund Requests, Fund Request Details, Adjustments, Adjustment Details */}
+          {/* Transfer creation - requires TRANSFER ability */}
           <Route
             path="transfer"
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[1]}
+                allowedAbilities={["TRANSFER"]}
               >
                 <Transfer />
               </RoleProtectedRoute>
@@ -138,7 +138,7 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[1]}
+                allowedAbilities={["TRANSFER"]}
               >
                 <TransferDetails />
               </RoleProtectedRoute>
@@ -150,7 +150,7 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[1]}
+                allowedAbilities={["TRANSFER"]}
               >
                 <Reservations />
               </RoleProtectedRoute>
@@ -161,7 +161,7 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[1]}
+                allowedAbilities={["TRANSFER"]}
               >
                 <ReservationsDetails />
               </RoleProtectedRoute>
@@ -172,7 +172,7 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[1]}
+                allowedAbilities={["TRANSFER"]}
               >
                 <FundRequests />
               </RoleProtectedRoute>
@@ -183,7 +183,7 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[1]}
+                allowedAbilities={["TRANSFER"]}
               >
                 <FundRequestsDetails />
               </RoleProtectedRoute>
@@ -194,7 +194,7 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[1]}
+                allowedAbilities={["TRANSFER"]}
               >
                 <FundAdjustments />
               </RoleProtectedRoute>
@@ -205,20 +205,20 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[1]}
+                allowedAbilities={["TRANSFER"]}
               >
                 <FundAdjustmentsDetails />
               </RoleProtectedRoute>
             }
           />
 
-          {/* Level 2, 3, 4: All pending pages and pending details */}
+          {/* Pending pages - require APPROVE ability */}
           <Route
             path="PendingTransfer"
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[2, 3, 4]}
+                allowedAbilities={["APPROVE"]}
               >
                 <PendingTransfer />
               </RoleProtectedRoute>
@@ -229,7 +229,7 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[2, 3, 4]}
+                allowedAbilities={["APPROVE"]}
               >
                 <PendingTransferDetails />
               </RoleProtectedRoute>
@@ -240,7 +240,7 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[2, 3, 4]}
+                allowedAbilities={["APPROVE"]}
               >
                 <PendingAdjustments />
               </RoleProtectedRoute>
@@ -251,7 +251,7 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[2, 3, 4]}
+                allowedAbilities={["APPROVE"]}
               >
                 <PendingAdjustmentsDetails />
               </RoleProtectedRoute>
@@ -262,7 +262,7 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[2, 3, 4]}
+                allowedAbilities={["APPROVE"]}
               >
                 <PendingReservations />
               </RoleProtectedRoute>
@@ -273,7 +273,7 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[2, 3, 4]}
+                allowedAbilities={["APPROVE"]}
               >
                 <PendingReservationsDetails />
               </RoleProtectedRoute>
@@ -284,7 +284,7 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[2, 3, 4]}
+                allowedAbilities={["APPROVE"]}
               >
                 <PendingRequests />
               </RoleProtectedRoute>
@@ -295,7 +295,7 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[2, 3, 4]}
+                allowedAbilities={["APPROVE"]}
               >
                 <PendingRequestsDetails />
               </RoleProtectedRoute>
@@ -476,7 +476,7 @@ export default function AppRoutes() {
             <ProtectedRoute>
               <RoleProtectedRoute
                 allowedRoles={["superadmin"]}
-                allowedLevels={[1]}
+                allowedAbilities={["TRANSFER"]}
               >
                 <TableViewPDF />
               </RoleProtectedRoute>
