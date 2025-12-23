@@ -1606,7 +1606,7 @@ export function SharedTable({
                                 </button>
                               )}
                               {!documents &&
-                                (!isHFR || row.hfr_has_remaining === true) && (
+                                (!isHFR || row.status === "pending") && (
                                   <button
                                     onClick={() => handleEdit(row, globalIndex)}
                                     className="p-1.5  hover:bg-blue-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-blue-700 transition-colors"
@@ -1647,7 +1647,7 @@ export function SharedTable({
                                   </button>
                                 )}
 
-                              {(!isHFR || row.hfr_has_remaining === true) && (
+                              {(!isHFR || row.status === "pending") && (
                                 <button
                                   onClick={() =>
                                     handleDeleteClick(row, globalIndex)
