@@ -287,7 +287,7 @@ export function SharedTable({
   onColumnFilterChange, // Callback when filters change
   initialColumnFilters, // Initial filter values from parent
   isHFR = false,
-  onUnhold,
+  // onUnhold,
   onTransfer,
   showSelection = false,
   selectedRows: externalSelectedRows,
@@ -769,11 +769,11 @@ export function SharedTable({
     }
   };
 
-  const handleUnhold = (row: TableRow, index: number) => {
-    if (onUnhold) {
-      onUnhold(row, index);
-    }
-  };
+  // const handleUnhold = (row: TableRow, index: number) => {
+  //   if (onUnhold) {
+  //     onUnhold(row, index);
+  //   }
+  // };
 
   const handleTransfer = (row: TableRow, index: number) => {
     if (onTransfer) {
@@ -1528,7 +1528,7 @@ export function SharedTable({
                                 // row.status === "approved" &&
                                 row.hfr_has_remaining === true && (
                                   <>
-                                    <button
+                                    {/* <button
                                       onClick={() =>
                                         handleUnhold(row, globalIndex)
                                       }
@@ -1551,7 +1551,7 @@ export function SharedTable({
                                           strokeLinejoin="round"
                                         />
                                       </svg>
-                                    </button>
+                                    </button> */}
                                     <button
                                       onClick={() =>
                                         handleTransfer(row, globalIndex)
