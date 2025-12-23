@@ -26,14 +26,6 @@ import type { Attachment } from "@/api/attachments.api";
 
 const ORACLE_EXPECTED_SUBMIT_STEPS = 4;
 const ORACLE_ERROR_STATUSES = ["error", "failed", "warning"];
-const ORACLE_STATUS_PILL_STYLES: Record<
-  "approved" | "rejected" | "in_progress",
-  string
-> = {
-  approved: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  rejected: "bg-rose-50 text-rose-700 border border-rose-200",
-  in_progress: "bg-amber-50 text-amber-700 border border-amber-200",
-};
 
 export default function Transfer() {
   const { t } = useTranslation();
@@ -1213,7 +1205,13 @@ export default function Transfer() {
             <div className="flex items-center justify-between px-6 py-4 my-5 bg-white border border-gray-200 rounded-xl shadow-sm">
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center ${ORACLE_STATUS_PILL_STYLES[submitOverallStatus]}`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    submitOverallStatus === "approved"
+                      ? "bg-green-100 text-green-600"
+                      : submitOverallStatus === "rejected"
+                      ? "bg-red-100 text-red-600"
+                      : "bg-blue-100 text-blue-600"
+                  }`}
                 >
                   {submitOverallStatus === "approved" && (
                     <svg
@@ -1250,11 +1248,13 @@ export default function Transfer() {
                   )}
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">الحالة الحالية</p>
+                  <p className="text-xs text-gray-500">حالة حجز القيد</p>
                   <p className="text-sm font-semibold text-gray-900">
                     {submitOverallStatus === "in_progress"
-                      ? t("status.in_progress")
-                      : t(`status.${submitOverallStatus}`)}
+                      ? "جاري حجز القيد"
+                      : submitOverallStatus === "approved"
+                      ? "تم حجز القيد"
+                      : "فشل حجز القيد"}
                   </p>
                 </div>
               </div>
@@ -1445,136 +1445,126 @@ export default function Transfer() {
                     }
 
                     return (
-                      <div className="space-y-8">
-                        {journalGroups.map((group, groupIndex) => (
-                          <div key={groupIndex}>
-                            {/* Action Type Badge */}
-                            <div className="flex items-center gap-3 mb-4">
-                              <span className="text-xs font-bold text-[#4E8476] uppercase tracking-wider bg-[#4E8476]/10 px-3 py-1 rounded-full">
-                                {group.action_type}
-                              </span>
-                              <div className="flex-1 h-px bg-gray-300"></div>
-                            </div>
+                      <div className="space-y-8 mt-4">
+                        {journalGroups.map((group, groupIndex) => {
+                          // Determine the action type and display text
+                          const actionType =
+                            group.action_type?.toLowerCase() || "";
+                          const isRejectAction = actionType === "reject";
 
-                            {/* Timeline for this action type */}
-                            <div className="relative">
-                              {/* Vertical line */}
-                              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
+                          // Calculate group status
+                          const groupSteps = group.steps || [];
+                          const groupHasError = groupSteps.some((step) =>
+                            ["error", "failed", "warning"].includes(
+                              (step.status || "").toLowerCase()
+                            )
+                          );
+                          const groupAllSuccess = groupSteps.every(
+                            (step) =>
+                              (step.status || "").toLowerCase() === "success"
+                          );
+                          const groupStatus = groupHasError
+                            ? "rejected"
+                            : groupAllSuccess && groupSteps.length > 0
+                            ? "approved"
+                            : "in_progress";
 
-                              {group.steps.map((step, index) => {
-                                // Check if this is an error/failed/warning status
-                                const isErrorStatus = [
-                                  "error",
-                                  "failed",
-                                  "warning",
-                                ].includes(step.status.toLowerCase());
-                                const isSuccessStatus =
-                                  step.status.toLowerCase() === "success";
+                          // Display title based on action type and status
+                          let displayTitle = "";
+                          if (isRejectAction) {
+                            if (groupStatus === "in_progress") {
+                              displayTitle = "جاري عكس القيد";
+                            } else if (groupStatus === "approved") {
+                              displayTitle = "تم عكس القيد";
+                            } else {
+                              displayTitle = "فشل عكس القيد";
+                            }
+                          } else if (actionType === "approve") {
+                            if (groupStatus === "in_progress") {
+                              displayTitle = "جاري رفع الميزانية";
+                            } else if (groupStatus === "approved") {
+                              displayTitle = "تم رفع الميزانية";
+                            } else {
+                              displayTitle = "فشل رفع الميزانية";
+                            }
+                          } else {
+                            // Fallback to original action_type
+                            displayTitle = group.action_type || "";
+                          }
 
-                                return (
+                          return (
+                            <div key={groupIndex}>
+                              {/* Overall status summary for this group */}
+                              <div className="flex items-center justify-between px-6 py-4 mb-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+                                <div className="flex items-center gap-3">
                                   <div
-                                    key={index}
-                                    className="relative flex items-start gap-4 pb-8 last:pb-0"
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                      groupStatus === "approved"
+                                        ? "bg-green-100 text-green-600"
+                                        : groupStatus === "rejected"
+                                        ? "bg-red-100 text-red-600"
+                                        : "bg-blue-100 text-blue-600"
+                                    }`}
                                   >
-                                    {/* Timeline dot with icon */}
-                                    <div
-                                      className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
-                                        isSuccessStatus
-                                          ? "bg-green-500 border-green-200"
-                                          : isErrorStatus
-                                          ? "bg-red-500 border-red-200"
-                                          : "bg-gray-400 border-gray-200"
-                                      }`}
-                                    >
-                                      {isSuccessStatus ? (
-                                        <svg
-                                          className="w-6 h-6 text-white"
-                                          fill="currentColor"
-                                          viewBox="0 0 20 20"
-                                        >
-                                          <path
-                                            fillRule="evenodd"
-                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                            clipRule="evenodd"
-                                          />
-                                        </svg>
-                                      ) : isErrorStatus ? (
-                                        <svg
-                                          className="w-6 h-6 text-white"
-                                          fill="currentColor"
-                                          viewBox="0 0 20 20"
-                                        >
-                                          <path
-                                            fillRule="evenodd"
-                                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                            clipRule="evenodd"
-                                          />
-                                        </svg>
-                                      ) : (
-                                        <span className="text-white font-bold">
-                                          {step.step_number}
-                                        </span>
-                                      )}
-                                    </div>
-
-                                    {/* Step content */}
-                                    <div className="flex-1 min-w-0 pt-1">
-                                      <div className="flex items-center justify-between mb-1">
-                                        <h4 className="text-sm font-semibold text-gray-900">
-                                          {step.step_name}
-                                        </h4>
-                                        <span
-                                          className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                            isSuccessStatus
-                                              ? "bg-green-100 text-green-800"
-                                              : isErrorStatus
-                                              ? "bg-red-100 text-red-800"
-                                              : "bg-gray-100 text-gray-800"
-                                          }`}
-                                        >
-                                          {step.status}
-                                        </span>
-                                      </div>
-                                      <p className="text-sm text-gray-600 mb-2">
-                                        {step.message}
-                                      </p>
-                                      {(step.request_id ||
-                                        step.document_id ||
-                                        step.group_id) && (
-                                        <div className="flex flex-wrap gap-3 text-xs text-gray-500">
-                                          {step.request_id && (
-                                            <span>
-                                              <span className="font-medium">
-                                                {t("oracle.requestId")}:
-                                              </span>{" "}
-                                              {step.request_id}
-                                            </span>
-                                          )}
-                                          {step.document_id && (
-                                            <span>
-                                              <span className="font-medium">
-                                                {t("oracle.documentId")}:
-                                              </span>{" "}
-                                              {step.document_id}
-                                            </span>
-                                          )}
-                                          {step.group_id && (
-                                            <span>
-                                              <span className="font-medium">
-                                                {t("oracle.groupId")}:
-                                              </span>{" "}
-                                              {step.group_id}
-                                            </span>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
+                                    {groupStatus === "approved" && (
+                                      <svg
+                                        className="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M5 13l4 4L19 7"
+                                        />
+                                      </svg>
+                                    )}
+                                    {groupStatus === "rejected" && (
+                                      <svg
+                                        className="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M6 18L18 6M6 6l12 12"
+                                        />
+                                      </svg>
+                                    )}
+                                    {groupStatus === "in_progress" && (
+                                      <div className="w-5 h-5 border-2 border-current border-b-transparent rounded-full animate-spin" />
+                                    )}
                                   </div>
-                                );
-                              })}
+                                  <div>
+                                    <p className="text-xs text-gray-500">
+                                      {isRejectAction
+                                        ? "حالة عكس القيد"
+                                        : "حالة رفع الميزانية"}
+                                    </p>
+                                    <p className="text-sm font-semibold text-gray-900">
+                                      {displayTitle}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                                  <span className="text-xs text-gray-500">
+                                    الخطوات
+                                  </span>
+                                  <span className="px-2 py-1 rounded-md bg-gray-100">
+                                    {groupSteps.length}
+                                  </span>
+                                </div>
+                              </div>
+
+                           
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     );
                   })()}

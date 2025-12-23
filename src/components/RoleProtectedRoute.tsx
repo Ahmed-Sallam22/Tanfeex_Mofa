@@ -18,25 +18,22 @@ export default function RoleProtectedRoute({
 }: RoleProtectedRouteProps) {
   const { t } = useTranslation();
   const userRole = useUserRole();
-  
+
   // Fetch user profile to get abilities
   const { data: userProfile } = useGetUserProfileQuery(undefined, {
     skip: !userRole, // Only fetch if user has a role (is authenticated)
   });
 
-  const fallbackContent =
-    fallback ?? (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            {t("messages.accessDeniedTitle")}
-          </h2>
-          <p className="text-gray-600">
-            {t("messages.accessDeniedDescription")}
-          </p>
-        </div>
+  const fallbackContent = fallback ?? (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <div className="text-center">
+        <h2 className="text-xl font-semibold text-gray-800 mb-2">
+          {t("messages.accessDeniedTitle")}
+        </h2>
+        <p className="text-gray-600">{t("messages.accessDeniedDescription")}</p>
       </div>
-    );
+    </div>
+  );
 
   // Check role-based access
   const hasRoleAccess =
