@@ -3,51 +3,84 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { TanfeezLoader } from "../components/ui";
 import ProtectedRoute from "../components/ProtectedRoute";
 import RoleProtectedRoute from "../components/RoleProtectedRoute";
-import Transfer from "@/pages/dashboard/Transfer";
-import TransferDetails from "@/pages/dashboard/TransferDetails";
-// import TransferPDFView from "@/pages/dashboard/TransferPDFView";
-import Reservations from "@/pages/dashboard/Reservations";
-import ReservationsDetails from "@/pages/dashboard/ReservationsDetails";
-import FundRequests from "@/pages/dashboard/FundRequests";
-import FundRequestsDetails from "@/pages/dashboard/FundRequestsDetails";
-import FundAdjustments from "@/pages/dashboard/FundAdjustments";
-import FundAdjustmentsDetails from "@/pages/dashboard/FundAdjustmentsDetails";
-import PendingTransfer from "@/pages/dashboard/PendingTransfer";
-import PendingTransferDetails from "@/pages/dashboard/PendingTransferDetails";
-import PendingAdjustments from "@/pages/dashboard/PendingAdjustments";
-import PendingAdjustmentsDetails from "@/pages/dashboard/PendingAdjustmentsDetails";
-import PendingReservations from "@/pages/dashboard/PendingReservations";
-import PendingReservationsDetails from "@/pages/dashboard/PendingReservationsDetails";
-import PendingRequests from "@/pages/dashboard/PendingRequests";
-import PendingRequestsDetails from "@/pages/dashboard/PendingRequestsDetails";
-// import ProjectsOverview from "@/pages/dashboard/ProjectsOverview";F
-// import AccountsProjects from "@/pages/dashboard/AccountsProjects";
-import Users from "@/pages/dashboard/Users";
-import Reports from "@/pages/dashboard/Reports";
-import AddWorkFlow from "@/pages/dashboard/AddWorkFlow";
-import WorkFlow from "@/pages/dashboard/WorkFlow";
-import WorkflowAssignments from "@/pages/dashboard/WorkflowAssignments";
-// import Envelope from "@/pages/dashboard/Envelope";
-import Chat from "@/pages/dashboard/Chat";
-// import DocumentIO from "@/pages/dashboard/DocumentIO";
-import InvoiceDetails from "@/pages/dashboard/InvoiceDetails";
-import UploadInvoice from "@/pages/dashboard/UploadInvoice";
-import SegmentConfiguration from "@/pages/dashboard/SegmentConfiguration";
-import SecurityGroups from "@/pages/dashboard/SecurityGroups";
-import AnalyticalReport from "@/pages/reports/AnalyticalReport";
-import Assumption from "@/pages/dashboard/Assumption";
-import AssumptionBuilder from "@/pages/dashboard/AssumptionBuilder";
 import AppLayout from "@/components/layout/AppLayout";
 import AccessDenied from "@/pages/AccessDenied";
 import NotFound from "@/pages/NotFound";
-import TableViewPDF from "@/pages/dashboard/TableViewPDF";
 
+// Lazy load auth pages
 import SignIn from "../pages/auth/SignIn";
 
+// Lazy load dashboard pages
 const Home = lazy(() => import("../pages/dashboard/Home"));
 const DashboardDetails = lazy(
   () => import("../pages/dashboard/DashboardDetails")
 );
+
+// Transfer pages
+const Transfer = lazy(() => import("@/pages/dashboard/Transfer"));
+const TransferDetails = lazy(() => import("@/pages/dashboard/TransferDetails"));
+const PendingTransfer = lazy(() => import("@/pages/dashboard/PendingTransfer"));
+const PendingTransferDetails = lazy(
+  () => import("@/pages/dashboard/PendingTransferDetails")
+);
+
+// Reservations pages
+const Reservations = lazy(() => import("@/pages/dashboard/Reservations"));
+const ReservationsDetails = lazy(
+  () => import("@/pages/dashboard/ReservationsDetails")
+);
+const PendingReservations = lazy(
+  () => import("@/pages/dashboard/PendingReservations")
+);
+const PendingReservationsDetails = lazy(
+  () => import("@/pages/dashboard/PendingReservationsDetails")
+);
+
+// Fund Request pages
+const FundRequests = lazy(() => import("@/pages/dashboard/FundRequests"));
+const FundRequestsDetails = lazy(
+  () => import("@/pages/dashboard/FundRequestsDetails")
+);
+const PendingRequests = lazy(() => import("@/pages/dashboard/PendingRequests"));
+const PendingRequestsDetails = lazy(
+  () => import("@/pages/dashboard/PendingRequestsDetails")
+);
+
+// Fund Adjustments pages
+const FundAdjustments = lazy(() => import("@/pages/dashboard/FundAdjustments"));
+const FundAdjustmentsDetails = lazy(
+  () => import("@/pages/dashboard/FundAdjustmentsDetails")
+);
+const PendingAdjustments = lazy(
+  () => import("@/pages/dashboard/PendingAdjustments")
+);
+const PendingAdjustmentsDetails = lazy(
+  () => import("@/pages/dashboard/PendingAdjustmentsDetails")
+);
+
+// Other dashboard pages
+const Users = lazy(() => import("@/pages/dashboard/Users"));
+const Reports = lazy(() => import("@/pages/dashboard/Reports"));
+const AddWorkFlow = lazy(() => import("@/pages/dashboard/AddWorkFlow"));
+const WorkFlow = lazy(() => import("@/pages/dashboard/WorkFlow"));
+const WorkflowAssignments = lazy(
+  () => import("@/pages/dashboard/WorkflowAssignments")
+);
+const Chat = lazy(() => import("@/pages/dashboard/Chat"));
+const InvoiceDetails = lazy(() => import("@/pages/dashboard/InvoiceDetails"));
+const UploadInvoice = lazy(() => import("@/pages/dashboard/UploadInvoice"));
+const SegmentConfiguration = lazy(
+  () => import("@/pages/dashboard/SegmentConfiguration")
+);
+const SecurityGroups = lazy(() => import("@/pages/dashboard/SecurityGroups"));
+const Assumption = lazy(() => import("@/pages/dashboard/Assumption"));
+const AssumptionBuilder = lazy(
+  () => import("@/pages/dashboard/AssumptionBuilder")
+);
+const TableViewPDF = lazy(() => import("@/pages/dashboard/TableViewPDF"));
+
+// Report pages
+const AnalyticalReport = lazy(() => import("@/pages/reports/AnalyticalReport"));
 
 export default function AppRoutes() {
   return (

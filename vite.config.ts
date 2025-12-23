@@ -98,6 +98,53 @@ export default defineConfig(({ mode }) => {
               // Group remaining node_modules
               return 'vendor-common';
             }
+            
+            // Split application code by feature/route
+            if (id.includes('src/pages/dashboard/Transfer.tsx') || id.includes('src/pages/dashboard/TransferDetails.tsx')) {
+              return 'page-transfer';
+            }
+            if (id.includes('src/pages/dashboard/PendingTransfer')) {
+              return 'page-pending-transfer';
+            }
+            if (id.includes('src/pages/dashboard/Reservations')) {
+              return 'page-reservations';
+            }
+            if (id.includes('src/pages/dashboard/PendingReservations')) {
+              return 'page-pending-reservations';
+            }
+            if (id.includes('src/pages/dashboard/FundRequests')) {
+              return 'page-fund-requests';
+            }
+            if (id.includes('src/pages/dashboard/PendingRequests')) {
+              return 'page-pending-requests';
+            }
+            if (id.includes('src/pages/dashboard/FundAdjustments')) {
+              return 'page-fund-adjustments';
+            }
+            if (id.includes('src/pages/dashboard/PendingAdjustments')) {
+              return 'page-pending-adjustments';
+            }
+            if (id.includes('src/pages/dashboard/Home') || id.includes('src/pages/dashboard/DashboardDetails')) {
+              return 'page-home';
+            }
+            if (id.includes('src/pages/dashboard')) {
+              return 'pages-dashboard';
+            }
+            if (id.includes('src/pages/reports')) {
+              return 'pages-reports';
+            }
+            if (id.includes('src/pages/auth')) {
+              return 'pages-auth';
+            }
+            if (id.includes('src/features')) {
+              return 'features';
+            }
+            if (id.includes('src/api')) {
+              return 'api';
+            }
+            if (id.includes('src/components')) {
+              return 'components';
+            }
           },
         },
       },
@@ -105,10 +152,12 @@ export default defineConfig(({ mode }) => {
       target: 'es2020',
       // Enable CSS code splitting
       cssCodeSplit: true,
-      // Chunk size warning limit
-      chunkSizeWarningLimit: 500,
+      // Chunk size warning limit (increased since we have proper code splitting)
+      chunkSizeWarningLimit: 600,
       // Disable source maps in production
       sourcemap: isProduction ? false : true,
+      // Report compressed size for analysis
+      reportCompressedSize: true,
     },
     // Optimize dependencies pre-bundling
     optimizeDeps: {
