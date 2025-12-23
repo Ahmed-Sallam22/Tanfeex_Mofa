@@ -266,6 +266,12 @@ export default function WorkflowAssignments() {
                     + {t("workflow.addHfrWorkflow")}
                   </button>
                   <button
+                    onClick={() => handleAddWorkflow("AFR")}
+                    className="px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 text-sm"
+                  >
+                    + {t("workflow.addAfrWorkflow")}
+                  </button>
+                  <button
                     onClick={() => handleAddWorkflow(null)}
                     className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm"
                   >
@@ -282,7 +288,7 @@ export default function WorkflowAssignments() {
                   {Object.entries(groupedWorkflows)
                     .sort(([keyA], [keyB]) => {
                       // Sort: FAR, DFR, HFR, others, ALL
-                      const order = ["FAR", "DFR", "HFR", "DAR", "RAR", "ALL"];
+                      const order = ["FAR", "DFR", "HFR", "AFR", "ALL"];
                       return order.indexOf(keyA) - order.indexOf(keyB);
                     })
                     .map(([transactionCode, workflows]) => (
@@ -431,11 +437,8 @@ export default function WorkflowAssignments() {
                                       <option value="HFR">
                                         {t("workflow.hfrOnly")}
                                       </option>
-                                      <option value="DAR">
-                                        {t("workflow.darOnly")}
-                                      </option>
-                                      <option value="RAR">
-                                        {t("workflow.rarOnly")}
+                                      <option value="AFR">
+                                        {t("workflow.afrOnly")}
                                       </option>
                                     </select>
                                     {selection.transaction_code_filter && (

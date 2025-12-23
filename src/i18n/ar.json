@@ -1332,6 +1332,7 @@
     "addFarWorkflow": "إضافة سير عمل FAR",
     "addDfrWorkflow": "إضافة سير عمل DFR",
     "addHfrWorkflow": "إضافة سير عمل HFR",
+    "addAfrWorkflow": "إضافة سير عمل AFR",
     "addGeneralWorkflow": "إضافة سير عمل عام",
     "allTransactions": "جميع المعاملات",
     "workflowsLabel": "سير العمل",
@@ -1342,8 +1343,8 @@
     "farOnly": "FAR فقط",
     "dfrOnly": "DFR فقط",
     "hfrOnly": "HFR فقط",
-    "darOnly": "DAR فقط",
-    "rarOnly": "RAR فقط",
+    "afrOnly": "AFR فقط",
+
     "only": "فقط",
     "filter": "فلتر",
     "created": "تم الإنشاء",
