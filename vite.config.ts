@@ -70,82 +70,11 @@ export default defineConfig(({ mode }) => {
           comments: false,
         },
       },
-      // Code splitting for better caching and smaller bundle sizes
+      // Code splitting - let Vite handle it automatically to preserve dependency order
       rollupOptions: {
         output: {
-          manualChunks: (id) => {
-            // Split vendor chunks for better caching
-            if (id.includes('node_modules')) {
-              // Keep all React-related packages together to avoid multiple instances
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || id.includes('react-i18next') || id.includes('react-redux') || id.includes('react-hook-form') || id.includes('react-hot-toast')) {
-                return 'vendor-react';
-              }
-              if (id.includes('redux') || id.includes('@reduxjs')) {
-                return 'vendor-redux';
-              }
-              if (id.includes('i18next') && !id.includes('react-i18next')) {
-                return 'vendor-i18n';
-              }
-              if (id.includes('recharts') || id.includes('d3')) {
-                return 'vendor-charts';
-              }
-              if (id.includes('lucide') || id.includes('icons')) {
-                return 'vendor-icons';
-              }
-              if (id.includes('zod')) {
-                return 'vendor-forms';
-              }
-              // Group remaining node_modules
-              return 'vendor-common';
-            }
-            
-            // Split application code by feature/route
-            if (id.includes('src/pages/dashboard/Transfer.tsx') || id.includes('src/pages/dashboard/TransferDetails.tsx')) {
-              return 'page-transfer';
-            }
-            if (id.includes('src/pages/dashboard/PendingTransfer')) {
-              return 'page-pending-transfer';
-            }
-            if (id.includes('src/pages/dashboard/Reservations')) {
-              return 'page-reservations';
-            }
-            if (id.includes('src/pages/dashboard/PendingReservations')) {
-              return 'page-pending-reservations';
-            }
-            if (id.includes('src/pages/dashboard/FundRequests')) {
-              return 'page-fund-requests';
-            }
-            if (id.includes('src/pages/dashboard/PendingRequests')) {
-              return 'page-pending-requests';
-            }
-            if (id.includes('src/pages/dashboard/FundAdjustments')) {
-              return 'page-fund-adjustments';
-            }
-            if (id.includes('src/pages/dashboard/PendingAdjustments')) {
-              return 'page-pending-adjustments';
-            }
-            if (id.includes('src/pages/dashboard/Home') || id.includes('src/pages/dashboard/DashboardDetails')) {
-              return 'page-home';
-            }
-            if (id.includes('src/pages/dashboard')) {
-              return 'pages-dashboard';
-            }
-            if (id.includes('src/pages/reports')) {
-              return 'pages-reports';
-            }
-            if (id.includes('src/pages/auth')) {
-              return 'pages-auth';
-            }
-            if (id.includes('src/features')) {
-              return 'features';
-            }
-            if (id.includes('src/api')) {
-              return 'api';
-            }
-            if (id.includes('src/components')) {
-              return 'components';
-            }
-          },
+          // Remove manualChunks to let Vite handle chunking automatically
+          // This prevents module initialization order issues
         },
       },
       // Target modern browsers for smaller bundle

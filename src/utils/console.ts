@@ -1,6 +1,3 @@
-/**
- * Console utility to conditionally hide console logs in production
- */
 
 // Check if we're in production
 const isProduction = import.meta.env.PROD
@@ -15,10 +12,11 @@ const originalConsole = {
   trace: console.trace,
 }
 
-// Override console methods in production
+// Override console methods in production (keep error for debugging)
 if (isProduction) {
   console.log = () => {}
-  console.error = () => {}
+  // Keep console.error enabled for debugging
+  // console.error = () => {}
   console.warn = () => {}
   console.info = () => {}
   console.debug = () => {}

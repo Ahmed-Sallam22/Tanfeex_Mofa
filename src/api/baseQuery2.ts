@@ -1,12 +1,25 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import type { RootState } from '../app/store';
 import { showSessionExpired, setCredentials } from '../features/auth/authSlice';
+import type { AuthTokens, User } from '../types/auth';
+
+// Define a minimal type for the auth state to avoid circular dependency with store.ts
+interface AuthState {
+  user: User | null;
+  userLevel: number | null;
+  tokens: AuthTokens | null;
+  isAuthenticated: boolean;
+  user_level_name?: string | null;
+}
+
+interface AppState {
+  auth: AuthState;
+}
 
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_BASE_URL2 || '/api',
   prepareHeaders: (headers, { getState }) => {
-    const state = getState() as RootState;
+    const state = getState() as AppState;
     const token = state.auth?.tokens?.token;
     if (token) headers.set('Authorization', `Bearer ${token}`);
     return headers;
@@ -69,7 +82,7 @@ export const customBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBase
   }
   
   if (result.error && result.error.status === 401) {
-    const state = api.getState() as RootState;
+    const state = api.getState() as AppState;
     const refreshToken = state.auth?.tokens?.refresh;
     
     if (refreshToken && state.auth.isAuthenticated) {

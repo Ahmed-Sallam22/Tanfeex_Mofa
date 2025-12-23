@@ -11,7 +11,6 @@ function App() {
   const dispatch = useAppDispatch()
 
   useEffect(() => {
-    // Hydrate auth state from localStorage
     dispatch(hydrate())
   }, [dispatch])
 
