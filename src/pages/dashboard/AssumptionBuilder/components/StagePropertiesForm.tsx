@@ -30,7 +30,9 @@ export const StagePropertiesForm = ({
   const [arrayDraft, setArrayDraft] = useState("");
 
   const isArrayOperator = useMemo(
-    () => stageData.operator === "in" || stageData.operator === "not_in",
+    () => stageData.operator === "in" || stageData.operator === "not_in" ||
+      stageData.operator === "in_contain" || stageData.operator === "not_in_contain" ||
+      stageData.operator === "in_starts_with" || stageData.operator === "not_in_starts_with",
     [stageData.operator]
   );
 

@@ -13,6 +13,10 @@ export const operatorOptions: SelectOption[] = [
   { value: "endsWith", label: "Ends With" },
   { value: "in", label: "In (value in list)" },
   { value: "not_in", label: "Not In (value not in list)" },
+  { value: "in_contain", label: "In List (Contains)" },
+  { value: "not_in_contain", label: "Not In List (Contains)" },
+  { value: "in_starts_with", label: "In List (Starts With)" },
+  { value: "not_in_starts_with", label: "Not In List (Starts With)" },
 ];
 
 // Data type options
