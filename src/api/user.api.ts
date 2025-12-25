@@ -67,6 +67,16 @@ export const userApi = createApi({
       }),
       invalidatesTags: [{ type: 'Users', id: 'LIST' }],
     }),
+
+    // ASSIGN USER TO LEVEL
+    assignUserLevel: builder.mutation<{ message?: string }, { user_id: number; level_order: number }>({
+      query: (body) => ({
+        url: `/auth/users/level/update`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: [{ type: 'Users', id: 'LIST' }],
+    }),
   }),
 });
 
@@ -75,4 +85,5 @@ export const {
   useCreateUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useAssignUserLevelMutation,
 } = userApi;

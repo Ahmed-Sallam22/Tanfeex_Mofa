@@ -29,7 +29,6 @@ import { cn } from "@/utils/cn";
 const ORACLE_EXPECTED_SUBMIT_STEPS = 4;
 const ORACLE_ERROR_STATUSES = ["error", "failed", "warning"];
 
-
 export default function FundRequests() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
@@ -358,7 +357,7 @@ export default function FundRequests() {
       toast.success(t("fundRequests.fileDownloadSuccess"));
     } catch (error) {
       console.log(error);
-      
+
       toast.error(t("fundRequests.fileDownloadError"));
     }
   };
@@ -429,7 +428,6 @@ export default function FundRequests() {
 
   const handleEdit = (row: TableRow) => {
     const originalFundAdjuments = row.original as FundRequestItem;
-
 
     setSelectedFundAdjuments(originalFundAdjuments);
     setIsEditMode(true);
@@ -546,7 +544,6 @@ export default function FundRequests() {
 
     // Open modal after clearing values
     setIsCreateModalOpen(true);
-
   };
 
   const handleCloseModal = () => {
@@ -1044,497 +1041,495 @@ export default function FundRequests() {
         </div>
       </SharedModal>
       {/* Oracle ERP Status Modal */}
-   <SharedModal
-           isOpen={isTrackModalOpen}
-           onClose={() => {
-             setIsTrackModalOpen(false);
-             setTrackTransactionId(null);
-             setActiveOracleTab("submit"); // Reset to default tab
-           }}
-           title={t("transfer.oracleStatus")}
-           size="lg"
-         >
-           <div className="flex flex-col" style={{ maxHeight: "80vh" }}>
-             {/* Tabs */}
-             <div className="flex border-b border-gray-200 px-6 pt-4">
-               <button
-                 onClick={() => setActiveOracleTab("submit")}
-                 className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                   activeOracleTab === "submit"
-                     ? "border-[#4E8476] text-[#4E8476]"
-                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                 }`}
-               >
-                 <div className="flex items-center gap-2">
-                   <svg
-                     className="w-4 h-4"
-                     fill="none"
-                     stroke="currentColor"
-                     viewBox="0 0 24 24"
-                   >
-                     <path
-                       strokeLinecap="round"
-                       strokeLinejoin="round"
-                       strokeWidth={2}
-                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                     />
-                   </svg>
-                   {t("oracle.submitSteps")}
-                 </div>
-               </button>
-               <button
-                 onClick={() => setActiveOracleTab("journal")}
-                 className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                   activeOracleTab === "journal"
-                     ? "border-[#4E8476] text-[#4E8476]"
-                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                 }`}
-               >
-                 <div className="flex items-center gap-2">
-                   <svg
-                     className="w-4 h-4"
-                     fill="none"
-                     stroke="currentColor"
-                     viewBox="0 0 24 24"
-                   >
-                     <path
-                       strokeLinecap="round"
-                       strokeLinejoin="round"
-                       strokeWidth={2}
-                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                     />
-                   </svg>
-                   {t("oracle.approveRejectSteps")}
-                 </div>
-               </button>
-             </div>
-   
-             {/* Overall submit status summary */}
-             {activeOracleTab === "submit" && submitOverallStatus && (
-               <div className="flex items-center justify-between px-6 py-4 my-5 bg-white border border-gray-200 rounded-xl shadow-sm">
-                 <div className="flex items-center gap-3">
-                   <div
-                     className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                       submitOverallStatus === "approved"
-                         ? "bg-green-100 text-green-600"
-                         : submitOverallStatus === "rejected"
-                         ? "bg-red-100 text-red-600"
-                         : "bg-blue-100 text-blue-600"
-                     }`}
-                   >
-                     {submitOverallStatus === "approved" && (
-                       <svg
-                         className="w-5 h-5"
-                         fill="none"
-                         stroke="currentColor"
-                         viewBox="0 0 24 24"
-                       >
-                         <path
-                           strokeLinecap="round"
-                           strokeLinejoin="round"
-                           strokeWidth={2}
-                           d="M5 13l4 4L19 7"
-                         />
-                       </svg>
-                     )}
-                     {submitOverallStatus === "rejected" && (
-                       <svg
-                         className="w-5 h-5"
-                         fill="none"
-                         stroke="currentColor"
-                         viewBox="0 0 24 24"
-                       >
-                         <path
-                           strokeLinecap="round"
-                           strokeLinejoin="round"
-                           strokeWidth={2}
-                           d="M6 18L18 6M6 6l12 12"
-                         />
-                       </svg>
-                     )}
-                     {submitOverallStatus === "in_progress" && (
-                       <div className="w-5 h-5 border-2 border-current border-b-transparent rounded-full animate-spin" />
-                     )}
-                   </div>
-                   <div>
-                     <p className="text-xs text-gray-500">حالة حجز القيد</p>
-                     <p className="text-sm font-semibold text-gray-900">
-                       {submitOverallStatus === "in_progress"
-                         ? "جاري حجز القيد"
-                         : submitOverallStatus === "approved"
-                         ? "تم حجز القيد"
-                         : "فشل حجز القيد"}
-                     </p>
-                   </div>
-                 </div>
-                 <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                   <span className="text-xs text-gray-500">الخطوات</span>
-                   <span className="px-2 py-1 rounded-md bg-gray-100">
-                     {submitSteps.length}/{ORACLE_EXPECTED_SUBMIT_STEPS}
-                   </span>
-                 </div>
-               </div>
-             )}
-   
-             {/* Scrollable Content */}
-             <div className="flex-1 overflow-y-auto ">
-               {isLoadingOracleStatus ? (
-                 <div className="space-y-6">
-                   {/* Loading Skeleton */}
-                   <div className="relative">
-                     <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-                     {[1, 2, 3, 4].map((i) => (
-                       <div
-                         key={i}
-                         className="relative flex items-start gap-4 pb-8 last:pb-0"
-                       >
-                         <div className="relative z-10 w-12 h-12 bg-gray-300 rounded-full animate-pulse"></div>
-                         <div className="flex-1 pt-2 space-y-2">
-                           <div className="h-4 bg-gray-300 rounded w-3/4 animate-pulse"></div>
-                           <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse"></div>
-                         </div>
-                       </div>
-                     ))}
-                   </div>
-                 </div>
-               ) : oracleStatusError ? (
-                 <div className="flex flex-col items-center justify-center py-12">
-                   <div className="text-red-500 text-4xl mb-4">⚠️</div>
-                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                     {t("oracle.loadError")}
-                   </h3>
-                   <p className="text-sm text-gray-600 text-center max-w-md">
-                     {t("oracle.loadErrorMessage")}
-                   </p>
-                 </div>
-               ) : oracleStatusData ? (
-                 <div>
-                   {/* Submit Steps Tab Content */}
-                   {activeOracleTab === "submit" &&
-                     (() => {
-                       const submitGroupLocal = submitGroup;
-   
-                       if (!submitGroupLocal) {
-                         return (
-                           <div className="flex flex-col items-center justify-center py-12">
-                             <div className="text-gray-400 text-4xl mb-4">📋</div>
-                             <p className="text-sm text-gray-600">
-                               {t("oracle.noSubmitSteps")}
-                             </p>
-                           </div>
-                         );
-                       }
-   
-                       // return (
-                       //   <div className="relative">
-                       //     <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
-   
-                       //     {submitGroupLocal.steps.map((step, index) => {
-                       //       const isErrorStatus = ORACLE_ERROR_STATUSES.includes(
-                       //         (step.status || "").toLowerCase()
-                       //       );
-                       //       const isSuccessStatus =
-                       //         (step.status || "").toLowerCase() === "success";
-   
-                       //       return (
-                       //         <div
-                       //           key={index}
-                       //           className="relative flex items-start gap-4 pb-8 last:pb-0"
-                       //         >
-                       //           <div
-                       //             className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
-                       //               isSuccessStatus
-                       //                 ? "bg-green-500 border-green-200"
-                       //                 : isErrorStatus
-                       //                 ? "bg-red-500 border-red-200"
-                       //                 : "bg-gray-400 border-gray-200"
-                       //             }`}
-                       //           >
-                       //             {isSuccessStatus ? (
-                       //               <svg
-                       //                 className="w-6 h-6 text-white"
-                       //                 fill="currentColor"
-                       //                 viewBox="0 0 20 20"
-                       //               >
-                       //                 <path
-                       //                   fillRule="evenodd"
-                       //                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                       //                   clipRule="evenodd"
-                       //                 />
-                       //               </svg>
-                       //             ) : isErrorStatus ? (
-                       //               <svg
-                       //                 className="w-6 h-6 text-white"
-                       //                 fill="currentColor"
-                       //                 viewBox="0 0 20 20"
-                       //               >
-                       //                 <path
-                       //                   fillRule="evenodd"
-                       //                   d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                       //                   clipRule="evenodd"
-                       //                 />
-                       //               </svg>
-                       //             ) : (
-                       //               <span className="text-white font-bold">
-                       //                 {step.step_number}
-                       //               </span>
-                       //             )}
-                       //           </div>
-   
-                       //           <div className="flex-1 min-w-0 pt-1">
-                       //             <div className="flex items-center justify-between mb-1">
-                       //               <h4 className="text-sm font-semibold text-gray-900">
-                       //                 {step.step_name}
-                       //               </h4>
-                       //               <span
-                       //                 className={`text-xs font-medium px-2 py-1 rounded-full ${
-                       //                   isSuccessStatus
-                       //                     ? "bg-green-100 text-green-800"
-                       //                     : isErrorStatus
-                       //                     ? "bg-red-100 text-red-800"
-                       //                     : "bg-gray-100 text-gray-800"
-                       //                 }`}
-                       //               >
-                       //                 {step.status}
-                       //               </span>
-                       //             </div>
-                       //             <p className="text-sm text-gray-600 mb-2">
-                       //               {step.message}
-                       //             </p>
-                       //             {(step.request_id ||
-                       //               step.document_id ||
-                       //               step.group_id) && (
-                       //               <div className="flex flex-wrap gap-3 text-xs text-gray-500">
-                       //                 {step.request_id && (
-                       //                   <span>
-                       //                     <span className="font-medium">
-                       //                       {t("oracle.requestId")}:
-                       //                     </span>{" "}
-                       //                     {step.request_id}
-                       //                   </span>
-                       //                 )}
-                       //                 {step.document_id && (
-                       //                   <span>
-                       //                     <span className="font-medium">
-                       //                       {t("oracle.documentId")}:
-                       //                     </span>{" "}
-                       //                     {step.document_id}
-                       //                   </span>
-                       //                 )}
-                       //                 {step.group_id && (
-                       //                   <span>
-                       //                     <span className="font-medium">
-                       //                       {t("oracle.groupId")}:
-                       //                     </span>{" "}
-                       //                     {step.group_id}
-                       //                   </span>
-                       //                 )}
-                       //               </div>
-                       //             )}
-                       //           </div>
-                       //         </div>
-                       //       );
-                       //     })}
-                       //   </div>
-                       // );
-                     })()}
-   
-                   {/* Journal Steps Tab Content */}
-                   {activeOracleTab === "journal" &&
-                     (() => {
-                       if (journalGroups.length === 0) {
-                         return (
-                           <div className="flex flex-col items-center justify-center py-12">
-                             <div className="text-gray-400 text-4xl mb-4">📋</div>
-                             <p className="text-sm text-gray-600">
-                               {t("oracle.noJournalSteps")}
-                             </p>
-                           </div>
-                         );
-                       }
-   
-                       return (
-                         <div className="space-y-8 mt-4">
-                           {journalGroups.map((group, groupIndex) => {
-                             // Determine the action type and display text
-                             const actionType =
-                               group.action_type?.toLowerCase() || "";
-                             const isRejectAction = actionType === "reject";
-   
-                             // Calculate group status
-                             const groupSteps = group.steps || [];
-                             const groupHasError = groupSteps.some((step) =>
-                               ["error", "failed", "warning"].includes(
-                                 (step.status || "").toLowerCase()
-                               )
-                             );
-                             const groupAllSuccess = groupSteps.every(
-                               (step) =>
-                                 (step.status || "").toLowerCase() === "success"
-                             );
-                             const groupStatus = groupHasError
-                               ? "rejected"
-                               : groupAllSuccess && groupSteps.length > 0
-                               ? "approved"
-                               : "in_progress";
-   
-                             // Display title based on action type and status
-                             let displayTitle = "";
-                             if (isRejectAction) {
-                               if (groupStatus === "in_progress") {
-                                 displayTitle = "جاري عكس القيد";
-                               } else if (groupStatus === "approved") {
-                                 displayTitle = "تم عكس القيد";
-                               } else {
-                                 displayTitle = "فشل عكس القيد";
-                               }
-                             } else if (actionType === "approve") {
-                               if (groupStatus === "in_progress") {
-                                 displayTitle = "جاري رفع الميزانية";
-                               } else if (groupStatus === "approved") {
-                                 displayTitle = "تم رفع الميزانية";
-                               } else {
-                                 displayTitle = "فشل رفع الميزانية";
-                               }
-                             } else {
-                               // Fallback to original action_type
-                               displayTitle = group.action_type || "";
-                             }
-   
-                             return (
-                               <div key={groupIndex}>
-                                 {/* Overall status summary for this group */}
-                                 <div className="flex items-center justify-between px-6 py-4 mb-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-                                   <div className="flex items-center gap-3">
-                                     <div
-                                       className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                         groupStatus === "approved"
-                                           ? "bg-green-100 text-green-600"
-                                           : groupStatus === "rejected"
-                                           ? "bg-red-100 text-red-600"
-                                           : "bg-blue-100 text-blue-600"
-                                       }`}
-                                     >
-                                       {groupStatus === "approved" && (
-                                         <svg
-                                           className="w-5 h-5"
-                                           fill="none"
-                                           stroke="currentColor"
-                                           viewBox="0 0 24 24"
-                                         >
-                                           <path
-                                             strokeLinecap="round"
-                                             strokeLinejoin="round"
-                                             strokeWidth={2}
-                                             d="M5 13l4 4L19 7"
-                                           />
-                                         </svg>
-                                       )}
-                                       {groupStatus === "rejected" && (
-                                         <svg
-                                           className="w-5 h-5"
-                                           fill="none"
-                                           stroke="currentColor"
-                                           viewBox="0 0 24 24"
-                                         >
-                                           <path
-                                             strokeLinecap="round"
-                                             strokeLinejoin="round"
-                                             strokeWidth={2}
-                                             d="M6 18L18 6M6 6l12 12"
-                                           />
-                                         </svg>
-                                       )}
-                                       {groupStatus === "in_progress" && (
-                                         <div className="w-5 h-5 border-2 border-current border-b-transparent rounded-full animate-spin" />
-                                       )}
-                                     </div>
-                                     <div>
-                                       <p className="text-xs text-gray-500">
-                                         {isRejectAction
-                                           ? "حالة عكس القيد"
-                                           : "حالة رفع الميزانية"}
-                                       </p>
-                                       <p className="text-sm font-semibold text-gray-900">
-                                         {displayTitle}
-                                       </p>
-                                     </div>
-                                   </div>
-                                   <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                                     <span className="text-xs text-gray-500">
-                                       الخطوات
-                                     </span>
-                                     <span className="px-2 py-1 rounded-md bg-gray-100">
-                                       {groupSteps.length}
-                                     </span>
-                                   </div>
-                                 </div>
-   
-                              
-                               </div>
-                             );
-                           })}
-                         </div>
-                       );
-                     })()}
-                 </div>
-               ) : (
-                 <div className="flex flex-col items-center justify-center py-12">
-                   <div className="text-gray-400 text-4xl mb-4">📋</div>
-                   <p className="text-sm text-gray-600">{t("oracle.noData")}</p>
-                 </div>
-               )}
-             </div>
-   
-             {/* Close Button */}
-             <div className="flex justify-between px-6 py-4 border-t border-gray-200">
-               <button
-                 onClick={() => {
-                   if (refetchOracleStatus) {
-                     refetchOracleStatus();
-                     toast.success(t("oracle.refreshing"));
-                   }
-                 }}
-                 disabled={isLoadingOracleStatus}
-                 className="px-4 py-2 text-sm font-medium text-[#4E8476] bg-[#4E8476]/10 border border-[#4E8476] rounded-md hover:bg-[#4E8476]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-               >
-                 {isLoadingOracleStatus ? (
-                   <>
-                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#4E8476]"></div>
-                     <span>{t("oracle.refreshing")}</span>
-                   </>
-                 ) : (
-                   <>
-                     <svg
-                       className="w-4 h-4"
-                       fill="none"
-                       stroke="currentColor"
-                       viewBox="0 0 24 24"
-                     >
-                       <path
-                         strokeLinecap="round"
-                         strokeLinejoin="round"
-                         strokeWidth={2}
-                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                       />
-                     </svg>
-                     <span>{t("common.refresh")}</span>
-                   </>
-                 )}
-               </button>
-               <button
-                 onClick={() => {
-                   setIsTrackModalOpen(false);
-                   setTrackTransactionId(null);
-                   setActiveOracleTab("submit"); // Reset to default tab
-                 }}
-                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
-               >
-                 {t("common.close")}
-               </button>
-             </div>
-           </div>
-         </SharedModal>
+      <SharedModal
+        isOpen={isTrackModalOpen}
+        onClose={() => {
+          setIsTrackModalOpen(false);
+          setTrackTransactionId(null);
+          setActiveOracleTab("submit"); // Reset to default tab
+        }}
+        title={t("transfer.oracleStatus")}
+        size="lg"
+      >
+        <div className="flex flex-col" style={{ maxHeight: "80vh" }}>
+          {/* Tabs */}
+          <div className="flex border-b border-gray-200 px-6 pt-4">
+            <button
+              onClick={() => setActiveOracleTab("submit")}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeOracleTab === "submit"
+                  ? "border-[#4E8476] text-[#4E8476]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                {t("oracle.submitSteps")}
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveOracleTab("journal")}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeOracleTab === "journal"
+                  ? "border-[#4E8476] text-[#4E8476]"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                {t("oracle.approveRejectSteps")}
+              </div>
+            </button>
+          </div>
+
+          {/* Overall submit status summary */}
+          {activeOracleTab === "submit" && submitOverallStatus && (
+            <div className="flex items-center justify-between px-6 py-4 my-5 bg-white border border-gray-200 rounded-xl shadow-sm">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    submitOverallStatus === "approved"
+                      ? "bg-green-100 text-green-600"
+                      : submitOverallStatus === "rejected"
+                      ? "bg-red-100 text-red-600"
+                      : "bg-blue-100 text-blue-600"
+                  }`}
+                >
+                  {submitOverallStatus === "approved" && (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  )}
+                  {submitOverallStatus === "rejected" && (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  )}
+                  {submitOverallStatus === "in_progress" && (
+                    <div className="w-5 h-5 border-2 border-current border-b-transparent rounded-full animate-spin" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">حالة حجز القيد</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {submitOverallStatus === "in_progress"
+                      ? "جاري حجز القيد"
+                      : submitOverallStatus === "approved"
+                      ? "تم حجز القيد"
+                      : "فشل حجز القيد"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                <span className="text-xs text-gray-500">الخطوات</span>
+                <span className="px-2 py-1 rounded-md bg-gray-100">
+                  {submitSteps.length}/{ORACLE_EXPECTED_SUBMIT_STEPS}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto ">
+            {isLoadingOracleStatus ? (
+              <div className="space-y-6">
+                {/* Loading Skeleton */}
+                <div className="relative">
+                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="relative flex items-start gap-4 pb-8 last:pb-0"
+                    >
+                      <div className="relative z-10 w-12 h-12 bg-gray-300 rounded-full animate-pulse"></div>
+                      <div className="flex-1 pt-2 space-y-2">
+                        <div className="h-4 bg-gray-300 rounded w-3/4 animate-pulse"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : oracleStatusError ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="text-red-500 text-4xl mb-4">⚠️</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  {t("oracle.loadError")}
+                </h3>
+                <p className="text-sm text-gray-600 text-center max-w-md">
+                  {t("oracle.loadErrorMessage")}
+                </p>
+              </div>
+            ) : oracleStatusData ? (
+              <div>
+                {/* Submit Steps Tab Content */}
+                {activeOracleTab === "submit" &&
+                  (() => {
+                    const submitGroupLocal = submitGroup;
+
+                    if (!submitGroupLocal) {
+                      return (
+                        <div className="flex flex-col items-center justify-center py-12">
+                          <div className="text-gray-400 text-4xl mb-4">📋</div>
+                          <p className="text-sm text-gray-600">
+                            {t("oracle.noSubmitSteps")}
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    // return (
+                    //   <div className="relative">
+                    //     <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
+
+                    //     {submitGroupLocal.steps.map((step, index) => {
+                    //       const isErrorStatus = ORACLE_ERROR_STATUSES.includes(
+                    //         (step.status || "").toLowerCase()
+                    //       );
+                    //       const isSuccessStatus =
+                    //         (step.status || "").toLowerCase() === "success";
+
+                    //       return (
+                    //         <div
+                    //           key={index}
+                    //           className="relative flex items-start gap-4 pb-8 last:pb-0"
+                    //         >
+                    //           <div
+                    //             className={`relative z-10 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-4 ${
+                    //               isSuccessStatus
+                    //                 ? "bg-green-500 border-green-200"
+                    //                 : isErrorStatus
+                    //                 ? "bg-red-500 border-red-200"
+                    //                 : "bg-gray-400 border-gray-200"
+                    //             }`}
+                    //           >
+                    //             {isSuccessStatus ? (
+                    //               <svg
+                    //                 className="w-6 h-6 text-white"
+                    //                 fill="currentColor"
+                    //                 viewBox="0 0 20 20"
+                    //               >
+                    //                 <path
+                    //                   fillRule="evenodd"
+                    //                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    //                   clipRule="evenodd"
+                    //                 />
+                    //               </svg>
+                    //             ) : isErrorStatus ? (
+                    //               <svg
+                    //                 className="w-6 h-6 text-white"
+                    //                 fill="currentColor"
+                    //                 viewBox="0 0 20 20"
+                    //               >
+                    //                 <path
+                    //                   fillRule="evenodd"
+                    //                   d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    //                   clipRule="evenodd"
+                    //                 />
+                    //               </svg>
+                    //             ) : (
+                    //               <span className="text-white font-bold">
+                    //                 {step.step_number}
+                    //               </span>
+                    //             )}
+                    //           </div>
+
+                    //           <div className="flex-1 min-w-0 pt-1">
+                    //             <div className="flex items-center justify-between mb-1">
+                    //               <h4 className="text-sm font-semibold text-gray-900">
+                    //                 {step.step_name}
+                    //               </h4>
+                    //               <span
+                    //                 className={`text-xs font-medium px-2 py-1 rounded-full ${
+                    //                   isSuccessStatus
+                    //                     ? "bg-green-100 text-green-800"
+                    //                     : isErrorStatus
+                    //                     ? "bg-red-100 text-red-800"
+                    //                     : "bg-gray-100 text-gray-800"
+                    //                 }`}
+                    //               >
+                    //                 {step.status}
+                    //               </span>
+                    //             </div>
+                    //             <p className="text-sm text-gray-600 mb-2">
+                    //               {step.message}
+                    //             </p>
+                    //             {(step.request_id ||
+                    //               step.document_id ||
+                    //               step.group_id) && (
+                    //               <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                    //                 {step.request_id && (
+                    //                   <span>
+                    //                     <span className="font-medium">
+                    //                       {t("oracle.requestId")}:
+                    //                     </span>{" "}
+                    //                     {step.request_id}
+                    //                   </span>
+                    //                 )}
+                    //                 {step.document_id && (
+                    //                   <span>
+                    //                     <span className="font-medium">
+                    //                       {t("oracle.documentId")}:
+                    //                     </span>{" "}
+                    //                     {step.document_id}
+                    //                   </span>
+                    //                 )}
+                    //                 {step.group_id && (
+                    //                   <span>
+                    //                     <span className="font-medium">
+                    //                       {t("oracle.groupId")}:
+                    //                     </span>{" "}
+                    //                     {step.group_id}
+                    //                   </span>
+                    //                 )}
+                    //               </div>
+                    //             )}
+                    //           </div>
+                    //         </div>
+                    //       );
+                    //     })}
+                    //   </div>
+                    // );
+                  })()}
+
+                {/* Journal Steps Tab Content */}
+                {activeOracleTab === "journal" &&
+                  (() => {
+                    if (journalGroups.length === 0) {
+                      return (
+                        <div className="flex flex-col items-center justify-center py-12">
+                          <div className="text-gray-400 text-4xl mb-4">📋</div>
+                          <p className="text-sm text-gray-600">
+                            {t("oracle.noJournalSteps")}
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-8 mt-4">
+                        {journalGroups.map((group, groupIndex) => {
+                          // Determine the action type and display text
+                          const actionType =
+                            group.action_type?.toLowerCase() || "";
+                          const isRejectAction = actionType === "reject";
+
+                          // Calculate group status
+                          const groupSteps = group.steps || [];
+                          const groupHasError = groupSteps.some((step) =>
+                            ["error", "failed", "warning"].includes(
+                              (step.status || "").toLowerCase()
+                            )
+                          );
+                          const groupAllSuccess = groupSteps.every(
+                            (step) =>
+                              (step.status || "").toLowerCase() === "success"
+                          );
+                          const groupStatus = groupHasError
+                            ? "rejected"
+                            : groupAllSuccess && groupSteps.length > 0
+                            ? "approved"
+                            : "in_progress";
+
+                          // Display title based on action type and status
+                          let displayTitle = "";
+                          if (isRejectAction) {
+                            if (groupStatus === "in_progress") {
+                              displayTitle = "جاري عكس القيد";
+                            } else if (groupStatus === "approved") {
+                              displayTitle = "تم عكس القيد";
+                            } else {
+                              displayTitle = "فشل عكس القيد";
+                            }
+                          } else if (actionType === "approve") {
+                            if (groupStatus === "in_progress") {
+                              displayTitle = "جاري رفع الميزانية";
+                            } else if (groupStatus === "approved") {
+                              displayTitle = "تم رفع الميزانية";
+                            } else {
+                              displayTitle = "فشل رفع الميزانية";
+                            }
+                          } else {
+                            // Fallback to original action_type
+                            displayTitle = group.action_type || "";
+                          }
+
+                          return (
+                            <div key={groupIndex}>
+                              {/* Overall status summary for this group */}
+                              <div className="flex items-center justify-between px-6 py-4 mb-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                      groupStatus === "approved"
+                                        ? "bg-green-100 text-green-600"
+                                        : groupStatus === "rejected"
+                                        ? "bg-red-100 text-red-600"
+                                        : "bg-blue-100 text-blue-600"
+                                    }`}
+                                  >
+                                    {groupStatus === "approved" && (
+                                      <svg
+                                        className="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M5 13l4 4L19 7"
+                                        />
+                                      </svg>
+                                    )}
+                                    {groupStatus === "rejected" && (
+                                      <svg
+                                        className="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M6 18L18 6M6 6l12 12"
+                                        />
+                                      </svg>
+                                    )}
+                                    {groupStatus === "in_progress" && (
+                                      <div className="w-5 h-5 border-2 border-current border-b-transparent rounded-full animate-spin" />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-gray-500">
+                                      {isRejectAction
+                                        ? "حالة عكس القيد"
+                                        : "حالة رفع الميزانية"}
+                                    </p>
+                                    <p className="text-sm font-semibold text-gray-900">
+                                      {displayTitle}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                                  <span className="text-xs text-gray-500">
+                                    الخطوات
+                                  </span>
+                                  <span className="px-2 py-1 rounded-md bg-gray-100">
+                                    {groupSteps.length}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="text-gray-400 text-4xl mb-4">📋</div>
+                <p className="text-sm text-gray-600">{t("oracle.noData")}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Close Button */}
+          <div className="flex justify-between px-6 py-4 border-t border-gray-200">
+            <button
+              onClick={() => {
+                if (refetchOracleStatus) {
+                  refetchOracleStatus();
+                  toast.success(t("oracle.refreshing"));
+                }
+              }}
+              disabled={isLoadingOracleStatus}
+              className="px-4 py-2 text-sm font-medium text-[#4E8476] bg-[#4E8476]/10 border border-[#4E8476] rounded-md hover:bg-[#4E8476]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isLoadingOracleStatus ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#4E8476]"></div>
+                  <span>{t("oracle.refreshing")}</span>
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  <span>{t("common.refresh")}</span>
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setIsTrackModalOpen(false);
+                setTrackTransactionId(null);
+                setActiveOracleTab("submit"); // Reset to default tab
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              {t("common.close")}
+            </button>
+          </div>
+        </div>
+      </SharedModal>
       <SharedModal
         isOpen={isStatusModalOpen}
         onClose={() => {
@@ -1770,6 +1765,67 @@ export default function FundRequests() {
                                 </div>
                               )}
                             </div>
+
+                            {/* Action Information - Show if acted_by exists */}
+                            {stage.acted_by && (
+                              <div className="mt-3 pt-3 border-t border-gray-100">
+                                <div className="flex items-center gap-4 text-xs text-gray-600">
+                                  {/* User Info */}
+                                  <div className="flex items-center gap-2">
+                                    <svg
+                                      className="w-4 h-4 text-gray-400"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                      />
+                                    </svg>
+                                    <span className="font-medium">
+                                      {t("status.actedBy")}:
+                                    </span>
+                                    <span>{stage.acted_by.username}</span>
+                                  </div>
+
+                                  {/* Date Info */}
+                                  {stage.acted_by.action_at && (
+                                    <div className="flex items-center gap-2">
+                                      <svg
+                                        className="w-4 h-4 text-gray-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                      </svg>
+                                      <span className="font-medium">
+                                        {t("status.actionDate")}:
+                                      </span>
+                                      <span>
+                                        {new Date(
+                                          stage.acted_by.action_at
+                                        ).toLocaleString("ar-EG", {
+                                          year: "numeric",
+                                          month: "long",
+                                          day: "numeric",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

@@ -1525,8 +1525,8 @@ export function SharedTable({
                                 </button>
                               )}
                               {isHFR &&
-                                // row.status === "approved" &&
-                                row.hfr_has_remaining === true && (
+                                row.status === "approved" && (
+                                  // row.hfr_has_remaining === true && (
                                   <>
                                     {/* <button
                                       onClick={() =>

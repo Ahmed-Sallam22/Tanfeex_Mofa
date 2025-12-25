@@ -1529,7 +1529,8 @@
     "admin": "Admin",
     "user": "User",
     "userLevelUpdated": "User level updated successfully",
-    "userLevelCreated": "User level created successfully"
+    "userLevelCreated": "User level created successfully",
+    "userLevelDeleted": "User level deleted successfully"
   },
   "reports": {
     "title": "Reports",
@@ -1824,15 +1825,16 @@
     "decisionPolicy": "Decision Policy",
     "awaitingApproval": "Awaiting Approval",
     "inProgress": "In Progress",
-  "approved": "Approved",
-  "pending": "Pending",
-      "Pending": "معلق",
-
-  "rejected": "Rejected",
-  "in_progress": "In Progress",
-  "active": "Active",
+    "approved": "Approved",
+    "pending": "Pending",
+    "Pending": "Pending",
+    "rejected": "Rejected",
+    "in_progress": "In Progress",
+    "active": "Active",
     "stage": "Stage",
-    "noData": "No status information available"
+    "noData": "No status information available",
+    "actedBy": "Acted By",
+    "actionDate": "Date"
   },
   "analyticalReport": {
     "title": "Analytical Report",

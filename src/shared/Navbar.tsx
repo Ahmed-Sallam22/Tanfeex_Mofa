@@ -6,7 +6,7 @@ import img from "../assets/Avatar/32px.png";
 import { useLogout } from "@/hooks/useLogout";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/hooks/useLocale";
-import { useGetUserProfileQuery } from "../api/auth.api";
+// import { useGetUserProfileQuery } from "../api/auth.api";
 
 type NavbarProps = {
   onSearchClick?: () => void;
@@ -56,13 +56,14 @@ export default function Navbar({ onSearchClick, onBellClick }: NavbarProps) {
     ? capitalizeWords(currentUser.role)
     : "Guest";
   const canTransferBudget = currentUser?.can_transfer_budget || false;
-  const { data: userProfile } = useGetUserProfileQuery(undefined, {
-    skip: !userRole, // Only fetch if user has a role (is authenticated)
-  });
+  // const { data: userProfile } = useGetUserProfileQuery(undefined, {
+  //   skip: !userRole, // Only fetch if user has a role (is authenticated)
+  // });
 
   // Extract role from user's first group
   const userGroupRole =
-    userProfile?.groups?.[0]?.roles?.[0] || userLevelNameFromState || "";
+    // userProfile?.groups?.[0]?.roles?.[0] ||
+    userLevelNameFromState || "";
 
   return (
     <div className="inline-flex items-center gap-2 sm:gap-3 bg-white rounded-full shadow-sm border border-gray-100 px-2 py-2 sm:py-3 max-w-full">

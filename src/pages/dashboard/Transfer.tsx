@@ -1560,8 +1560,6 @@ export default function Transfer() {
                                   </span>
                                 </div>
                               </div>
-
-                           
                             </div>
                           );
                         })}
@@ -1800,7 +1798,7 @@ export default function Transfer() {
                               </span>
                             </div>
 
-                            <div className="flex items-center justify-between text-sm text-gray-600">
+                            <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
                               <span>
                                 <span className="font-medium">
                                   {t("status.decisionPolicy")}:
@@ -1810,7 +1808,7 @@ export default function Transfer() {
                             </div>
 
                             {/* Stage Status Icon */}
-                            <div className="flex items-center mt-3 text-sm">
+                            <div className="flex items-center mt-3 text-sm mb-3">
                               {stage.status === "approved" ||
                               stage.status === "active" ? (
                                 <div className="flex items-center text-green-600">
@@ -1876,6 +1874,67 @@ export default function Transfer() {
                                 </div>
                               )}
                             </div>
+
+                            {/* Action Information - Show if acted_by exists */}
+                            {stage.acted_by && (
+                              <div className="mt-3 pt-3 border-t border-gray-100">
+                                <div className="flex items-center gap-4 text-xs text-gray-600">
+                                  {/* User Info */}
+                                  <div className="flex items-center gap-2">
+                                    <svg
+                                      className="w-4 h-4 text-gray-400"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                      />
+                                    </svg>
+                                    <span className="font-medium">
+                                      {t("status.actedBy")}:
+                                    </span>
+                                    <span>{stage.acted_by.username}</span>
+                                  </div>
+
+                                  {/* Date Info */}
+                                  {stage.acted_by.action_at && (
+                                    <div className="flex items-center gap-2">
+                                      <svg
+                                        className="w-4 h-4 text-gray-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                      </svg>
+                                      <span className="font-medium">
+                                        {t("status.actionDate")}:
+                                      </span>
+                                      <span>
+                                        {new Date(
+                                          stage.acted_by.action_at
+                                        ).toLocaleString("ar-EG", {
+                                          year: "numeric",
+                                          month: "long",
+                                          day: "numeric",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

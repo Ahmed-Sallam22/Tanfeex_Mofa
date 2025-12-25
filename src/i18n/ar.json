@@ -1528,7 +1528,8 @@
     "admin": "مسؤول",
     "user": "مستخدم",
     "userLevelUpdated": "تم تحديث مستوى المستخدم بنجاح",
-    "userLevelCreated": "تم إنشاء مستوى المستخدم بنجاح"
+    "userLevelCreated": "تم إنشاء مستوى المستخدم بنجاح",
+    "userLevelDeleted": "تم حذف مستوى المستخدم بنجاح"
   },
   "reports": {
     "title": "التقارير",
@@ -1823,15 +1824,16 @@
     "decisionPolicy": "سياسة القرار",
     "awaitingApproval": "في انتظار الموافقة",
     "inProgress": "قيد التنفيذ",
-  "approved": "تمت الموافقة",
-  "Pending": "معلق",
+    "approved": "تمت الموافقة",
+    "Pending": "معلق",
     "pending": "معلق",
-
-  "rejected": "مرفوض",
-  "in_progress": "قيد التنفيذ",
-  "active": "نشط",
+    "rejected": "مرفوض",
+    "in_progress": "قيد التنفيذ",
+    "active": "نشط",
     "stage": "مرحلة",
-    "noData": "لا توجد معلومات حالة متاحة"
+    "noData": "لا توجد معلومات حالة متاحة",
+    "actedBy": "تم بواسطة",
+    "actionDate": "التاريخ"
   },
   "analyticalReport": {
     "title": "التقرير التحليلي",
