@@ -171,7 +171,7 @@ export default function TransferDetails() {
             ? primaryBudget.Other.toString()
             : transfer.other_consumption || "0",
           // Calculate cost value ALWAYS from MOFA_COST_2
-          costValue: mofaCost2 ? Number(mofaCost2.Total_budget) / 2 : 0,
+          costValue: mofaCash ? Number(mofaCash.Total_budget) / 2 : 0,
           // Add new budget tracking fields from primaryBudget
           total_budget: primaryBudget ? primaryBudget.Total_budget || 0 : 0,
           initial_budget: primaryBudget ? primaryBudget.Initial_budget || 0 : 0,
@@ -704,8 +704,8 @@ export default function TransferDetails() {
       );
 
       // Calculate cost value ALWAYS from MOFA_COST_2 (Funds_available / 2)
-      const costValue = mofaCost2Record
-        ? (mofaCost2Record.Funds_available || 0) / 2
+      const costValue = mofaCashRecord
+        ? (mofaCashRecord.Total_budget || 0) / 2
         : 0;
 
       // Collect all budget names
