@@ -335,7 +335,10 @@ export default function AppRoutes() {
           <Route
             path="reports"
             element={
-              <RoleProtectedRoute allowedRoles={["superadmin"]}>
+              <RoleProtectedRoute
+                allowedRoles={["superadmin"]}
+                allowedAbilities={["REPORT"]}
+              >
                 <Reports />
               </RoleProtectedRoute>
             }
@@ -343,7 +346,10 @@ export default function AppRoutes() {
           <Route
             path="analytical-report"
             element={
-              <RoleProtectedRoute allowedRoles={["superadmin"]}>
+              <RoleProtectedRoute
+                allowedRoles={["superadmin"]}
+                allowedAbilities={["REPORT"]}
+              >
                 <AnalyticalReport />
               </RoleProtectedRoute>
             }
