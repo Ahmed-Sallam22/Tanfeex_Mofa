@@ -23,7 +23,7 @@ import {
   useUploadAttachmentMutation,
 } from "@/api/attachments.api";
 import type { Attachment } from "@/api/attachments.api";
-import { useBulkApproveRejectTransferMutation } from "@/api/pendingTransfer.api";
+import { useUnholdReservationMutation } from "@/api/pendingTransfer.api";
 const ORACLE_EXPECTED_SUBMIT_STEPS = 4;
 const ORACLE_ERROR_STATUSES = ["error", "failed", "warning"];
 
@@ -89,7 +89,7 @@ export default function Reservations() {
   const [updateTransfer, { isLoading: isUpdating }] =
     useUpdateTransferMutation();
   const [deleteTransfer] = useDeleteTransferMutation();
-  const [bulkApproveRejectTransfer] = useBulkApproveRejectTransferMutation();
+  const [unholdReservation] = useUnholdReservationMutation();
 
   // Attachments API calls
   const {
@@ -723,12 +723,8 @@ export default function Reservations() {
   const confirmUnhold = async () => {
     if (selectedRow) {
       try {
-        const ACTION_REJECT = "reject";
-        await bulkApproveRejectTransfer({
-          transaction_id: [parseInt(selectedRow.id as string)],
-          decide: [ACTION_REJECT],
-          reason: unholdReason ? [unholdReason] : [],
-          other_user_id: [],
+        await unholdReservation({
+          transaction_id: parseInt(selectedRow.id as string),
         }).unwrap();
         setUnholdReason(""); // Clear reason after success
         toast.success(t("reservations.unholdSuccess"));

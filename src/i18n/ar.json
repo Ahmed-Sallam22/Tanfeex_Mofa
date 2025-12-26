@@ -492,6 +492,7 @@
     "pleaseSelectTimePeriod": "يرجى اختيار فترة زمنية",
     "pleaseEnterNotes": "يرجى إدخال ملاحظات/سبب",
     "pleaseSelectBudgetControl": "يرجى اختيار التحكم في الميزانية",
+    "pleaseSelectTransferType": "يرجى اختيار نوع التعزيز",
     "createSuccess": "تم إنشاء تعديل التخفيض بنجاح!",
     "createFailed": "فشل إنشاء تعديل التخفيض",
     "updateSuccess": "تم تحديث تعديل التخفيض بنجاح!",
@@ -539,6 +540,10 @@
     "selectBudgetControl": "اختر ضبط الميزانية",
     "transactionDateLabel": "تاريخ المعاملة",
     "selectTransactionDate": "اختر تاريخ المعاملة",
+    "transferType": "نوع التعزيز",
+    "selectTransferType": "اختر نوع التعزيز",
+    "directTransfer": "تعزيز مباشر",
+    "relatedEntitiesTransfer": "تعزيز الجهات ذات العلاقة",
     "notes": "ملاحظات *",
     "enterNotes": "أدخل ملاحظات لتعديل التخفيض...",
     "cancel": "إلغاء",
@@ -936,8 +941,12 @@
     "attachments": "المرفقات",
     "budgetControl": "ضبط الميزانية",
     "notes": "ملاحظات",
+    "transferType": "نوع التعزيز",
     "selectBudgetControl": "اختر ضبط الميزانية",
     "selectTransactionDate": "اختر تاريخ المعاملة",
+    "selectTransferType": "اختر نوع التعزيز",
+    "directTransfer": "تعزيز مباشر",
+    "relatedEntitiesTransfer": "تعزيز الجهات ذات العلاقة",
     "enterNotes": "أدخل ملاحظات للتعديلات",
     "loadingFundAdjuments": "جاري تحميل تعديلات التمويل...",
     "failedToLoad": "فشل تحميل تعديلات التمويل",
@@ -1924,5 +1933,7 @@
     "rejected": "مرفوض",
     "in_progress": "قيد التنفيذ",
     "draft": "مسودة"
-  }
+  },
+    "Typeـofـreinforcement":"نوع التعزيز",
+  "selectTypeـofـreinforcement": "اختر نوع التعزيز"
 }

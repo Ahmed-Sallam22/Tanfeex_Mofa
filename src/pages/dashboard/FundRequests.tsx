@@ -44,12 +44,14 @@ export default function FundRequests() {
   const [time_period, settime_period] = useState<string>("");
   const [reason, setreason] = useState<string>("");
   const [budget_control, setBudgetControl] = useState<string>("");
+  const [transfer_type, setTransferType] = useState<string>("");
 
   // Validation states
   const [validationErrors, setValidationErrors] = useState<{
     time_period?: string;
     reason?: string;
     budget_control?: string;
+    transfer_type?: string;
   }>({});
 
   // API calls
@@ -541,6 +543,7 @@ export default function FundRequests() {
     settime_period("");
     setreason("");
     setBudgetControl("");
+    setTransferType("");
 
     // Open modal after clearing values
     setIsCreateModalOpen(true);
@@ -553,6 +556,7 @@ export default function FundRequests() {
     settime_period("");
     setreason("");
     setBudgetControl("");
+    setTransferType("");
     setValidationErrors({});
   };
 
@@ -623,6 +627,7 @@ export default function FundRequests() {
       time_period?: string;
       reason?: string;
       budget_control?: string;
+      transfer_type?: string;
     } = {};
 
     if (!time_period.trim()) {
@@ -635,6 +640,10 @@ export default function FundRequests() {
 
     if (!budget_control.trim()) {
       errors.budget_control = "Please select a budget control";
+    }
+
+    if (!transfer_type.trim()) {
+      errors.transfer_type = "Please select a transfer type";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -651,6 +660,7 @@ export default function FundRequests() {
         notes: htmlNotes, // Send as HTML
         type: "AFR", // Static as requested
         budget_control: budget_control,
+        transfer_type: transfer_type,
       };
 
       if (isEditMode && selectedFundAdjuments) {
@@ -688,6 +698,16 @@ export default function FundRequests() {
     { value: "سيولة", label: "سيولة" },
     { value: "تكاليف", label: "تكاليف" },
   ];
+
+  // Select options for transfer type
+  const transferTypeOptions: SelectOption[] = [
+    { value: "تعزيز مباشر", label: "تعزيز مباشر" },
+    {
+      value: "تعزيز الجهات ذات العلاقة",
+      label: "تعزيز الجهات ذات العلاقة",
+    },
+  ];
+
   const handleChat = (row: TableRow) => {
     // Navigate to chat page with transaction/request ID
     navigate(`/app/chat/${row.id}`, { state: { txCode: row.code } });
@@ -815,6 +835,25 @@ export default function FundRequests() {
           </div>
 
           <div>
+            <SharedSelect
+              key={`transfer-type-${
+                isEditMode ? selectedFundAdjuments?.transaction_id : "create"
+              }`}
+              title={t("Type_of_reinforcement")}
+              options={transferTypeOptions}
+              value={transfer_type}
+              onChange={(value) => setTransferType(String(value))}
+              placeholder={t("select_Type_of_reinforcement")}
+              required
+            />
+            {validationErrors.transfer_type && (
+              <p className="mt-1 text-sm text-red-600">
+                {validationErrors.transfer_type}
+              </p>
+            )}
+          </div>
+
+          <div>
             <label className="block text-xs font-bold text-[#282828] mb-2">
               {t("fundRequests.notes")} *
             </label>
@@ -850,6 +889,7 @@ export default function FundRequests() {
                 isUpdating ||
                 !budget_control.trim() ||
                 !time_period.trim() ||
+                !transfer_type.trim() ||
                 !reason.trim()
               }
               className="px-4 py-2 text-sm font-medium text-white bg-[#4E8476] border border-[#4E8476] rounded-md hover:bg-[#4E8476] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"

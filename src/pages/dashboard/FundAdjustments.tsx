@@ -43,6 +43,7 @@ export default function FundAdjustments() {
   const [time_period, settime_period] = useState<string>("");
   const [reason, setreason] = useState<string>("");
   const [budget_control, setBudgetControl] = useState<string>("");
+  const [transfer_type, setTransferType] = useState<string>("");
 
   // Attachments state
   const [isAttachmentsModalOpen, setIsAttachmentsModalOpen] = useState(false);
@@ -70,6 +71,7 @@ export default function FundAdjustments() {
     time_period?: string;
     reason?: string;
     budget_control?: string;
+    transfer_type?: string;
   }>({});
 
   // API calls
@@ -588,6 +590,7 @@ export default function FundAdjustments() {
     settime_period("");
     setreason("");
     setBudgetControl("");
+    setTransferType("");
 
     // Open modal after clearing values
     setIsCreateModalOpen(true);
@@ -602,6 +605,7 @@ export default function FundAdjustments() {
     settime_period("");
     setreason("");
     setBudgetControl("");
+    setTransferType("");
     setValidationErrors({});
     setShouldOpenModal(false); // Reset the modal trigger
   };
@@ -615,6 +619,7 @@ export default function FundAdjustments() {
       time_period?: string;
       reason?: string;
       budget_control?: string;
+      transfer_type?: string;
     } = {};
 
     if (!time_period.trim()) {
@@ -629,6 +634,10 @@ export default function FundAdjustments() {
       errors.budget_control = t("fundAdjustments.pleaseSelectBudgetControl");
     }
 
+    if (!transfer_type.trim()) {
+      errors.transfer_type = t("fundAdjustments.pleaseSelectTransferType");
+    }
+
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       return;
@@ -641,6 +650,7 @@ export default function FundAdjustments() {
         notes: reason, // reason already contains HTML from RichTextEditor
         type: "DFR", // Static as requested
         budget_control: budget_control,
+        transfer_type: transfer_type,
       };
 
       if (isEditMode && selectedFundAdjustment) {
@@ -683,6 +693,14 @@ export default function FundAdjustments() {
     { value: "تكاليف", label: "تكاليف" },
   ];
 
+    const transferTypeOptions: SelectOption[] = [
+      { value: "تعزيز مباشر", label: "تعزيز مباشر" },
+      {
+        value: "تعزيز الجهات ذات العلاقة",
+        label: "تعزيز الجهات ذات العلاقة",
+      },
+    ];
+  
   const handleReasonChange = (value: string) => {
     setreason(value);
     // Clear validation error when user types
@@ -815,6 +833,24 @@ export default function FundAdjustments() {
               required
             />
           </div>
+           <div>
+                      <SharedSelect
+                        key={`transfer-type-${
+                          isEditMode ? selectedFundAdjustment?.transaction_id : "create"
+                        }`}
+                        title={t("Type_of_reinforcement")}
+                        options={transferTypeOptions}
+                        value={transfer_type}
+                        onChange={(value) => setTransferType(String(value))}
+                        placeholder={t("select_Type_of_reinforcement")}
+                        required
+                      />
+                      {validationErrors.transfer_type && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {validationErrors.transfer_type}
+                        </p>
+                      )}
+                    </div>
 
           {/* Reason */}
           <div className="space-y-2">

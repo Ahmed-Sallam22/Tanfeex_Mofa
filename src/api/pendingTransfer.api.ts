@@ -91,6 +91,15 @@ export interface BulkApproveRejectResponse {
   processed_transactions?: number[];
 }
 
+export interface UnholdRequest {
+  transaction_id: number;
+}
+
+export interface UnholdResponse {
+  message: string;
+  success: boolean;
+}
+
 export const pendingTransferApi = createApi({
   reducerPath: 'pendingTransferApi',
   baseQuery: customBaseQuery,
@@ -132,6 +141,14 @@ export const pendingTransferApi = createApi({
       }),
       invalidatesTags: ['PendingTransfer'],
     }),
+    unholdReservation: builder.mutation<UnholdResponse, UnholdRequest>({
+      query: (body) => ({
+        url: `/budget/transfers/unhold/`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['PendingTransfer'],
+    }),
   }),
 });
 
@@ -141,4 +158,5 @@ export const {
   useUpdatePendingTransferMutation,
   useDeletePendingTransferMutation,
   useBulkApproveRejectTransferMutation,
+  useUnholdReservationMutation,
 } = pendingTransferApi;

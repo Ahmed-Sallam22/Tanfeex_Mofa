@@ -493,6 +493,7 @@
     "pleaseSelectTimePeriod": "Please select a time period",
     "pleaseEnterNotes": "Please enter notes/reason",
     "pleaseSelectBudgetControl": "Please select budget control",
+    "pleaseSelectTransferType": "Please select transfer type",
     "createSuccess": "Decrease Fund Requests created successfully!",
     "createFailed": "Failed to create Decrease Fund Requests",
     "updateSuccess": "Decrease Fund Requests updated successfully!",
@@ -540,6 +541,10 @@
     "selectBudgetControl": "Select budget control",
     "transactionDateLabel": "Transaction Date",
     "selectTransactionDate": "Select transaction date",
+    "transferType": "Transfer Type",
+    "selectTransferType": "Select transfer type",
+    "directTransfer": "Direct Transfer",
+    "relatedEntitiesTransfer": "Related Entities Transfer",
     "notes": "Notes *",
     "enterNotes": "Enter notes for the Decrease Fund Requests...",
     "cancel": "Cancel",
@@ -936,8 +941,12 @@
     "attachments": "Attachments",
     "budgetControl": "Budget Control",
     "notes": "Notes",
+    "transferType": "Transfer Type",
     "selectBudgetControl": "Select budget control",
     "selectTransactionDate": "Select transaction date",
+    "selectTransferType": "Select transfer type",
+    "directTransfer": "Direct Transfer",
+    "relatedEntitiesTransfer": "Related Entities Transfer",
     "enterNotes": "Enter notes for Additional Requests",
     "loadingFundAdjuments": "Loading Additional Requests...",
     "failedToLoad": "Failed to load Additional Requests",
@@ -1925,5 +1934,7 @@
     "rejected": "Rejected",
     "in_progress": "In Progress",
     "draft": "Draft"
-  }
+  },
+  "Typeـofـreinforcement":"Type of Reinforcement",
+  "select_Type_of_reinforcement": "Select Type of Reinforcement"
 }
