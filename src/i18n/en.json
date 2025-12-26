@@ -1933,7 +1933,8 @@
     "pending": "Pending",
     "rejected": "Rejected",
     "in_progress": "In Progress",
-    "draft": "Draft"
+    "draft": "Draft",
+    "Un_Holded": "Un Holded"
   },
   "Typeـofـreinforcement":"Type of Reinforcement",
   "select_Type_of_reinforcement": "Select Type of Reinforcement"

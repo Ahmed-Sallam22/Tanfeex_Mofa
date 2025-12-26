@@ -248,6 +248,8 @@ export default function Reservations() {
               return t("statusTransfer.rejected");
             case "in_progress":
             case "in-progress":
+              return t("statusTransfer.Un_Holded");
+            case "Un_Holded":
               return t("statusTransfer.in_progress");
             case "draft":
               return t("statusTransfer.draft");
@@ -265,6 +267,8 @@ export default function Reservations() {
             ? "bg-red-100 text-red-800"
             : value === "in_progress" || value === "in-progress"
             ? "bg-blue-300 text-blue-800"
+            : value === "Un_Holded"
+            ? "bg-purple-100 text-purple-800"
             : "bg-gray-100 text-gray-800";
 
         return (

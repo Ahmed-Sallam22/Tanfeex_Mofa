@@ -909,7 +909,7 @@
     "originalHold": "الحجز الأصلي",
     "totalUsed": "إجمالي المستخدم",
     "remainingInHold": "المتبقي في الحجز",
-    "canUnhold": "يمكن إلغاء الحجز",
+    "canUnhold": "يمكن فك الحجز",
     "segmentBreakdown": "تفصيل القطاعات",
     "transferLineId": "معرف سطر التحويل",
     "remaining": "المتبقي",
@@ -1932,7 +1932,8 @@
     "pending": "قيد الانتظار",
     "rejected": "مرفوض",
     "in_progress": "قيد التنفيذ",
-    "draft": "مسودة"
+    "draft": "مسودة",
+    "Un_Holded": "تم فك الحجز"
   },
     "Typeـofـreinforcement":"نوع التعزيز",
   "selectTypeـofـreinforcement": "اختر نوع التعزيز"
