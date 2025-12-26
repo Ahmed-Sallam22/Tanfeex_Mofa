@@ -248,7 +248,7 @@ export default function Reservations() {
               return t("statusTransfer.rejected");
             case "in_progress":
               return t("statusTransfer.in_progress");
-            case "Un_Holded":
+            case "un_holded":
               return t("statusTransfer.Un_Holded");
             case "draft":
               return t("statusTransfer.draft");
