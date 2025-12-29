@@ -111,7 +111,10 @@
     "encumbranceInProgress": "حجوزات تحت الإجراء",
     "covenant": "العهد",
     "actualSpent": "المنصرف الفعلي",
-    "adjustedBudget": "الاعتماد بعد التعديل"
+    "adjustedBudget": "الاعتماد بعد التعديل",
+    "total": "الإجمالي",
+    "breakdown": "التفصيل",
+    "transferType": "نوع التحويل"
   },
   "dashboardDetails": {
     "backToDashboard": "العودة إلى لوحة التحكم",

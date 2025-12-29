@@ -12,7 +12,10 @@ import {
   YAxis,
   Bar,
 } from "recharts";
-import { useGetDashboardDataQuery } from "@/api/dashboard.api";
+import {
+  useGetDashboardDataQuery,
+  type TransferTypeData,
+} from "@/api/dashboard.api";
 import { useGetAnalyticalReportQuery } from "@/api/analyticalReport.api";
 import { useGetSegmentsByTypeQuery } from "@/api/segmentConfiguration.api";
 import SharedSelect from "@/shared/SharedSelect";
@@ -159,6 +162,35 @@ export default function Home() {
 
   const statusData = useMemo(() => {
     const normalData = dashboardData?.normal;
+    
+    // Calculate totals from by_transfer_type if available
+    if (normalData?.by_transfer_type) {
+      const types = Object.values(normalData.by_transfer_type);
+      
+      const totalApproved = types.reduce((sum, type) => sum + type.approved_transfers, 0);
+      const totalPending = types.reduce((sum, type) => sum + type.pending_transfers, 0);
+      const totalRejected = types.reduce((sum, type) => sum + type.rejected_transfers, 0);
+      
+      return [
+        {
+          name: t("home.approved"),
+          value: totalApproved,
+          color: "#007E77",
+        },
+        {
+          name: t("home.pending"),
+          value: totalPending,
+          color: "#6BE6E4",
+        },
+        {
+          name: t("home.rejected"),
+          value: totalRejected,
+          color: "#4E8476",
+        },
+      ];
+    }
+    
+    // Fallback to old structure if by_transfer_type is not available
     if (!normalData) {
       return [
         { name: t("home.approved"), value: 0, color: "#007E77" },
@@ -170,17 +202,17 @@ export default function Home() {
     return [
       {
         name: t("home.approved"),
-        value: normalData.approved_transfers,
+        value: normalData.approved_transfers || 0,
         color: "#007E77",
       },
       {
         name: t("home.pending"),
-        value: normalData.pending_transfers,
+        value: normalData.pending_transfers || 0,
         color: "#6BE6E4",
       },
       {
         name: t("home.rejected"),
-        value: normalData.rejected_transfers,
+        value: normalData.rejected_transfers || 0,
         color: "#4E8476",
       },
     ];
@@ -372,21 +404,85 @@ export default function Home() {
                   // tick={false} // uncomment to hide labels
                 />
                 <RTooltip
-                  wrapperStyle={{
-                    background: "transparent",
-                    border: "none",
-                    boxShadow: "none",
+                  cursor={{ fill: "rgba(78, 132, 118, 0.1)" }}
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const data = payload[0];
+                    const statusName = String(data.payload.name);
+
+                    // Determine which field to show based on status
+                    const getValueByStatus = (
+                      typeData: TransferTypeData | undefined,
+                      status: string
+                    ): number => {
+                      if (!typeData) return 0;
+                      if (status === t("home.approved"))
+                        return typeData.approved_transfers;
+                      if (status === t("home.pending"))
+                        return typeData.pending_transfers;
+                      if (status === t("home.rejected"))
+                        return typeData.rejected_transfers;
+                      return 0;
+                    };
+
+                    const transferTypes = ["FAR", "AFR", "DFR", "HFR"];
+
+                    return (
+                      <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-200 min-w-[200px]">
+                        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: data.payload.color }}
+                          />
+                          <p className="font-semibold text-gray-900 text-sm">
+                            {statusName}
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-gray-500">
+                              {t("home.total")}:
+                            </span>
+                            <span className="text-sm font-bold text-gray-900">
+                              {Number(data.value).toLocaleString()}
+                            </span>
+                          </div>
+                          {dashboardData?.normal?.by_transfer_type && (
+                            <div className="pt-2 border-t border-gray-100">
+                              <div className="text-xs text-gray-400 mb-1">
+                                {t("home.breakdown")}:
+                              </div>
+                              <div className="space-y-1">
+                                {transferTypes.map((type) => {
+                                  const typeData =
+                                    dashboardData.normal?.by_transfer_type?.[
+                                      type as keyof typeof dashboardData.normal.by_transfer_type
+                                    ];
+                                  const value = getValueByStatus(
+                                    typeData,
+                                    statusName
+                                  );
+                                  return (
+                                    <div
+                                      key={type}
+                                      className="flex justify-between items-center"
+                                    >
+                                      <span className="text-xs text-gray-600">
+                                        {type}:
+                                      </span>
+                                      <span className="text-xs font-medium text-gray-900">
+                                        {Number(value).toLocaleString()}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
                   }}
-                  contentStyle={{
-                    background: "#E5E7EB",
-                    color: "#fff",
-                    border: "none",
-                  }} // keep tooltip pill
-                  formatter={(value: number, name: string) => [
-                    Number(value).toLocaleString(),
-                    String(name).replace("_", " "),
-                  ]}
-                  labelFormatter={() => ""}
                 />
                 <Bar dataKey="value" name="Transfers" radius={[8, 8, 0, 0]}>
                   {statusData.map((entry, i) => (
@@ -398,6 +494,115 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Transfer Types Charts Grid */}
+      {dashboardData?.normal?.by_transfer_type && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Object.entries(dashboardData.normal.by_transfer_type).map(
+            ([type, data]) => {
+              const typeColors: Record<string, string[]> = {
+                FAR: ["#007E77", "#6BE6E4", "#4E8476"],
+                AFR: ["#2E7D32", "#81C784", "#4CAF50"],
+                DFR: ["#D32F2F", "#EF5350", "#E57373"],
+                HFR: ["#F57C00", "#FFB74D", "#FF9800"],
+              };
+
+              const chartData = [
+                {
+                  name: t("home.approved"),
+                  value: data.approved_transfers,
+                  color: typeColors[type][0],
+                },
+                {
+                  name: t("home.pending"),
+                  value: data.pending_transfers,
+                  color: typeColors[type][1],
+                },
+                {
+                  name: t("home.rejected"),
+                  value: data.rejected_transfers,
+                  color: typeColors[type][2],
+                },
+              ];
+
+              return (
+                <div
+                  key={type}
+                  className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 animate-fadeIn"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="font-semibold text-gray-900">{type}</div>
+                    <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                      {t("home.total")}: {data.total_transfers}
+                    </div>
+                  </div>
+
+                  {/* Pie Chart */}
+                  <div className="h-[160px] w-full mb-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={chartData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={60}
+                          innerRadius={40}
+                          dataKey="value"
+                          strokeWidth={0}
+                          paddingAngle={2}
+                        >
+                          {chartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <RTooltip
+                          content={({ active, payload }) => {
+                            if (!active || !payload?.length) return null;
+                            const data = payload[0];
+                            return (
+                              <div className="bg-white p-2 rounded-lg shadow-lg border border-gray-200">
+                                <p className="font-medium text-sm text-gray-900">
+                                  {data.name}
+                                </p>
+                                <p className="text-xs text-gray-600">
+                                  {Number(data.value).toLocaleString()}
+                                </p>
+                              </div>
+                            );
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="space-y-2">
+                    {chartData.map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between text-xs"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: item.color }}
+                          />
+                          <span className="text-gray-600">{item.name}</span>
+                        </div>
+                        <span className="font-semibold text-gray-900">
+                          {item.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+          )}
+        </div>
+      )}
 
       {/* Pie Charts Section - مؤشرات الصرف */}
       <div className="space-y-4">

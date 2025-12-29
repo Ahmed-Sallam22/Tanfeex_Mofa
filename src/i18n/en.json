@@ -112,7 +112,10 @@
     "encumbranceInProgress": "Encumbrance In Progress",
     "covenant": "Covenant",
     "actualSpent": "Actual Spent",
-    "adjustedBudget": "Adjusted Budget"
+    "adjustedBudget": "Adjusted Budget",
+    "total": "Total",
+    "breakdown": "Breakdown",
+    "transferType": "Transfer Type"
   },
   "dashboardDetails": {
     "backToDashboard": "Back to Dashboard",

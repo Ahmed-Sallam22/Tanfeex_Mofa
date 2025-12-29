@@ -3,6 +3,19 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { customBaseQuery } from './baseQuery';
 
 // Normal dashboard data types
+export interface TransferTypeData {
+  total_transfers: number;
+  pending_transfers: number;
+  approved_transfers: number;
+  rejected_transfers: number;
+  transaction_ids: {
+    all: number[];
+    pending: number[];
+    approved: number[];
+    rejected: number[];
+  };
+}
+
 export interface NormalDashboardData {
   total_transfers: number;
   total_transfers_far: number;
@@ -11,6 +24,12 @@ export interface NormalDashboardData {
   approved_transfers: number;
   rejected_transfers: number;
   pending_transfers: number;
+  by_transfer_type?: {
+    FAR?: TransferTypeData;
+    AFR?: TransferTypeData;
+    DFR?: TransferTypeData;
+    HFR?: TransferTypeData;
+  };
   pending_transfers_by_level: {
     Level1: number;
     Level2: number;
