@@ -1939,5 +1939,8 @@
     "Un_Holded": "تم فك الحجز"
   },
   "Type_of_reinforcement": "نوع التعزيز",
-  "select_Type_of_reinforcement": "اختر نوع التعزيز"
+  "select_Type_of_reinforcement": "اختر نوع التعزيز",
+    "Type_of_reinforcement2": "نوع التخفيض",
+  "select_Type_of_reinforcement2": "اختر نوع التخفيض"
+
 }

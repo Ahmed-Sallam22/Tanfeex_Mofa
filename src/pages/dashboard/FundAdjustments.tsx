@@ -700,10 +700,10 @@ export default function FundAdjustments() {
   ];
 
   const transferTypeOptions: SelectOption[] = [
-    { value: "تعزيز مباشر", label: "تعزيز مباشر" },
+    { value: "تخفيض مباشر", label: "تخفيض مباشر" },
     {
-      value: "تعزيز الجهات ذات العلاقة",
-      label: "تعزيز الجهات ذات العلاقة",
+      value: "تخفيض الجهات ذات العلاقة",
+      label: "تخفيض الجهات ذات العلاقة",
     },
   ];
 
@@ -844,11 +844,11 @@ export default function FundAdjustments() {
               key={`transfer-type-${
                 isEditMode ? selectedFundAdjustment?.transaction_id : "create"
               }`}
-              title={t("Type_of_reinforcement")}
+              title={t("Type_of_reinforcement2")}
               options={transferTypeOptions}
               value={transfer_type}
               onChange={(value) => setTransferType(String(value))}
-              placeholder={t("select_Type_of_reinforcement")}
+              placeholder={t("select_Type_of_reinforcement2")}
               required
             />
             {validationErrors.transfer_type && (
