@@ -1414,31 +1414,31 @@ export default function TransferDetails() {
         );
       },
     },
-    {
-      id: "costValue",
-      header: t("fundAdjustmentsDetails.columns.costBudget50"),
-      showSum: true,
+    // {
+    //   id: "costValue",
+    //   header: t("fundAdjustmentsDetails.columns.costBudget50"),
+    //   showSum: true,
 
-      render: (_, row) => {
-        const transferRow = row as unknown as TransferTableRow;
-        // Show cost value only if it's greater than 0
-        const value = transferRow.costValue || 0;
-        if (value > 0) {
-          return (
-            <div className="bg-amber-50 -mx-3 -my-2 px-3 py-2 border-l-4 border-amber-400">
-              <span className="text-sm font-semibold text-amber-900">
-                {formatNumber(value)}
-              </span>
-            </div>
-          );
-        }
-        return (
-          <div className="bg-amber-50 -mx-3 -my-2 px-3 py-2 border-l-4 border-amber-400">
-            <span className="text-sm text-gray-400">-</span>
-          </div>
-        );
-      },
-    },
+    //   render: (_, row) => {
+    //     const transferRow = row as unknown as TransferTableRow;
+    //     // Show cost value only if it's greater than 0
+    //     const value = transferRow.costValue || 0;
+    //     if (value > 0) {
+    //       return (
+    //         <div className="bg-amber-50 -mx-3 -my-2 px-3 py-2 border-l-4 border-amber-400">
+    //           <span className="text-sm font-semibold text-amber-900">
+    //             {formatNumber(value)}
+    //           </span>
+    //         </div>
+    //       );
+    //     }
+    //     return (
+    //       <div className="bg-amber-50 -mx-3 -my-2 px-3 py-2 border-l-4 border-amber-400">
+    //         <span className="text-sm text-gray-400">-</span>
+    //       </div>
+    //     );
+    //   },
+    // },
     {
       id: "from",
       header: t("fundAdjustmentsDetails.columns.from"),
