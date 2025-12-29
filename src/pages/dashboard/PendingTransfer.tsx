@@ -23,7 +23,7 @@ export default function PendingTransfer() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
   const navigate = useNavigate();
-  const [q, setQ] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Selection state for delegation
@@ -40,6 +40,7 @@ export default function PendingTransfer() {
     page_size: 10,
     code: "FAR",
     status: statusFilter,
+    search: searchQuery,
   });
 
   const [bulkApproveRejectTransfer] = useBulkApproveRejectTransferMutation();
@@ -348,7 +349,7 @@ export default function PendingTransfer() {
 
   const handleSearchChange = (text: string) => {
     console.log("Search changed:", text);
-    setQ(text);
+    setSearchQuery(text);
   };
 
   const doSearch = (text: string) => {
@@ -489,10 +490,10 @@ export default function PendingTransfer() {
           <div className="flex-1">
             <SearchBar
               placeholder={t("pendingTransfer.searchPlaceholder")}
-              value={q}
+              value={searchQuery}
               onChange={handleSearchChange}
               onSubmit={doSearch}
-              debounce={250}
+              debounce={0}
             />
           </div>
 

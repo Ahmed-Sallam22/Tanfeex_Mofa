@@ -45,6 +45,7 @@ export interface FundAdjustmentListParams {
   page?: number;
   page_size?: number;
   code?: string;
+  search?: string;
 }
 
 export interface CreateFundAdjustmentRequest {

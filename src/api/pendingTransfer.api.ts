@@ -54,6 +54,7 @@ export interface PendingTransferQueryParams {
   page_size?: number;
   code?: string;
   status?: string;
+  search?: string;
 }
 
 export interface ApprovePendingTransferRequest {
@@ -106,13 +107,14 @@ export const pendingTransferApi = createApi({
   tagTypes: ['PendingTransfer'],
   endpoints: (builder) => ({
     getPendingTransfers: builder.query<PendingTransferResponse, PendingTransferQueryParams>({
-      query: ({ page = 1, page_size = 10, code = 'FAR', status = "pending" } = {}) => ({
+      query: ({ page = 1, page_size = 10, code = 'FAR', status = "pending", search } = {}) => ({
         url: `/budget/transfers/list_underapprovel/?status=${status}`,
         method: 'GET',
         params: {
           page,
           page_size,
           code,
+          search
         },
       }),
       providesTags: ['PendingTransfer'],

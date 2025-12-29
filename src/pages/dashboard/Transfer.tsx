@@ -82,6 +82,7 @@ export default function Transfer() {
     page: currentPage,
     page_size: 10,
     code: "FAR",
+    search: searchQuery,
   });
 
   const [createTransfer, { isLoading: isCreating }] =
@@ -456,11 +457,6 @@ export default function Transfer() {
     setSearchQuery(text);
   };
 
-  const handleSearchSubmit = (text: string) => {
-    console.log("Search submitted:", text);
-    // Implement search functionality
-  };
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -772,8 +768,7 @@ export default function Transfer() {
           placeholder={t("common.searchPlaceholder")}
           value={searchQuery}
           onChange={handleSearchChange}
-          onSubmit={handleSearchSubmit}
-          debounce={250}
+          debounce={0}
         />
       </div>
 

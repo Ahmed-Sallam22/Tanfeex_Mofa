@@ -50,11 +50,8 @@ const tableColumns = [
   {
     key: "amount",
     label: "المبلغ",
-    colSpan: 2,
-    subColumns: [
-      { key: "amountFrom", label: "منه", align: "center" as const },
-      { key: "amountTo", label: "اليه", align: "center" as const },
-    ],
+    rowSpan: 2,
+    align: "center" as const,
   },
   {
     key: "description",
@@ -79,8 +76,7 @@ interface TableRowData {
   economicClassification: string;
   documentNumber: string;
   discussionType: string;
-  amountFrom: string;
-  amountTo: string;
+  amount: string;
   description: string;
   justifications: string;
 }
@@ -120,8 +116,11 @@ const transformApiDataToTableData = (
   const rows: TableRowData[] = [];
 
   apiData.forEach((transaction, transactionIndex) => {
-    // Helper to format discussionType
-    const formatDiscussionType = () => {
+    // Helper to format discussionType with direction
+    const formatDiscussionType = (
+      fromCenter?: number | null,
+      toCenter?: number | null
+    ) => {
       const parts: string[] = [];
 
       if (transaction.transfer_type) {
@@ -132,15 +131,30 @@ const transformApiDataToTableData = (
         parts.push(transaction.control_budget);
       }
 
-      // if (transaction.type && !parts.includes(transaction.type)) {
-      //   parts.push(transaction.type);
-      // }
+      // Add direction based on which amount has value
+      if (fromCenter !== null && fromCenter !== undefined && fromCenter !== 0) {
+        parts.push("من");
+      } else if (
+        toCenter !== null &&
+        toCenter !== undefined &&
+        toCenter !== 0
+      ) {
+        parts.push("إلى");
+      }
 
       return parts.length > 0 ? parts.join(" - ") : "-";
     };
 
     if (transaction.transfers && transaction.transfers.length > 0) {
       transaction.transfers.forEach((transfer, transferIndex) => {
+        // Determine which amount to display
+        const amountValue =
+          transfer.from_center !== null &&
+          transfer.from_center !== undefined &&
+          transfer.from_center !== 0
+            ? transfer.from_center
+            : transfer.to_center;
+
         rows.push({
           id:
             transfer.transfer_id ||
@@ -152,9 +166,11 @@ const transformApiDataToTableData = (
           economicClassification: transfer.gfs_code?.toString() || "-",
           documentNumber:
             transaction.code || transaction.transaction_id?.toString() || "-",
-          discussionType: formatDiscussionType(),
-          amountFrom: formatNumber(transfer.from_center),
-          amountTo: formatNumber(transfer.to_center),
+          discussionType: formatDiscussionType(
+            transfer.from_center,
+            transfer.to_center
+          ),
+          amount: formatNumber(amountValue),
           description: transaction.notes ?? "-",
           justifications: transfer.reason ?? "-",
         });
@@ -169,9 +185,8 @@ const transformApiDataToTableData = (
         economicClassification: "-",
         documentNumber:
           transaction.code || transaction.transaction_id?.toString() || "-",
-        discussionType: formatDiscussionType(),
-        amountFrom: "-",
-        amountTo: "-",
+        discussionType: formatDiscussionType(null, null),
+        amount: "-",
         description: transaction.notes ?? "-",
         justifications: "-",
       });
@@ -425,59 +440,30 @@ const TableViewPDF = () => {
         {/* Data Table */}
         <table className="data-table w-full border-collapse border border-gray-400">
           <thead>
-            {/* First header row */}
+            {/* Header row */}
             <tr className="bg-gray-100">
               {tableColumns.map((col) => (
                 <th
                   key={col.key}
                   className={`border border-gray-400 px-3 py-3 text-${col.align} font-bold`}
                   rowSpan={col.rowSpan}
-                  colSpan={col.colSpan}
                 >
                   {col.label}
                 </th>
               ))}
             </tr>
-            {/* Second header row for sub-columns */}
-            <tr className="bg-gray-100">
-              {tableColumns
-                .filter((col) => col.subColumns)
-                .flatMap((col) => col.subColumns!)
-                .map((subCol) => (
-                  <th
-                    key={subCol.key}
-                    className={`border border-gray-400 px-3 py-2 text-${subCol.align} font-bold`}
-                  >
-                    {subCol.label}
-                  </th>
-                ))}
-            </tr>
           </thead>
           <tbody>
             {tableData.map((row, index) => (
               <tr key={`${row.id}-${index}`} className="hover:bg-gray-50">
-                {tableColumns.map((col) => {
-                  // Handle columns with sub-columns
-                  if (col.subColumns) {
-                    return col.subColumns.map((subCol) => (
-                      <td
-                        key={subCol.key}
-                        className={`border border-gray-400 px-3 py-3 text-${subCol.align}`}
-                      >
-                        {row[subCol.key as keyof typeof row]}
-                      </td>
-                    ));
-                  }
-                  // Handle regular columns
-                  return (
-                    <td
-                      key={col.key}
-                      className={`border border-gray-400 px-3 py-3 text-${col.align}`}
-                    >
-                      {row[col.key as keyof typeof row]}
-                    </td>
-                  );
-                })}
+                {tableColumns.map((col) => (
+                  <td
+                    key={col.key}
+                    className={`border border-gray-400 px-3 py-3 text-${col.align}`}
+                  >
+                    {row[col.key as keyof typeof row]}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>

@@ -54,6 +54,7 @@ export interface TransferListParams {
   page?: number;
   page_size?: number;
   code?: string;
+  search?: string;
 }
 
 export interface CreateTransferRequest {
@@ -196,13 +197,14 @@ export const transferApi = createApi({
   tagTypes: ['Transfer'],
   endpoints: (builder) => ({
     getTransferList: builder.query<TransferListResponse, TransferListParams>({
-      query: ({ page = 1, page_size = 10, code = 'FAR' } = {}) => ({
+      query: ({ page = 1, page_size = 10, code = 'FAR', search } = {}) => ({
         url: `/budget/transfers/list/`,
         method: 'GET',
         params: {
           page,
           page_size,
           code,
+          search
         },
       }),
       providesTags: ['Transfer'],

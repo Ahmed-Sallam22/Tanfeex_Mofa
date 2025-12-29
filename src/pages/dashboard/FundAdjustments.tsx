@@ -35,7 +35,7 @@ export default function FundAdjustments() {
 
   // State management
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [_searchQuery, _setSearchQuery] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [selectedFundAdjustment, setSelectedFundAdjustment] =
@@ -44,6 +44,10 @@ export default function FundAdjustments() {
   const [reason, setreason] = useState<string>("");
   const [budget_control, setBudgetControl] = useState<string>("");
   const [transfer_type, setTransferType] = useState<string>("");
+
+  // Export PDF state
+  const [showExportUI, setShowExportUI] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
 
   // Attachments state
   const [isAttachmentsModalOpen, setIsAttachmentsModalOpen] = useState(false);
@@ -85,6 +89,7 @@ export default function FundAdjustments() {
       page: currentPage,
       page_size: 10,
       code: "DFR",
+      search: searchQuery,
     });
 
   const {
@@ -452,7 +457,7 @@ export default function FundAdjustments() {
   };
 
   const handleSearchChange = (text: string) => {
-    _setSearchQuery(text);
+    setSearchQuery(text);
   };
 
   const handleSearchSubmit = (text: string) => {
@@ -720,9 +725,25 @@ export default function FundAdjustments() {
 
   // Check if form has data
   const hasData = budget_control.trim() || time_period.trim() || reason.trim();
+
   const handleChat = (row: TableRow) => {
     // Navigate to chat page with transaction/request ID
     navigate(`/app/chat/${row.id}`, { state: { txCode: row.code } });
+  };
+
+  // Handle export to PDF
+  const handleExportToPdf = async (selectedIds: number[]) => {
+    if (selectedIds.length === 0) {
+      toast.error(t("messages.selectAtLeastOne"));
+      return;
+    }
+
+    // Navigate to PDF view page
+    const idsParam = selectedIds.join(",");
+    navigate(`/app/table-view-pdf?ids=${idsParam}`);
+
+    // Clear selection after navigation
+    setSelectedRows(new Set());
   };
 
   return (
@@ -732,22 +753,40 @@ export default function FundAdjustments() {
         <h1 className="text-2xl font-bold text-gray-900">
           {t("fundAdjustmentsPage.title")}
         </h1>
-        <button
-          onClick={handleCreateRequest}
-          className="px-4 py-2 bg-[#4E8476] text-white rounded-lg hover:bg-[#35584f] transition-colors"
-        >
-          {t("fundAdjustmentsPage.createFundAdjustment")}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              setShowExportUI(!showExportUI);
+              if (showExportUI) {
+                // Clear selection when disabling export mode
+                setSelectedRows(new Set());
+              }
+            }}
+            className={`px-4 py-2 rounded-md transition-colors font-medium ${
+              showExportUI
+                ? "bg-red-500 hover:bg-red-600 text-white"
+                : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+            }`}
+          >
+            {showExportUI ? t("common.cancel") : t("common.exportPDF")}
+          </button>
+          <button
+            onClick={handleCreateRequest}
+            className="px-4 py-2 bg-[#4E8476] text-white rounded-lg hover:bg-[#35584f] transition-colors"
+          >
+            {t("fundAdjustmentsPage.createFundAdjustment")}
+          </button>
+        </div>
       </div>
 
       {/* Search Bar */}
       <div className="p-4 bg-white rounded-2xl mb-6">
         <SearchBar
           placeholder={t("fundAdjustmentsPage.searchPlaceholder")}
-          value={_searchQuery}
+          value={searchQuery}
           onChange={handleSearchChange}
           onSubmit={handleSearchSubmit}
-          debounce={250}
+          debounce={0}
         />
       </div>
 
@@ -789,7 +828,10 @@ export default function FundAdjustments() {
           transactions={true}
           onChat={handleChat}
           onFilter={handleFilter}
+          showSelection={showExportUI}
+          selectedRows={selectedRows}
           filterLabel={t("fundAdjustmentsPage.filterTransfers")}
+          onExport={showExportUI ? handleExportToPdf : undefined}
         />
       )}
 
