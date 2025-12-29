@@ -114,7 +114,13 @@
     "adjustedBudget": "الاعتماد بعد التعديل",
     "total": "الإجمالي",
     "breakdown": "التفصيل",
-    "transferType": "نوع التحويل"
+    "transferType": "نوع التحويل",
+    "transferTypes": {
+      "FAR": "تحويلات الميزانية",
+      "AFR": "تعزيز الميزانية",
+      "DFR": "تخفيض الميزانية",
+      "HFR": "حجز الميزانية"
+    }
   },
   "dashboardDetails": {
     "backToDashboard": "العودة إلى لوحة التحكم",

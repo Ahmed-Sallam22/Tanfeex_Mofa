@@ -115,7 +115,13 @@
     "adjustedBudget": "Adjusted Budget",
     "total": "Total",
     "breakdown": "Breakdown",
-    "transferType": "Transfer Type"
+    "transferType": "Transfer Type",
+    "transferTypes": {
+      "FAR": "Budget Transfers",
+      "AFR": "Budget Enhancement",
+      "DFR": "Budget Reduction",
+      "HFR": "Budget Reservation"
+    }
   },
   "dashboardDetails": {
     "backToDashboard": "Back to Dashboard",

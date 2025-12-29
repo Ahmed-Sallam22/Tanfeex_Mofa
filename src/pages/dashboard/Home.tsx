@@ -162,15 +162,24 @@ export default function Home() {
 
   const statusData = useMemo(() => {
     const normalData = dashboardData?.normal;
-    
+
     // Calculate totals from by_transfer_type if available
     if (normalData?.by_transfer_type) {
       const types = Object.values(normalData.by_transfer_type);
-      
-      const totalApproved = types.reduce((sum, type) => sum + type.approved_transfers, 0);
-      const totalPending = types.reduce((sum, type) => sum + type.pending_transfers, 0);
-      const totalRejected = types.reduce((sum, type) => sum + type.rejected_transfers, 0);
-      
+
+      const totalApproved = types.reduce(
+        (sum, type) => sum + type.approved_transfers,
+        0
+      );
+      const totalPending = types.reduce(
+        (sum, type) => sum + type.pending_transfers,
+        0
+      );
+      const totalRejected = types.reduce(
+        (sum, type) => sum + type.rejected_transfers,
+        0
+      );
+
       return [
         {
           name: t("home.approved"),
@@ -189,7 +198,7 @@ export default function Home() {
         },
       ];
     }
-    
+
     // Fallback to old structure if by_transfer_type is not available
     if (!normalData) {
       return [
@@ -468,7 +477,7 @@ export default function Home() {
                                       className="flex justify-between items-center"
                                     >
                                       <span className="text-xs text-gray-600">
-                                        {type}:
+                                        {t(`home.transferTypes.${type}`)}:
                                       </span>
                                       <span className="text-xs font-medium text-gray-900">
                                         {Number(value).toLocaleString()}
@@ -532,7 +541,9 @@ export default function Home() {
                 >
                   {/* Header */}
                   <div className="flex items-center justify-between mb-4">
-                    <div className="font-semibold text-gray-900">{type}</div>
+                    <div className="font-semibold text-gray-900">
+                      {t(`home.transferTypes.${type}`)}
+                    </div>
                     <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                       {t("home.total")}: {data.total_transfers}
                     </div>

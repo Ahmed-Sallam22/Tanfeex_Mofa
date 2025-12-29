@@ -306,22 +306,22 @@ export default function AnalyticalReport() {
                   {formatNumber(data.summary.grand_total_decrease_fund)}
                 </p>
               </div>
-              <div className="bg-orange-50 p-4 rounded-lg">
+              {/* <div className="bg-orange-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600">
                   {t("analyticalReport.grandTotalFrom")}
                 </p>
                 <p className="text-xl font-bold text-orange-600">
                   {formatNumber(data.summary.grand_total_from)}
                 </p>
-              </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
+              </div> */}
+              {/* <div className="bg-purple-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600">
                   {t("analyticalReport.grandTotalTo")}
                 </p>
                 <p className="text-xl font-bold text-purple-600">
                   {formatNumber(data.summary.grand_total_to)}
                 </p>
-              </div>
+              </div> */}
               <div className="bg-indigo-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600">
                   {t("analyticalReport.grandTotalAdditionalFund")}
