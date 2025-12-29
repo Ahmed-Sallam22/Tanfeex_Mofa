@@ -32,6 +32,7 @@ export interface FundAdjustmentItem {
   approve_interface_id: number | null;
   report: string;
   type: string;
+  transfer_type?: string;
 }
 
 export interface FundAdjustmentListResponse {
@@ -52,12 +53,16 @@ export interface CreateFundAdjustmentRequest {
   transaction_date: string;
   notes: string;
   type: string;
+  budget_control?: string;
+  transfer_type?: string;
 }
 
 export interface UpdateFundAdjustmentRequest {
   transaction_date: string;
   notes: string;
   type: string;
+  budget_control?: string;
+  transfer_type?: string;
 }
 
 export interface FundAdjustmentResponse {

@@ -497,6 +497,10 @@ export default function FundRequests() {
     const budgetControl = originalFundAdjuments.control_budget || "";
     setBudgetControl(budgetControl);
 
+    // Set transfer type if available
+    const transferTypeValue = originalFundAdjuments.transfer_type || "";
+    setTransferType(transferTypeValue);
+
     console.log("Setting form values:", {
       originalDate: originalFundAdjuments.transaction_date,
       processedDate: transactionDate,
@@ -505,6 +509,7 @@ export default function FundRequests() {
       notes,
       textNotes,
       budget_control_set: budgetControl,
+      transfer_type_set: transferTypeValue,
     }); // Debug log
 
     // Small delay to ensure state is updated before opening modal

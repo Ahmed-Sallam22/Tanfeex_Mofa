@@ -548,10 +548,16 @@ export default function FundAdjustments() {
     setBudgetControl(budgetControl);
     console.log("✅ Set budget_control to:", budgetControl);
 
+    // Set transfer type if available
+    const transferTypeValue = originalFundAdjustment.transfer_type || "";
+    setTransferType(transferTypeValue);
+    console.log("✅ Set transfer_type to:", transferTypeValue);
+
     console.log("AFTER setting form values:", {
       time_period_set: finalDateValue,
       reason_set: notes,
       budget_control_set: budgetControl,
+      transfer_type_set: transferTypeValue,
     });
 
     // Trigger modal opening via useEffect after state updates

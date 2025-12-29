@@ -33,6 +33,7 @@ export interface FundRequestItem {
   approve_interface_id: number | null;
   report: string;
   type: string;
+  transfer_type?: string;
 }
 
 export interface FundRequestListResponse {
@@ -53,12 +54,16 @@ export interface CreateFundRequestRequest {
   transaction_date: string;
   notes: string;
   type: string;
+  budget_control?: string;
+  transfer_type?: string;
 }
 
 export interface UpdateFundRequestRequest {
   transaction_date: string;
   notes: string;
   type: string;
+  budget_control?: string;
+  transfer_type?: string;
 }
 
 export interface FundRequestResponse {
