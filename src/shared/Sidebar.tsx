@@ -749,15 +749,34 @@ const getSections = (
   }> = [];
 
   // Dashboard - always visible
+  const dashboardItems = [
+    {
+      to: "/app",
+      label: t("dashboard"),
+      icon: DashboardIcon,
+    },
+  ];
+
+  // Add reports if user has REPORT ability
+  const hasReport = userAbilities.includes("REPORT");
+  if (hasReport) {
+    dashboardItems.push(
+      {
+        to: "/app/reports",
+        label: t("reports.title"),
+        icon: ReportsIcon,
+      },
+      {
+        to: "/app/analytical-report",
+        label: t("analyticalReport.title"),
+        icon: ReportsIcon,
+      }
+    );
+  }
+
   sections.push({
     title: "",
-    items: [
-      {
-        to: "/app",
-        label: t("dashboard"),
-        icon: DashboardIcon,
-      },
-    ],
+    items: dashboardItems,
   });
 
   const hasTransfer = userAbilities.includes("TRANSFER");
