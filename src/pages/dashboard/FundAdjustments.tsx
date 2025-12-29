@@ -746,6 +746,18 @@ export default function FundAdjustments() {
     setSelectedRows(new Set());
   };
 
+  // Handle selection change from SharedTable (converts Set<string | number> to Set<number>)
+  const handleSelectionChange = (selectedIds: Set<string | number>) => {
+    const numberSet = new Set<number>();
+    selectedIds.forEach((id) => {
+      const numId = typeof id === "string" ? parseInt(id, 10) : id;
+      if (!isNaN(numId)) {
+        numberSet.add(numId);
+      }
+    });
+    setSelectedRows(numberSet);
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -828,8 +840,11 @@ export default function FundAdjustments() {
           transactions={true}
           onChat={handleChat}
           onFilter={handleFilter}
+          showExportButton={showExportUI}
+          exportButtonText={t("common.exportPDF")}
           showSelection={showExportUI}
           selectedRows={selectedRows}
+          onSelectionChange={handleSelectionChange}
           filterLabel={t("fundAdjustmentsPage.filterTransfers")}
           onExport={showExportUI ? handleExportToPdf : undefined}
         />

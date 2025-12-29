@@ -739,6 +739,18 @@ export default function FundRequests() {
     setSelectedRows(new Set());
   };
 
+  // Handle selection change from SharedTable (converts Set<string | number> to Set<number>)
+  const handleSelectionChange = (selectedIds: Set<string | number>) => {
+    const numberSet = new Set<number>();
+    selectedIds.forEach((id) => {
+      const numId = typeof id === "string" ? parseInt(id, 10) : id;
+      if (!isNaN(numId)) {
+        numberSet.add(numId);
+      }
+    });
+    setSelectedRows(numberSet);
+  };
+
   return (
     <div>
       {/* Header with Create Button */}
@@ -824,6 +836,9 @@ export default function FundRequests() {
           onChat={handleChat}
           showSelection={showExportUI}
           selectedRows={selectedRows}
+          showExportButton={showExportUI}
+          exportButtonText={t("common.exportPDF")}
+          onSelectionChange={handleSelectionChange}
           onDelete={handleDelete}
           onFilter={handleFilter}
           filterLabel={t("fundRequests.filterFundAdjuments")}

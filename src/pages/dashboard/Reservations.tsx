@@ -824,6 +824,18 @@ export default function Reservations() {
     setSelectedRows(new Set());
   };
 
+  // Handle selection change from SharedTable (converts Set<string | number> to Set<number>)
+  const handleSelectionChange = (selectedIds: Set<string | number>) => {
+    const numberSet = new Set<number>();
+    selectedIds.forEach((id) => {
+      const numId = typeof id === "string" ? parseInt(id, 10) : id;
+      if (!isNaN(numId)) {
+        numberSet.add(numId);
+      }
+    });
+    setSelectedRows(numberSet);
+  };
+
   return (
     <div>
       {/* Header with Create Button */}
@@ -905,6 +917,9 @@ export default function Reservations() {
           onDelete={handleDelete}
           showSelection={showExportUI}
           selectedRows={selectedRows}
+          showExportButton={showExportUI}
+          exportButtonText={t("common.exportPDF")}
+          onSelectionChange={handleSelectionChange}
           onFilter={handleFilter}
           filterLabel={t("common.filterLabel")}
           isHFR={true}
