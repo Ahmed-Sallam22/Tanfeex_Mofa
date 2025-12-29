@@ -77,6 +77,11 @@ export default function Reservations() {
     allocation_sub_type?: string;
   }>({});
 
+  // State for expanded comments in status modal
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(
+    new Set()
+  );
+
   // API calls
   const { data: transferResponse, isLoading } = useGetTransferListQuery({
     page: currentPage,
@@ -308,6 +313,7 @@ export default function Reservations() {
     const transactionId = Number(row.id);
     // Clear any previous status data to prevent showing old data
     setStatusTransactionId(null);
+    setExpandedComments(new Set()); // Clear expanded comments
     setIsStatusModalOpen(true);
     // Set the transaction ID after modal is open to trigger fresh API call
     setTimeout(() => {
@@ -2147,7 +2153,7 @@ export default function Reservations() {
                             {/* Action Information - Show if acted_by exists */}
                             {stage.acted_by && (
                               <div className="mt-3 pt-3 border-t border-gray-100">
-                                <div className="flex items-center gap-4 text-xs text-gray-600">
+                                <div className="flex items-center gap-4 text-xs text-gray-600 mb-2">
                                   {/* User Info */}
                                   <div className="flex items-center gap-2">
                                     <svg
@@ -2202,6 +2208,74 @@ export default function Reservations() {
                                     </div>
                                   )}
                                 </div>
+
+                                {/* Comment Section */}
+                                {stage.comment &&
+                                  (() => {
+                                    const commentKey = `${workflow.execution_order}-${stage.order_index}`;
+                                    const isExpanded =
+                                      expandedComments.has(commentKey);
+                                    const lines = stage.comment.split("\n");
+                                    const MAX_LINES = 2;
+                                    const needsTruncation =
+                                      lines.length > MAX_LINES;
+
+                                    const displayText =
+                                      needsTruncation && !isExpanded
+                                        ? lines.slice(0, MAX_LINES).join("\n") +
+                                          "..."
+                                        : stage.comment;
+
+                                    const toggleExpanded = () => {
+                                      setExpandedComments((prev) => {
+                                        const newSet = new Set(prev);
+                                        if (newSet.has(commentKey)) {
+                                          newSet.delete(commentKey);
+                                        } else {
+                                          newSet.add(commentKey);
+                                        }
+                                        return newSet;
+                                      });
+                                    };
+
+                                    return (
+                                      <div className="mt-2 p-3 bg-gray-50 rounded-md">
+                                        <div className="flex items-start gap-2">
+                                          <svg
+                                            className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth={2}
+                                              d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                                            />
+                                          </svg>
+                                          <div className="flex-1">
+                                            <span className="text-xs font-medium text-gray-600 block mb-1">
+                                              {t("status.comment")}:
+                                            </span>
+                                            <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                              {displayText}
+                                            </p>
+                                            {needsTruncation && (
+                                              <button
+                                                onClick={toggleExpanded}
+                                                className="mt-1 text-xs text-[#4E8476] hover:text-[#3d6b5f] font-medium transition-colors"
+                                              >
+                                                {isExpanded
+                                                  ? t("common.showLess")
+                                                  : t("common.showMore")}
+                                              </button>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })()}
                               </div>
                             )}
                           </div>

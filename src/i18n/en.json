@@ -167,6 +167,8 @@
     "rejected": "Rejected",
     "noStatusAvailable": "No status information available",
     "close": "Close",
+    "showMore": "Show More",
+    "showLess": "Show Less",
     "unableToLoad": "Unable to load transfers",
     "connectionTrouble": "We're having trouble connecting to our servers. This might be a temporary issue.",
     "tryAgain": "Try Again",
@@ -1843,7 +1845,8 @@
     "stage": "Stage",
     "noData": "No status information available",
     "actedBy": "Acted By",
-    "actionDate": "Date"
+    "actionDate": "Date",
+    "comment": "Comment"
   },
   "analyticalReport": {
     "title": "Analytical Report",
