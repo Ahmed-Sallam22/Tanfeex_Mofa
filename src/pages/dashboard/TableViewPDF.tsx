@@ -109,6 +109,18 @@ const formatNumber = (value?: number | null) => {
   return numeric.toLocaleString("en-US");
 };
 
+// Helper function to clean HTML tags from text
+const cleanHtmlTags = (text: string): string => {
+  if (!text) return "-";
+  // Remove HTML tags and trim whitespace
+  return (
+    text
+      .replace(/<br\s*\/?>/gi, "\n") // Replace <br> with newline
+      .replace(/<[^>]*>/g, "") // Remove all other HTML tags
+      .trim() || "-"
+  );
+};
+
 // Helper function to transform API data to table format
 const transformApiDataToTableData = (
   apiData: TransactionReportData[]
@@ -171,8 +183,8 @@ const transformApiDataToTableData = (
             transfer.to_center
           ),
           amount: formatNumber(amountValue),
-          description: transaction.notes ?? "-",
-          justifications: transfer.reason ?? "-",
+          description: cleanHtmlTags(transaction.notes ?? ""),
+          justifications: cleanHtmlTags(transfer.reason ?? ""),
         });
       });
     } else {
@@ -187,7 +199,7 @@ const transformApiDataToTableData = (
           transaction.code || transaction.transaction_id?.toString() || "-",
         discussionType: formatDiscussionType(null, null),
         amount: "-",
-        description: transaction.notes ?? "-",
+        description: cleanHtmlTags(transaction.notes ?? ""),
         justifications: "-",
       });
     }
@@ -460,6 +472,14 @@ const TableViewPDF = () => {
                   <td
                     key={col.key}
                     className={`border border-gray-400 px-3 py-3 text-${col.align}`}
+                    style={{
+                      whiteSpace:
+                        col.key === "description" ||
+                        col.key === "justifications"
+                          ? "pre-wrap"
+                          : "normal",
+                      verticalAlign: "top",
+                    }}
                   >
                     {row[col.key as keyof typeof row]}
                   </td>
