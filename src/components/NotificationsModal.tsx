@@ -14,16 +14,18 @@ import {
 import toast from "react-hot-toast";
 
 // Union type for notifications from both sources
-type UnifiedNotification = NotificationItem | {
-  id: string;
-  message: string;
-  type: string;
-  timestamp: string;
-  read: boolean;
-  data?: {
-    code?: string;
-  };
-};
+type UnifiedNotification =
+  | NotificationItem
+  | {
+      id: string;
+      message: string;
+      type: string;
+      timestamp: string;
+      read: boolean;
+      data?: {
+        code?: string;
+      };
+    };
 
 interface NotificationsModalProps {
   isOpen: boolean;
@@ -57,22 +59,20 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
   // Merge API and WebSocket notifications
   const apiNotifications = apiData?.notifications || [];
-  
+
   // Create a map of API notifications by message to avoid duplicates
-  const apiNotifMap = new Map(
-    apiNotifications.map((n) => [n.message, n])
-  );
-  
+  const apiNotifMap = new Map(apiNotifications.map((n) => [n.message, n]));
+
   // Add WebSocket notifications that aren't already in API data
   const mergedNotifications = [
     ...apiNotifications,
     ...wsNotifications.filter((wsN) => !apiNotifMap.has(wsN.message)),
   ].sort((a, b) => {
     const dateA = new Date(
-      ('created_at' in a ? a.created_at : a.timestamp) || new Date()
+      ("created_at" in a ? a.created_at : a.timestamp) || new Date()
     ).getTime();
     const dateB = new Date(
-      ('created_at' in b ? b.created_at : b.timestamp) || new Date()
+      ("created_at" in b ? b.created_at : b.timestamp) || new Date()
     ).getTime();
     return dateB - dateA;
   });
@@ -82,16 +82,16 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   const handleNotificationClick = async (notification: UnifiedNotification) => {
     try {
       // Mark as read in both systems
-      if ('id' in notification && typeof notification.id === 'number') {
+      if ("id" in notification && typeof notification.id === "number") {
         await markAsReadMutation(notification.id).unwrap();
       }
       wsMarkAsRead(String(notification.id));
 
       // Navigate if we have the required data
       if (
-        'Transaction_id' in notification &&
-        'type_of_Trasnction' in notification &&
-        'Type_of_action' in notification &&
+        "Transaction_id" in notification &&
+        "type_of_Trasnction" in notification &&
+        "Type_of_action" in notification &&
         notification.Transaction_id &&
         notification.type_of_Trasnction &&
         notification.Type_of_action
@@ -116,7 +116,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   ) => {
     e.stopPropagation();
     try {
-      if ('id' in notification && typeof notification.id === 'number') {
+      if ("id" in notification && typeof notification.id === "number") {
         await markAsReadMutation(notification.id).unwrap();
       }
       wsMarkAsRead(String(notification.id));
@@ -143,7 +143,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   ) => {
     e.stopPropagation();
     try {
-      if ('id' in notification && typeof notification.id === 'number') {
+      if ("id" in notification && typeof notification.id === "number") {
         await deleteNotificationMutation(notification.id).unwrap();
       }
       wsClearNotification(String(notification.id));
@@ -161,10 +161,14 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         apiNotifications.map((n) => deleteNotificationMutation(n.id).unwrap())
       );
       wsClearAll();
-      toast.success(t("notifications.allCleared") || "All notifications cleared");
+      toast.success(
+        t("notifications.allCleared") || "All notifications cleared"
+      );
     } catch (error) {
       console.error("Error clearing all notifications:", error);
-      toast.error(t("notifications.error") || "Failed to clear all notifications");
+      toast.error(
+        t("notifications.error") || "Failed to clear all notifications"
+      );
     }
   };
 
@@ -302,12 +306,22 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           ) : (
             <div className="divide-y divide-gray-100">
               {notifications.map((notification) => {
-                const notifType = 'type' in notification ? notification.type : 'general';
+                const notifType =
+                  "type" in notification ? notification.type : "general";
                 const notifId = notification.id;
-                const notifTimestamp = 'timestamp' in notification ? notification.timestamp : notification.created_at;
-                const isRead = 'is_read' in notification ? notification.is_read : ('read' in notification ? notification.read : false);
-                const notifData = 'data' in notification ? notification.data : undefined;
-                
+                const notifTimestamp =
+                  "timestamp" in notification
+                    ? notification.timestamp
+                    : notification.created_at;
+                const isRead =
+                  "is_read" in notification
+                    ? notification.is_read
+                    : "read" in notification
+                    ? notification.read
+                    : false;
+                const notifData =
+                  "data" in notification ? notification.data : undefined;
+
                 const style = getNotificationStyle(notifType);
                 return (
                   <div
