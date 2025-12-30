@@ -59,7 +59,11 @@
     "justNow": "Just now",
     "minutesAgo": "min ago",
     "hoursAgo": "hours ago",
-    "daysAgo": "days ago"
+    "daysAgo": "days ago",
+    "error": "An error occurred",
+    "allMarkedRead": "All notifications marked as read",
+    "deleted": "Notification deleted",
+    "allCleared": "All notifications cleared"
   },
   "home": {
     "title": "Dashboard",

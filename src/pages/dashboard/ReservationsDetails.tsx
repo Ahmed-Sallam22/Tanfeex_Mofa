@@ -1928,6 +1928,206 @@ export default function ReservationsDetails() {
             </div>
           </div>
         )}
+        {/* Action Buttons Section */}
+        {!isSubmitted ? (
+          <div className="bg-white rounded-2xl p-6 shadow-sm mt-6">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleAttachmentsClick()}
+                  className="inline-flex items-center text-sm gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g clipPath="url(#clip0_406_14639)">
+                      <path
+                        d="M11.334 6.00122C12.784 6.00929 13.5693 6.07359 14.0815 6.58585C14.6673 7.17164 14.6673 8.11444 14.6673 10.0001V10.6667C14.6673 12.5523 14.6673 13.4952 14.0815 14.0809C13.4957 14.6667 12.5529 14.6667 10.6673 14.6667H5.33398C3.44837 14.6667 2.50556 14.6667 1.91977 14.0809C1.33398 13.4952 1.33398 12.5523 1.33398 10.6667L1.33398 10.0001C1.33398 8.11444 1.33398 7.17163 1.91977 6.58585C2.43203 6.07359 3.2173 6.00929 4.66732 6.00122"
+                        stroke="#545454"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M8 10L8 1.33333M8 1.33333L10 3.66667M8 1.33333L6 3.66667"
+                        stroke="#545454"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </g>
+                    <defs>
+                      <clipPath id="clip0_406_14639">
+                        <rect width="16" height="16" rx="5" fill="white" />
+                      </clipPath>
+                    </defs>
+                  </svg>
+                  {t("fundAdjustmentsDetails.uploadTransferFile")}
+                </button>
+                {/* 
+              <button
+                onClick={() => setIsReportModalOpen(true)}
+                className="inline-flex text-sm items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M2.3103 2.30956C1.33398 3.28587 1.33398 4.85722 1.33398 7.99992C1.33398 11.1426 1.33398 12.714 2.3103 13.6903C3.28661 14.6666 4.85795 14.6666 8.00065 14.6666C11.1433 14.6666 12.7147 14.6666 13.691 13.6903C14.6673 12.714 14.6673 11.1426 14.6673 7.99992C14.6673 4.85722 14.6673 3.28587 13.691 2.30956C12.7147 1.33325 11.1433 1.33325 8.00065 1.33325C4.85795 1.33325 3.28661 1.33325 2.3103 2.30956ZM11.334 8.16659C11.6101 8.16659 11.834 8.39044 11.834 8.66659V11.9999C11.834 12.2761 11.6101 12.4999 11.334 12.4999C11.0578 12.4999 10.834 12.2761 10.834 11.9999V8.66659C10.834 8.39044 11.0578 8.16659 11.334 8.16659ZM8.50065 3.99992C8.50065 3.72378 8.27679 3.49992 8.00065 3.49992C7.72451 3.49992 7.50065 3.72378 7.50065 3.99992V11.9999C7.50065 12.2761 7.72451 12.4999 8.00065 12.4999C8.27679 12.4999 8.50065 12.2761 8.50065 11.9999V3.99992ZM4.66732 5.49992C4.94346 5.49992 5.16732 5.72378 5.16732 5.99992V11.9999C5.16732 12.2761 4.94346 12.4999 4.66732 12.4999C4.39118 12.4999 4.16732 12.2761 4.16732 11.9999V5.99992C4.16732 5.72378 4.39118 5.49992 4.66732 5.49992Z"
+                    fill="#545454"
+                  />
+                </svg>
+                {t("fundAdjustmentsDetails.report")}
+              </button> */}
+              </div>
+
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitDisabled() || isSubmitting}
+                className={`px-6 py-2 text-sm rounded-lg transition-colors inline-flex items-center gap-2 ${
+                  isSubmitDisabled() || isSubmitting
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-[#4E8476] text-white hover:bg-blue-700"
+                }`}
+                title={
+                  isSubmitting
+                    ? t("fundAdjustmentsDetails.submittingTitle")
+                    : isSubmitDisabled()
+                    ? (() => {
+                        const totalValidRows =
+                          (apiData?.transfers?.length || 0) +
+                          localRows.length +
+                          editedRows.filter(
+                            (row) =>
+                              !(
+                                row.id.startsWith("default-") &&
+                                row.costCenterCode === "" &&
+                                row.accountCode === "" &&
+                                row.projectCode === ""
+                              )
+                          ).length;
+
+                        if (totalValidRows < 1) {
+                          return t(
+                            "fundAdjustmentsDetails.submitDisabledMinRows"
+                          );
+                        } else {
+                          return t(
+                            "fundAdjustmentsDetails.submitDisabledErrors"
+                          );
+                        }
+                      })()
+                    : t("fundAdjustmentsDetails.submitTitle")
+                }
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    {t("fundAdjustmentsDetails.submitting")}
+                  </>
+                ) : (
+                  t("fundAdjustmentsDetails.submit")
+                )}
+              </button>
+            </div>
+
+            {/* Submit status message - only show if submit is disabled */}
+            {isSubmitDisabled() && (
+              <div className="mt-3 flex items-center gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 1L15 14H1L8 1Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M8 5V8"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="8" cy="11" r="0.5" fill="currentColor" />
+                </svg>
+                <span>
+                  {(() => {
+                    const totalValidRows =
+                      (apiData?.transfers?.length || 0) +
+                      localRows.length +
+                      editedRows.filter(
+                        (row) =>
+                          !(
+                            row.id.startsWith("default-") &&
+                            row.costCenterCode === "" &&
+                            row.accountCode === "" &&
+                            row.projectCode === ""
+                          )
+                      ).length;
+
+                    if (totalValidRows < 2) {
+                      return t("fundAdjustmentsDetails.submitWarningMinRows");
+                    } else {
+                      return t("fundAdjustmentsDetails.submitWarningErrors");
+                    }
+                  })()}
+                </span>
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {/* Only show Re-open Request button if status is rejected and not already clicked */}
+        {!isReopenClicked &&
+          (transferStatus === "rejected" ||
+            apiData?.status?.status === "rejected" ||
+            apiData?.summary?.status === "rejected") && (
+            <div className="bg-white rounded-2xl p-6 shadow-sm mt-6">
+              <button
+                onClick={handleReopenRequest}
+                className="inline-flex text-sm items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M9.70065 14.4466C12.5607 13.6933 14.6673 11.0933 14.6673 7.99992C14.6673 4.31992 11.7073 1.33325 8.00065 1.33325C3.55398 1.33325 1.33398 5.03992 1.33398 5.03992M1.33398 5.03992V1.99992M1.33398 5.03992H2.67398H4.29398"
+                    stroke="#545454"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M1.33398 8C1.33398 11.68 4.32065 14.6667 8.00065 14.6667"
+                    stroke="#545454"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeDasharray="3 3"
+                  />
+                </svg>
+                {t("fundAdjustmentsDetails.reopenRequest")}
+              </button>
+            </div>
+          )}
       </div>
 
       {/* History Section */}
@@ -2214,205 +2414,6 @@ export default function ReservationsDetails() {
           </div>
         </div>
       )}
-
-      {/* Action Buttons Section */}
-      {!isSubmitted ? (
-        <div className="bg-white rounded-2xl p-6 shadow-sm mt-6">
-          <div className="flex justify-between items-center">
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleAttachmentsClick()}
-                className="inline-flex items-center text-sm gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g clipPath="url(#clip0_406_14639)">
-                    <path
-                      d="M11.334 6.00122C12.784 6.00929 13.5693 6.07359 14.0815 6.58585C14.6673 7.17164 14.6673 8.11444 14.6673 10.0001V10.6667C14.6673 12.5523 14.6673 13.4952 14.0815 14.0809C13.4957 14.6667 12.5529 14.6667 10.6673 14.6667H5.33398C3.44837 14.6667 2.50556 14.6667 1.91977 14.0809C1.33398 13.4952 1.33398 12.5523 1.33398 10.6667L1.33398 10.0001C1.33398 8.11444 1.33398 7.17163 1.91977 6.58585C2.43203 6.07359 3.2173 6.00929 4.66732 6.00122"
-                      stroke="#545454"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M8 10L8 1.33333M8 1.33333L10 3.66667M8 1.33333L6 3.66667"
-                      stroke="#545454"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_406_14639">
-                      <rect width="16" height="16" rx="5" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
-                {t("fundAdjustmentsDetails.uploadTransferFile")}
-              </button>
-              {/* 
-              <button
-                onClick={() => setIsReportModalOpen(true)}
-                className="inline-flex text-sm items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M2.3103 2.30956C1.33398 3.28587 1.33398 4.85722 1.33398 7.99992C1.33398 11.1426 1.33398 12.714 2.3103 13.6903C3.28661 14.6666 4.85795 14.6666 8.00065 14.6666C11.1433 14.6666 12.7147 14.6666 13.691 13.6903C14.6673 12.714 14.6673 11.1426 14.6673 7.99992C14.6673 4.85722 14.6673 3.28587 13.691 2.30956C12.7147 1.33325 11.1433 1.33325 8.00065 1.33325C4.85795 1.33325 3.28661 1.33325 2.3103 2.30956ZM11.334 8.16659C11.6101 8.16659 11.834 8.39044 11.834 8.66659V11.9999C11.834 12.2761 11.6101 12.4999 11.334 12.4999C11.0578 12.4999 10.834 12.2761 10.834 11.9999V8.66659C10.834 8.39044 11.0578 8.16659 11.334 8.16659ZM8.50065 3.99992C8.50065 3.72378 8.27679 3.49992 8.00065 3.49992C7.72451 3.49992 7.50065 3.72378 7.50065 3.99992V11.9999C7.50065 12.2761 7.72451 12.4999 8.00065 12.4999C8.27679 12.4999 8.50065 12.2761 8.50065 11.9999V3.99992ZM4.66732 5.49992C4.94346 5.49992 5.16732 5.72378 5.16732 5.99992V11.9999C5.16732 12.2761 4.94346 12.4999 4.66732 12.4999C4.39118 12.4999 4.16732 12.2761 4.16732 11.9999V5.99992C4.16732 5.72378 4.39118 5.49992 4.66732 5.49992Z"
-                    fill="#545454"
-                  />
-                </svg>
-                {t("fundAdjustmentsDetails.report")}
-              </button> */}
-            </div>
-
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitDisabled() || isSubmitting}
-              className={`px-6 py-2 text-sm rounded-lg transition-colors inline-flex items-center gap-2 ${
-                isSubmitDisabled() || isSubmitting
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-[#4E8476] text-white hover:bg-blue-700"
-              }`}
-              title={
-                isSubmitting
-                  ? t("fundAdjustmentsDetails.submittingTitle")
-                  : isSubmitDisabled()
-                  ? (() => {
-                      const totalValidRows =
-                        (apiData?.transfers?.length || 0) +
-                        localRows.length +
-                        editedRows.filter(
-                          (row) =>
-                            !(
-                              row.id.startsWith("default-") &&
-                              row.costCenterCode === "" &&
-                              row.accountCode === "" &&
-                              row.projectCode === ""
-                            )
-                        ).length;
-
-                      if (totalValidRows < 1) {
-                        return t(
-                          "fundAdjustmentsDetails.submitDisabledMinRows"
-                        );
-                      } else {
-                        return t("fundAdjustmentsDetails.submitDisabledErrors");
-                      }
-                    })()
-                  : t("fundAdjustmentsDetails.submitTitle")
-              }
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  {t("fundAdjustmentsDetails.submitting")}
-                </>
-              ) : (
-                t("fundAdjustmentsDetails.submit")
-              )}
-            </button>
-          </div>
-
-          {/* Submit status message - only show if submit is disabled */}
-          {isSubmitDisabled() && (
-            <div className="mt-3 flex items-center gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M8 1L15 14H1L8 1Z"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M8 5V8"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <circle cx="8" cy="11" r="0.5" fill="currentColor" />
-              </svg>
-              <span>
-                {(() => {
-                  const totalValidRows =
-                    (apiData?.transfers?.length || 0) +
-                    localRows.length +
-                    editedRows.filter(
-                      (row) =>
-                        !(
-                          row.id.startsWith("default-") &&
-                          row.costCenterCode === "" &&
-                          row.accountCode === "" &&
-                          row.projectCode === ""
-                        )
-                    ).length;
-
-                  if (totalValidRows < 2) {
-                    return t("fundAdjustmentsDetails.submitWarningMinRows");
-                  } else {
-                    return t("fundAdjustmentsDetails.submitWarningErrors");
-                  }
-                })()}
-              </span>
-            </div>
-          )}
-        </div>
-      ) : null}
-
-      {/* Only show Re-open Request button if status is rejected and not already clicked */}
-      {!isReopenClicked &&
-        (transferStatus === "rejected" ||
-          apiData?.status?.status === "rejected" ||
-          apiData?.summary?.status === "rejected") && (
-          <div className="bg-white rounded-2xl p-6 shadow-sm mt-6">
-            <button
-              onClick={handleReopenRequest}
-              className="inline-flex text-sm items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M9.70065 14.4466C12.5607 13.6933 14.6673 11.0933 14.6673 7.99992C14.6673 4.31992 11.7073 1.33325 8.00065 1.33325C3.55398 1.33325 1.33398 5.03992 1.33398 5.03992M1.33398 5.03992V1.99992M1.33398 5.03992H2.67398H4.29398"
-                  stroke="#545454"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M1.33398 8C1.33398 11.68 4.32065 14.6667 8.00065 14.6667"
-                  stroke="#545454"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeDasharray="3 3"
-                />
-              </svg>
-              {t("fundAdjustmentsDetails.reopenRequest")}
-            </button>
-          </div>
-        )}
 
       {/* Manage Attachments Modal */}
       <SharedModal

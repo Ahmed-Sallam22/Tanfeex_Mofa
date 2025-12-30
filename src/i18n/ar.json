@@ -58,7 +58,11 @@
     "justNow": "الآن",
     "minutesAgo": "دقيقة",
     "hoursAgo": "ساعة",
-    "daysAgo": "يوم"
+    "daysAgo": "يوم",
+    "error": "حدث خطأ",
+    "allMarkedRead": "تم تعليم جميع الإشعارات كمقروءة",
+    "deleted": "تم حذف الإشعار",
+    "allCleared": "تم حذف جميع الإشعارات"
   },
   "home": {
     "title": "لوحة التحكم",
@@ -905,7 +909,7 @@
     "systemGenerated": "هذا تقرير صادر عن النظام"
   },
   "allTransfers": {
-    "title": "جميع التحويلات",
+    "title": "جميع الطلبات",
     "viewOnly": "عرض فقط",
     "allTypes": "جميع الأنواع"
   },
