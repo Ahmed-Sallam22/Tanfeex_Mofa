@@ -25,9 +25,6 @@ export const useNotifications = () => {
 
   // Return default values if used outside provider (safe fallback)
   if (!context) {
-    console.warn(
-      "useNotifications used outside NotificationsProvider, returning defaults"
-    );
     return {
       status: "disconnected" as SocketStatus,
       notifications: [],
