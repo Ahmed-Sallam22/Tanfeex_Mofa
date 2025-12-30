@@ -81,25 +81,25 @@ export default function ProjectsOverview() {
       <path
         d="M9.03516 12.9834H13.333"
         stroke="#757575"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
         fill-rule="evenodd"
         clip-rule="evenodd"
         d="M8.46158 3.11747C8.92122 2.56814 9.74749 2.48758 10.3082 2.93788C10.3392 2.96231 11.3353 3.73614 11.3353 3.73614C11.9513 4.10852 12.1427 4.90018 11.762 5.50431C11.7417 5.53667 6.11013 12.581 6.11013 12.581C5.92277 12.8147 5.63836 12.9527 5.33441 12.956L3.17774 12.9831L2.69181 10.9264C2.62374 10.6372 2.69181 10.3335 2.87917 10.0997L8.46158 3.11747Z"
         stroke="#757575"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
         d="M7.41992 4.4248L10.6509 6.90606"
         stroke="#757575"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

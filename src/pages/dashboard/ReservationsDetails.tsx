@@ -2231,19 +2231,19 @@ export default function ReservationsDetails() {
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <g clip-path="url(#clip0_406_14639)">
+                  <g clipPath="url(#clip0_406_14639)">
                     <path
                       d="M11.334 6.00122C12.784 6.00929 13.5693 6.07359 14.0815 6.58585C14.6673 7.17164 14.6673 8.11444 14.6673 10.0001V10.6667C14.6673 12.5523 14.6673 13.4952 14.0815 14.0809C13.4957 14.6667 12.5529 14.6667 10.6673 14.6667H5.33398C3.44837 14.6667 2.50556 14.6667 1.91977 14.0809C1.33398 13.4952 1.33398 12.5523 1.33398 10.6667L1.33398 10.0001C1.33398 8.11444 1.33398 7.17163 1.91977 6.58585C2.43203 6.07359 3.2173 6.00929 4.66732 6.00122"
                       stroke="#545454"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
                     />
                     <path
                       d="M8 10L8 1.33333M8 1.33333L10 3.66667M8 1.33333L6 3.66667"
                       stroke="#545454"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                   </g>
                   <defs>
@@ -2254,7 +2254,7 @@ export default function ReservationsDetails() {
                 </svg>
                 {t("fundAdjustmentsDetails.uploadTransferFile")}
               </button>
-{/* 
+              {/* 
               <button
                 onClick={() => setIsReportModalOpen(true)}
                 className="inline-flex text-sm items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
@@ -2446,15 +2446,15 @@ export default function ReservationsDetails() {
               <path
                 d="M35.417 18.7542C39.9483 18.7794 42.4023 18.9803 44.0031 20.5811C45.8337 22.4117 45.8337 25.358 45.8337 31.2505V33.3339C45.8337 39.2264 45.8337 42.1727 44.0031 44.0033C42.1725 45.8339 39.2262 45.8339 33.3337 45.8339H16.667C10.7744 45.8339 7.82816 45.8339 5.99757 44.0033C4.16699 42.1727 4.16699 39.2264 4.16699 33.3339L4.16699 31.2505C4.16699 25.358 4.16699 22.4117 5.99757 20.5811C7.59837 18.9803 10.0524 18.7794 14.5837 18.7542"
                 stroke="#282828"
-                stroke-width="1.5"
-                stroke-linecap="round"
+                strokeWidth="1.5"
+                strokeLinecap="round"
               />
               <path
                 d="M25 31.25L25 4.16666M25 4.16666L31.25 11.4583M25 4.16666L18.75 11.4583"
                 stroke="#282828"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </svg>
           </div>

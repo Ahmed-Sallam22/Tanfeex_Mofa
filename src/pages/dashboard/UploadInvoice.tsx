@@ -185,15 +185,15 @@ export default function UploadInvoices() {
                 <path
                   d="M35.416 18.7539C39.9473 18.7791 42.4013 18.9801 44.0021 20.5809C45.8327 22.4115 45.8327 25.3577 45.8327 31.2503V33.3336C45.8327 39.2262 45.8327 42.1725 44.0021 44.003C42.1715 45.8336 39.2252 45.8336 33.3327 45.8336H16.666C10.7735 45.8336 7.82718 45.8336 5.9966 44.003C4.16602 42.1725 4.16602 39.2262 4.16602 33.3336L4.16602 31.2503C4.16602 25.3577 4.16602 22.4115 5.9966 20.5809C7.5974 18.9801 10.0514 18.7791 14.5827 18.7539"
                   stroke="#282828"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
                 />
                 <path
                   d="M25 31.25L25 4.16666M25 4.16666L31.25 11.4583M25 4.16666L18.75 11.4583"
                   stroke="#282828"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </svg>
             </div>
