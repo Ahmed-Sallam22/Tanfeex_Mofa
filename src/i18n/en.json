@@ -826,6 +826,8 @@
     "deleteWarning": "Deleting this segment may affect related data and configurations",
     "periodFormat": "Enter the period in format: month-year (e.g., 1-25 for January 2025)",
     "controlBudget": "Control Budget",
+    "uploadDisabled": "Upload Disabled",
+    "viewOnlyMode": "View Only Mode",
     "message": "Message",
     "success": "Success",
     "failed": "Failed",
@@ -890,6 +892,11 @@
     "balanced": "Balanced",
     "generatedOn": "Generated On",
     "systemGenerated": "This is a system-generated report"
+  },
+  "allTransfers": {
+    "title": "All Transfers",
+    "viewOnly": "View Only",
+    "allTypes": "All Types"
   },
   "reservations": {
     "title": "Reservations",

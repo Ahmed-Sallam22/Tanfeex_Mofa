@@ -818,6 +818,8 @@
     "deleteWarning": "قد يؤثر حذف هذا القطاع على البيانات والإعدادات ذات الصلة",
     "periodFormat": "أدخل الفترة بالتنسيق: شهر-سنة (مثال: 1-25 لشهر يناير 2025)",
     "controlBudget": "ضبط الموازنة",
+    "uploadDisabled": "التحميل غير متاح",
+    "viewOnlyMode": "وضع العرض فقط",
     "message": "الرسالة",
     "success": "نجح",
     "failed": "فشل",
@@ -890,6 +892,11 @@
     "balanced": "متوازن",
     "generatedOn": "تم الإنشاء في",
     "systemGenerated": "هذا تقرير صادر عن النظام"
+  },
+  "allTransfers": {
+    "title": "جميع التحويلات",
+    "viewOnly": "عرض فقط",
+    "allTypes": "جميع الأنواع"
   },
   "reservations": {
     "title": "الحجوزات",

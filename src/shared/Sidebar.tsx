@@ -633,6 +633,11 @@ const getSections = (
             label: t("analyticalReport.title"),
             icon: ReportsIcon,
           },
+          {
+            to: "/app/all-transfers",
+            label: t("allTransfers.title"),
+            icon: TransferIcon,
+          },
         ],
       },
       {
@@ -772,6 +777,20 @@ const getSections = (
         icon: ReportsIcon,
       }
     );
+  }
+
+  // Add All Transfers if user is superadmin OR has REPORT/TRANSFER/APPROVE ability
+  const hasAllTransfersAccess =
+    userRole === "superadmin" ||
+    userAbilities.includes("REPORT") ||
+    userAbilities.includes("TRANSFER") ||
+    userAbilities.includes("APPROVE");
+  if (hasAllTransfersAccess) {
+    dashboardItems.push({
+      to: "/app/all-transfers",
+      label: t("allTransfers.title"),
+      icon: TransferIcon,
+    });
   }
 
   sections.push({

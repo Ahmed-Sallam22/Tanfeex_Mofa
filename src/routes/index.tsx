@@ -18,6 +18,7 @@ const DashboardDetails = lazy(
 
 // Transfer pages
 const Transfer = lazy(() => import("@/pages/dashboard/Transfer"));
+const AllTransfers = lazy(() => import("@/pages/dashboard/AllTransfers"));
 const TransferDetails = lazy(() => import("@/pages/dashboard/TransferDetails"));
 const PendingTransfer = lazy(() => import("@/pages/dashboard/PendingTransfer"));
 const PendingTransferDetails = lazy(
@@ -141,6 +142,19 @@ export default function AppRoutes() {
                 allowedAbilities={["TRANSFER"]}
               >
                 <TransferDetails />
+              </RoleProtectedRoute>
+            }
+          />
+
+          {/* All Transfers - view all types without filtering */}
+          <Route
+            path="all-transfers"
+            element={
+              <RoleProtectedRoute
+                allowedRoles={["superadmin"]}
+                allowedAbilities={["TRANSFER", "APPROVE"]}
+              >
+                <AllTransfers />
               </RoleProtectedRoute>
             }
           />

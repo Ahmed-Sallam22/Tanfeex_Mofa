@@ -196,6 +196,7 @@ export interface SharedTableProps {
   currentPage?: number;
   onPageChange?: (page: number) => void;
   showPagination?: boolean;
+  Edit?: boolean;
   itemsPerPage?: number;
   // Server-side pagination props
   totalCount?: number; // Total number of items from API
@@ -260,6 +261,7 @@ export function SharedTable({
   currentPage = 1,
   onPageChange,
   showPagination = false,
+  Edit = true,
   itemsPerPage = 10,
   totalCount,
   hasNext,
@@ -1525,10 +1527,10 @@ export function SharedTable({
                                 </button>
                               )}
                               {isHFR &&
-                                row.status === "approved" && 
-                                  row.hfr_has_remaining === true && (
+                                row.status === "approved" &&
+                                row.hfr_has_remaining === true && (
                                   <>
-                                  {}
+                                    {}
                                     <button
                                       onClick={() =>
                                         handleUnhold(row, globalIndex)
@@ -1606,47 +1608,55 @@ export function SharedTable({
                                   </svg>
                                 </button>
                               )}
-                              {!documents &&
-                                (!isHFR || row.status === "pending") && (
-                                  <button
-                                    onClick={() => handleEdit(row, globalIndex)}
-                                    className="p-1.5  hover:bg-blue-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-blue-700 transition-colors"
-                                    title="Edit"
-                                    aria-label={t("common.edit")}
-                                  >
-                                    <svg
-                                      width="16"
-                                      height="16"
-                                      viewBox="0 0 16 16"
-                                      fill="none"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                      <path
-                                        d="M9.03564 12.9827H13.3335"
-                                        stroke="#757575"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                      <path
-                                        fillRule="evenodd"
-                                        clipRule="evenodd"
-                                        d="M8.46206 3.11698C8.9217 2.56765 9.74798 2.4871 10.3087 2.93739C10.3397 2.96182 11.3358 3.73565 11.3358 3.73565C11.9518 4.10804 12.1432 4.89969 11.7624 5.50383C11.7422 5.53618 6.11062 12.5805 6.11062 12.5805C5.92326 12.8142 5.63885 12.9522 5.33489 12.9555L3.17822 12.9826L2.6923 10.9259C2.62423 10.6367 2.6923 10.333 2.87966 10.0992L8.46206 3.11698Z"
-                                        stroke="#757575"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                      <path
-                                        d="M7.41992 4.42432L10.6509 6.90558"
-                                        stroke="#757575"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                    </svg>
-                                  </button>
-                                )}
+                              {Edit ? (
+                                <>
+                                  {!documents &&
+                                    (!isHFR || row.status === "pending") && (
+                                      <button
+                                        onClick={() =>
+                                          handleEdit(row, globalIndex)
+                                        }
+                                        className="p-1.5  hover:bg-blue-200 border rounded-full border-[#EEEEEE] cursor-pointer hover:text-blue-700 transition-colors"
+                                        title="Edit"
+                                        aria-label={t("common.edit")}
+                                      >
+                                        <svg
+                                          width="16"
+                                          height="16"
+                                          viewBox="0 0 16 16"
+                                          fill="none"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                          <path
+                                            d="M9.03564 12.9827H13.3335"
+                                            stroke="#757575"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          />
+                                          <path
+                                            fillRule="evenodd"
+                                            clipRule="evenodd"
+                                            d="M8.46206 3.11698C8.9217 2.56765 9.74798 2.4871 10.3087 2.93739C10.3397 2.96182 11.3358 3.73565 11.3358 3.73565C11.9518 4.10804 12.1432 4.89969 11.7624 5.50383C11.7422 5.53618 6.11062 12.5805 6.11062 12.5805C5.92326 12.8142 5.63885 12.9522 5.33489 12.9555L3.17822 12.9826L2.6923 10.9259C2.62423 10.6367 2.6923 10.333 2.87966 10.0992L8.46206 3.11698Z"
+                                            stroke="#757575"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          />
+                                          <path
+                                            d="M7.41992 4.42432L10.6509 6.90558"
+                                            stroke="#757575"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          />
+                                        </svg>
+                                      </button>
+                                    )}
+                                </>
+                              ) : (
+                                <></>
+                              )}
 
                               {(!isHFR || row.status === "pending") && (
                                 <button

@@ -57,6 +57,12 @@ export interface TransferListParams {
   search?: string;
 }
 
+export interface AllTransfersListParams {
+  page?: number;
+  page_size?: number;
+  search?: string;
+}
+
 export interface CreateTransferRequest {
   transaction_date: string;
   budget_control: string;
@@ -209,6 +215,18 @@ export const transferApi = createApi({
       }),
       providesTags: ['Transfer'],
     }),
+    getAllTransfersList: builder.query<TransferListResponse, AllTransfersListParams>({
+      query: ({ page = 1, page_size = 10, search } = {}) => ({
+        url: `/budget/transfers/list/`,
+        method: 'GET',
+        params: {
+          page,
+          page_size,
+          search
+        },
+      }),
+      providesTags: ['Transfer'],
+    }),
     createTransfer: builder.mutation<TransferResponse, CreateTransferRequest>({
       query: (body) => ({
         url: `/budget/transfers/create/`,
@@ -257,6 +275,7 @@ export const transferApi = createApi({
 
 export const { 
   useGetTransferListQuery,
+  useGetAllTransfersListQuery,
   useCreateTransferMutation,
   useUpdateTransferMutation,
   useDeleteTransferMutation,
