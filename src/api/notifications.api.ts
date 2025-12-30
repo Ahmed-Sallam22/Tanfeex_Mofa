@@ -95,7 +95,7 @@ export const getNotificationPath = (
 
     case "AFR":
       if (actionLower === "list") {
-        return `/app/fund-requests/${transactionId}`;
+        return `/app/FundRequests/${transactionId}`;
       } else {
         return `/app/PendingRequests/${transactionId}`;
       }
