@@ -1259,6 +1259,7 @@
   "tableColumns": {
     "id": "ID",
     "code": "Code",
+    "type": "Type",
     "transactionId": "Transaction ID",
     "requestedBy": "Requested By",
     "description": "Description",
