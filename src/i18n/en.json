@@ -50,6 +50,17 @@
     "search": "Search",
     "notifications": "Notifications"
   },
+  "notifications": {
+    "noNotifications": "No notifications",
+    "markAllRead": "Mark all as read",
+    "markRead": "Mark as read",
+    "clearAll": "Clear all",
+    "delete": "Delete",
+    "justNow": "Just now",
+    "minutesAgo": "min ago",
+    "hoursAgo": "hours ago",
+    "daysAgo": "days ago"
+  },
   "home": {
     "title": "Dashboard",
     "initialEnvelope": "Initial Envelope",

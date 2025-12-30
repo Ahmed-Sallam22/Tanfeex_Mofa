@@ -6,6 +6,7 @@ import img from "../assets/Avatar/32px.png";
 import { useLogout } from "@/hooks/useLogout";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/hooks/useLocale";
+import { useNotifications } from "@/contexts/NotificationsContext";
 // import { useGetUserProfileQuery } from "../api/auth.api";
 
 type NavbarProps = {
@@ -16,6 +17,7 @@ type NavbarProps = {
 export default function Navbar({ onSearchClick, onBellClick }: NavbarProps) {
   const { t } = useTranslation();
   const { locale, setLocale } = useLocale();
+  const { unreadCount } = useNotifications();
 
   // Get user data from Redux store (which is synced with localStorage)
   const user = useSelector((state: RootState) => state.auth.user);
@@ -112,8 +114,12 @@ export default function Navbar({ onSearchClick, onBellClick }: NavbarProps) {
         className="relative h-8 w-8 sm:h-9 sm:w-9 grid place-items-center rounded-full border border-gray-200 hover:bg-gray-50 flex-shrink-0"
       >
         <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-700" />
-        {/* Red dot */}
-        <span className="absolute -top-0.5 -right-0.5 h-2 w-2 sm:h-2.5 sm:w-2.5 bg-red-500 rounded-full ring-1 sm:ring-2 ring-white" />
+        {/* Notification badge - only show when there are unread notifications */}
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 ring-2 ring-white">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
       </button>
 
       {/* Divider - Hidden on mobile */}

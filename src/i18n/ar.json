@@ -49,6 +49,17 @@
     "search": "بحث",
     "notifications": "الإشعارات"
   },
+  "notifications": {
+    "noNotifications": "لا توجد إشعارات",
+    "markAllRead": "تعليم الكل كمقروء",
+    "markRead": "تعليم كمقروء",
+    "clearAll": "حذف الكل",
+    "delete": "حذف",
+    "justNow": "الآن",
+    "minutesAgo": "دقيقة",
+    "hoursAgo": "ساعة",
+    "daysAgo": "يوم"
+  },
   "home": {
     "title": "لوحة التحكم",
     "initialEnvelope": "المغلف الأولي",

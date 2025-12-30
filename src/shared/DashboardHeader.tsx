@@ -6,8 +6,12 @@ import type { RootState } from "@/app/store";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/utils/cn";
 import moment from "moment-hijri";
+import { useState } from "react";
+import { NotificationsModal } from "@/components/NotificationsModal";
 
 export default function DashboardHeader() {
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
   // Get user data from Redux store
   const user = useSelector((state: RootState) => state.auth.user);
   const { t, i18n } = useTranslation();
@@ -96,7 +100,13 @@ export default function DashboardHeader() {
       {/* Right: navbar capsule */}
       <Navbar
         onSearchClick={() => console.log("search")}
-        onBellClick={() => console.log("bell")}
+        onBellClick={() => setNotificationsOpen(true)}
+      />
+
+      {/* Notifications Modal */}
+      <NotificationsModal
+        isOpen={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
       />
     </header>
   );
