@@ -68,7 +68,7 @@ interface TransferDetailRow {
   availableBudget: number;
 }
 
-export default function TransferDetails() {
+export default function FundRequestsDetails() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();

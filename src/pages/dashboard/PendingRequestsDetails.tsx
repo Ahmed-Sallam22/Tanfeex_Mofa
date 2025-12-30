@@ -42,7 +42,7 @@ interface TransferTableRow {
   [key: string]: string | number | string[] | undefined;
 }
 
-export default function PendingAdjustmentsDetails() {
+export default function PendingRequestsDetails() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
