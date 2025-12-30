@@ -101,6 +101,14 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           notification.Type_of_action,
           notification.Transaction_id
         );
+        console.log("saj",
+          notification.type_of_Trasnction,
+          notification.Type_of_action,
+          notification.Transaction_id
+        );
+        
+        console.log(path);
+        
         navigate(path);
         onClose();
       }
