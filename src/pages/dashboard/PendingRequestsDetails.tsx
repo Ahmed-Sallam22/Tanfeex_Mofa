@@ -52,10 +52,8 @@ export default function PendingRequestsDetails() {
   // Use the transaction ID from params, default to 82 for testing
   const transactionId = id || "513"; // Use ID from params or default to 513
 
-  const {
-    data: apiData,
-    isLoading,
-  } = useGetTransferDetailsQuery(transactionId);
+  const { data: apiData, isLoading } =
+    useGetTransferDetailsQuery(transactionId);
 
   // Fetch segment types for dynamic columns
   const { data: segmentTypesData, isLoading: isLoadingSegmentTypes } =
@@ -537,11 +535,12 @@ export default function PendingRequestsDetails() {
     return (
       <div className="flex justify-center items-center h-64 bg-white rounded-lg">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">{t("pendingRequestsDetails.loadingTransfers")}</span>
+        <span className="ml-2 text-gray-600">
+          {t("pendingRequestsDetails.loadingTransfers")}
+        </span>
       </div>
     );
   }
-
 
   return (
     <div>

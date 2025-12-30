@@ -7,6 +7,8 @@ import { useLogout } from "@/hooks/useLogout";
 import { useTranslation } from "react-i18next";
 import { useLocale } from "@/hooks/useLocale";
 import { useNotifications } from "@/contexts/NotificationsContext";
+import { useGetAllNotificationsQuery } from "@/api/notifications.api";
+import { useMemo } from "react";
 // import { useGetUserProfileQuery } from "../api/auth.api";
 
 type NavbarProps = {
@@ -17,7 +19,33 @@ type NavbarProps = {
 export default function Navbar({ onSearchClick, onBellClick }: NavbarProps) {
   const { t } = useTranslation();
   const { locale, setLocale } = useLocale();
-  const { unreadCount } = useNotifications();
+  const { notifications: wsNotifications } = useNotifications();
+
+  // Get API notifications
+  const { data: apiData } = useGetAllNotificationsQuery();
+
+  // Calculate unread count from API data (prioritize API over WebSocket)
+  const unreadCount = useMemo(() => {
+    if (apiData?.notifications) {
+      // Count notifications where is_read is false
+      const apiUnreadCount = apiData.notifications.filter(
+        (n) => !n.is_read
+      ).length;
+
+      // Add WebSocket notifications that might not be in API yet
+      const wsUnreadCount = wsNotifications.filter((wsN) => {
+        const isInApi = apiData.notifications.some(
+          (apiN) => apiN.message === wsN.message
+        );
+        return !wsN.read && !isInApi;
+      }).length;
+
+      return apiUnreadCount + wsUnreadCount;
+    }
+
+    // Fallback to WebSocket only if API data is not available
+    return wsNotifications.filter((n) => !n.read).length;
+  }, [apiData, wsNotifications]);
 
   // Get user data from Redux store (which is synced with localStorage)
   const user = useSelector((state: RootState) => state.auth.user);

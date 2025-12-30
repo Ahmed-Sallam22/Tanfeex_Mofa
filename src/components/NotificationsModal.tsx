@@ -43,7 +43,6 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   // WebSocket notifications (real-time)
   const {
     notifications: wsNotifications,
-    unreadCount,
     status,
     markAsRead: wsMarkAsRead,
     markAllAsRead: wsMarkAllAsRead,
@@ -79,6 +78,13 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
   const notifications = mergedNotifications;
 
+  // Calculate unread count from merged notifications
+  const unreadCount = notifications.filter((n) => {
+    if ("is_read" in n) return !n.is_read;
+    if ("read" in n) return !n.read;
+    return false;
+  }).length;
+
   const handleNotificationClick = async (notification: UnifiedNotification) => {
     try {
       // Mark as read in both systems
@@ -101,14 +107,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           notification.Type_of_action,
           notification.Transaction_id
         );
-        console.log("saj",
-          notification.type_of_Trasnction,
-          notification.Type_of_action,
-          notification.Transaction_id
-        );
-        
-        console.log(path);
-        
+
         navigate(path);
         onClose();
       }
