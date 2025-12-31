@@ -865,6 +865,8 @@
     "status": "Status",
     "transactionType": "Transaction Type",
     "date": "Date",
+    "startDate": "Start Date",
+    "endDate": "End Date",
     "selectUser": "Select user...",
     "selectStatus": "Select status...",
     "selectType": "Select type..."

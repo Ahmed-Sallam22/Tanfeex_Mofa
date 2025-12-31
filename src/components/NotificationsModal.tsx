@@ -19,6 +19,11 @@ type UnifiedNotification =
   | {
       id: string;
       message: string;
+      eng_message?: string;
+      ara_message?: string;
+      Transaction_id?: number;
+      type_of_Trasnction?: "FAR" | "AFR" | "HFR" | "DFR";
+      Type_of_action?: "List" | "Approval";
       type: string;
       timestamp: string;
       read: boolean;
@@ -93,12 +98,13 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       }
       wsMarkAsRead(String(notification.id));
 
-      // Navigate if we have the required data
+      // Navigate only if we have the required data and valid values
       if (
         "Transaction_id" in notification &&
         "type_of_Trasnction" in notification &&
         "Type_of_action" in notification &&
         notification.Transaction_id &&
+        notification.Transaction_id > 0 && // Ensure valid ID
         notification.type_of_Trasnction &&
         notification.Type_of_action
       ) {
@@ -108,8 +114,11 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           notification.Transaction_id
         );
 
-        navigate(path);
-        onClose();
+        // Only navigate if path is valid
+        if (path) {
+          navigate(path);
+          onClose();
+        }
       }
     } catch (error) {
       console.error("Error handling notification click:", error);
@@ -232,13 +241,13 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/20 z-40" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/20 z-[9998]" onClick={onClose} />
 
       {/* Modal */}
       <div
         className={`fixed top-20 ${
           isRTL ? "left-4 sm:left-8" : "right-4 sm:right-8"
-        } w-[calc(100vw-2rem)] sm:w-[420px] bg-white rounded-2xl shadow-2xl z-50 max-h-[calc(100vh-6rem)] flex flex-col`}
+        } w-[calc(100vw-2rem)] sm:w-[420px] bg-white rounded-2xl shadow-2xl z-[9999] max-h-[calc(100vh-6rem)] flex flex-col`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -355,7 +364,14 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                               : "text-gray-700"
                           }`}
                         >
-                          {notification.message}
+                          {/* Display message based on language */}
+                          {isRTL
+                            ? "ara_message" in notification
+                              ? notification.ara_message
+                              : notification.message
+                            : "eng_message" in notification
+                            ? notification.eng_message
+                            : notification.message}
                         </p>
 
                         {notifData?.code && (

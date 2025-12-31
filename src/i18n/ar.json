@@ -865,6 +865,8 @@
     "status": "الحالة",
     "transactionType": "نوع المعاملة",
     "date": "التاريخ",
+    "startDate": "تاريخ البداية",
+    "endDate": "تاريخ النهاية",
     "selectUser": "اختر مستخدم...",
     "selectStatus": "اختر الحالة...",
     "selectType": "اختر النوع..."

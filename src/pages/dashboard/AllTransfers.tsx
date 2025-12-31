@@ -35,7 +35,10 @@ export default function AllTransfers() {
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>(
     undefined
   );
-  const [selectedDate, setSelectedDate] = useState<string | undefined>(
+  const [selectedStartDate, setSelectedStartDate] = useState<
+    string | undefined
+  >(undefined);
+  const [selectedEndDate, setSelectedEndDate] = useState<string | undefined>(
     undefined
   );
   const [selectedCode, setSelectedCode] = useState<string | undefined>(
@@ -80,14 +83,19 @@ export default function AllTransfers() {
   const handleClearFilters = () => {
     setSelectedUserId(undefined);
     setSelectedStatus(undefined);
-    setSelectedDate(undefined);
+    setSelectedStartDate(undefined);
+    setSelectedEndDate(undefined);
     setSelectedCode(undefined);
     setCurrentPage(1);
   };
 
   // Check if any filter is active
   const hasActiveFilters =
-    selectedUserId || selectedStatus || selectedDate || selectedCode;
+    selectedUserId ||
+    selectedStatus ||
+    selectedStartDate ||
+    selectedEndDate ||
+    selectedCode;
 
   // Attachments state
   const [isAttachmentsModalOpen, setIsAttachmentsModalOpen] = useState(false);
@@ -119,7 +127,8 @@ export default function AllTransfers() {
     search: searchQuery,
     user_id: selectedUserId,
     status: selectedStatus,
-    date: selectedDate,
+    start_date: selectedStartDate,
+    end_date: selectedEndDate,
     code: selectedCode,
   });
 
@@ -485,7 +494,7 @@ export default function AllTransfers() {
       </div>
 
       {/* Filters Section */}
-      <div className="bg-white rounded-2xl mb-6 z-[999999] relative">
+      <div className="bg-white rounded-2xl mb-6 z-[99] relative">
         {/* Filter Toggle Button */}
         <button
           onClick={() => setShowFilters(!showFilters)}
@@ -522,7 +531,7 @@ export default function AllTransfers() {
         {/* Filter Content */}
         {showFilters && (
           <div className="p-4 border-t border-gray-200 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               {/* User Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -602,16 +611,32 @@ export default function AllTransfers() {
                 />
               </div>
 
-              {/* Date Filter */}
+              {/* Start Date Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("filters.date")}
+                  {t("filters.startDate")}
                 </label>
                 <input
                   type="date"
-                  value={selectedDate || ""}
+                  value={selectedStartDate || ""}
                   onChange={(e) => {
-                    setSelectedDate(e.target.value || undefined);
+                    setSelectedStartDate(e.target.value || undefined);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4E8476] focus:border-transparent text-sm"
+                />
+              </div>
+
+              {/* End Date Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("filters.endDate")}
+                </label>
+                <input
+                  type="date"
+                  value={selectedEndDate || ""}
+                  onChange={(e) => {
+                    setSelectedEndDate(e.target.value || undefined);
                     setCurrentPage(1);
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4E8476] focus:border-transparent text-sm"

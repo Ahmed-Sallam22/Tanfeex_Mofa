@@ -4,6 +4,8 @@ import { customBaseQuery } from "./baseQuery";
 export interface NotificationItem {
   id: number;
   message: string;
+  eng_message?: string;
+  ara_message?: string;
   is_read: boolean;
   created_at: string;
   is_shown: boolean;

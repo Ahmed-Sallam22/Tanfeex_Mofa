@@ -2,11 +2,17 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/app/store";
 import { toast } from "react-hot-toast";
+import i18n from "@/i18n";
 
 export interface NotificationMessage {
   id: string;
   type: string;
   message: string;
+  eng_message?: string;
+  ara_message?: string;
+  Transaction_id?: number;
+  type_of_Trasnction?: "FAR" | "AFR" | "HFR" | "DFR";
+  Type_of_action?: "List" | "Approval";
   data?: {
     transaction_id?: number;
     code?: string;
@@ -121,9 +127,14 @@ export function useNotificationsSocket(): UseNotificationsSocketReturn {
             case "oracle_upload_completed":
             case "oracle_upload_failed": {
               const newNotification: NotificationMessage = {
-                id: data.data?.transaction_id?.toString() || `notif-${Date.now()}`,
+                id: data.id?.toString() || data.data?.transaction_id?.toString() || `notif-${Date.now()}`,
                 type: data.type,
                 message: data.message || "New notification",
+                eng_message: data.eng_message,
+                ara_message: data.ara_message,
+                Transaction_id: data.Transaction_id || data.data?.transaction_id,
+                type_of_Trasnction: data.type_of_Trasnction,
+                Type_of_action: data.Type_of_action,
                 data: data.data,
                 timestamp: data.timestamp || new Date().toISOString(),
                 read: false,
@@ -133,7 +144,12 @@ export function useNotificationsSocket(): UseNotificationsSocketReturn {
               setNotifications((prev) => [newNotification, ...prev]);
 
               // Show toast based on type
-              const toastMessage = data.message || "New notification";
+              // Check current language and display appropriate message
+              const currentLang = i18n.language;
+              const toastMessage = currentLang === "ar" 
+                ? (data.ara_message || data.message || "إشعار جديد")
+                : (data.eng_message || data.message || "New notification");
+              
               if (data.type === "oracle_upload_failed") {
                 toast.error(toastMessage, { duration: 5000 });
               } else if (data.type === "oracle_upload_completed") {

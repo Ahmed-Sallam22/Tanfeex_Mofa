@@ -63,7 +63,8 @@ export interface AllTransfersListParams {
   search?: string;
   user_id?: number;
   status?: string;
-  date?: string;
+  start_date?: string;
+  end_date?: string;
   code?: string; // Transaction type: FAR, AFR, HFR, DFR
 }
 
@@ -220,7 +221,7 @@ export const transferApi = createApi({
       providesTags: ['Transfer'],
     }),
     getAllTransfersList: builder.query<TransferListResponse, AllTransfersListParams>({
-      query: ({ page = 1, page_size = 10, search, user_id, status, date, code } = {}) => ({
+      query: ({ page = 1, page_size = 10, search, user_id, status, start_date, end_date, code } = {}) => ({
         url: `/budget/transfers/list/`,
         method: 'GET',
         params: {
@@ -229,7 +230,8 @@ export const transferApi = createApi({
           search,
           user_id,
           status,
-          date,
+          start_date,
+          end_date,
           code
         },
       }),
