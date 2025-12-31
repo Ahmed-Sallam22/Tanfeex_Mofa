@@ -247,10 +247,10 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       <div
         className={`fixed top-20 ${
           isRTL ? "left-4 sm:left-8" : "right-4 sm:right-8"
-        } w-[calc(100vw-2rem)] sm:w-[420px] bg-white rounded-2xl shadow-2xl z-[9999] max-h-[calc(100vh-6rem)] flex flex-col`}
+        } w-[calc(100vw-2rem)] sm:w-[420px] max-w-[420px] bg-white rounded-2xl shadow-2xl z-[9999] max-h-[calc(100vh-10rem)] flex flex-col overflow-hidden`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center gap-3">
             <Bell className="h-5 w-5 text-gray-700" />
             <h2 className="text-lg font-semibold text-gray-900">
@@ -258,7 +258,12 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             </h2>
             {unreadCount > 0 && (
               <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full min-w-[24px] text-center">
-                {unreadCount}
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+            {notifications.length > 0 && (
+              <span className="text-xs text-gray-400 font-medium">
+                ({notifications.length})
               </span>
             )}
           </div>
@@ -287,7 +292,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
         {/* Actions */}
         {notifications.length > 0 && (
-          <div className="flex items-center justify-between px-5 py-3 bg-gray-50/50 border-b border-gray-100">
+          <div className="flex items-center justify-between px-5 py-3 bg-gray-50/50 border-b border-gray-100 flex-shrink-0">
             <button
               onClick={handleMarkAllAsRead}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -306,7 +311,12 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         )}
 
         {/* Notifications List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overscroll-contain notifications-scroll"
+             style={{
+               scrollbarWidth: 'thin',
+               scrollbarColor: '#CBD5E0 #F7FAFC'
+             }}
+        >
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-6">
               <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
@@ -316,12 +326,11 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                 {t("notifications.noNotifications")}
               </p>
               <p className="text-gray-400 text-xs text-center mt-1">
-                سيظهر هنا جميع الإشعارات الجديدة
+                {isRTL ? "سيظهر هنا جميع الإشعارات الجديدة" : "All new notifications will appear here"}
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {notifications.map((notification) => {
+            <div className="divide-y divide-gray-100">{notifications.map((notification) => {
                 const notifType =
                   "type" in notification ? notification.type : "general";
                 const notifId = notification.id;
