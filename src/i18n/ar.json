@@ -389,8 +389,14 @@
     "transactionDate": "تاريخ المعاملة",
     "amount": "المبلغ",
     "approveMessage": "أنت على وشك الموافقة على هذا الحجز. بمجرد الموافقة، سيتم إخطار مقدم الطلب.",
+    "rejectMessage": "أنت على وشك رفض هذا الحجز. هذا الإجراء لا يمكن التراجع عنه. يرجى تقديم سبب واضح للرفض حتى يفهم مقدم الطلب الخطوات التالية.",
     "reasonOptional": "السبب (اختياري)",
+    "reasonForRejectionOptional": "سبب الرفض (اختياري)",
     "addComments": "إضافة تعليقات...",
+    "describeReason": "وصف سبب الرفض (اختياري)...",
+    "cancel": "إلغاء",
+    "approve": "موافقة",
+    "rejectTransferButton": "رفض الحجز",
     "columns": {
       "transactionCode": "رمز المعاملة",
       "requestedBy": "مطلوب من",
@@ -411,7 +417,13 @@
     "rejectSuccess": "تم رفض الحجز بنجاح",
     "rejectFailed": "فشل رفض الحجز",
     "selectUser": "اختر المستخدم",
+    "chooseUserToDelegate": "اختر مستخدمًا للتفويض إليه",
+    "reasonForDelegation": "سبب التفويض",
+    "provideDelegateReason": "قدم سببًا لتفويض هذه الحجوزات...",
+    "confirmDelegation": "تأكيد التفويض",
+    "delegateMessage": "أنت على وشك تفويض {count} حجز/حجوزات إلى مستخدم آخر. يرجى تحديد المستخدم وتقديم سبب للتفويض.",
     "delegateReasonPlaceholder": "سبب التفويض (اختياري)",
+    "delegateTransfers": "تفويض الحجوزات",
     "select": "اختر"
   },
   "pendingReservationsDetails": {
@@ -1988,6 +2000,9 @@
   "Type_of_reinforcement": "نوع التعزيز",
   "select_Type_of_reinforcement": "اختر نوع التعزيز",
     "Type_of_reinforcement2": "نوع التخفيض",
-  "select_Type_of_reinforcement2": "اختر نوع التخفيض"
+  "select_Type_of_reinforcement2": "اختر نوع التخفيض",
+  "footer": {
+    "copyright": "تنفيذ. جميع الحقوق محفوظة."
+  }
 
 }

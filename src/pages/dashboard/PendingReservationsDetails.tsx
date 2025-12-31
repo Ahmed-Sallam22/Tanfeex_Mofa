@@ -51,10 +51,8 @@ export default function PendingReservationsDetails() {
   // Use the transaction ID from params, default to 82 for testing
   const transactionId = id || "513"; // Use ID from params or default to 513
 
-  const {
-    data: apiData,
-    isLoading,
-  } = useGetTransferDetailsQuery(transactionId);
+  const { data: apiData, isLoading } =
+    useGetTransferDetailsQuery(transactionId);
 
   // Fetch segment types for dynamic columns
   const { data: segmentTypesData, isLoading: isLoadingSegmentTypes } =
@@ -543,8 +541,6 @@ export default function PendingReservationsDetails() {
     );
   }
 
-
-
   return (
     <div>
       {/* Header with back button */}
@@ -634,7 +630,7 @@ export default function PendingReservationsDetails() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700  border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               onClick={confirmApprove}
@@ -686,7 +682,7 @@ export default function PendingReservationsDetails() {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700  border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               onClick={confirmReject}

@@ -1,15 +1,17 @@
 import {
-  Outlet
+  Outlet,
   // useLocation
-} from 'react-router-dom';
-import { Menu } from 'lucide-react';
-import { useState } from 'react';
-import Sidebar from '@/shared/Sidebar';
-import DashboardHeader from '@/shared/DashboardHeader';
+} from "react-router-dom";
+import { Menu } from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import Sidebar from "@/shared/Sidebar";
+import DashboardHeader from "@/shared/DashboardHeader";
 // import ChatBot from '@/pages/dashboard/ChatBot';
 
 export default function AppLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);      // mobile/tablet overlay
+  const { t } = useTranslation();
+  const [sidebarOpen, setSidebarOpen] = useState(false); // mobile/tablet overlay
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // desktop: false => 2/10, true => 1/11
   // const location = useLocation();
   return (
@@ -26,27 +28,42 @@ export default function AppLayout() {
       <div className="hidden lg:grid lg:grid-cols-12 h-full">
         {/* Desktop Sidebar */}
         <div
-          className={`sticky top-0 ${sidebarCollapsed ? 'col-span-1' : 'col-span-2'} h-[97.5vh] m-3 overflow-y-auto overflow-x-hidden`}
+          className={`sticky top-0 ${
+            sidebarCollapsed ? "col-span-1" : "col-span-2"
+          } h-[97.5vh] m-3 overflow-y-auto overflow-x-hidden`}
         >
           {/* Smooth feel (transform no-op but keeps timing consistent) */}
           <div className="h-full transition-all duration-300 ease-in-out will-change-transform">
             <Sidebar
               onClose={() => setSidebarOpen(false)}
-              onToggle={() => setSidebarCollapsed(v => !v)}
-              desktopHidden={sidebarCollapsed}   // collapsed => icons only
+              onToggle={() => setSidebarCollapsed((v) => !v)}
+              desktopHidden={sidebarCollapsed} // collapsed => icons only
             />
           </div>
         </div>
 
         {/* Desktop Main Content */}
         <main
-          className={`${sidebarCollapsed ? 'col-span-11' : 'col-span-10'} h-full overflow-y-auto overflow-x-hidden transition-[grid-column] duration-300`}
+          className={`${
+            sidebarCollapsed ? "col-span-11" : "col-span-10"
+          } h-full overflow-y-auto overflow-x-hidden transition-[grid-column] duration-300`}
         >
-          <div className="p-6">
-            <DashboardHeader />
-            <div className="mt-8">
-              <Outlet />
+          <div className="min-h-full flex flex-col">
+            <div className="flex-1 p-6">
+              <DashboardHeader />
+              <div className="mt-8">
+                <Outlet />
+              </div>
             </div>
+
+            {/* Footer */}
+            <footer className="bg-white border-t border-gray-200 py-4 px-6 mt-auto">
+              <div className="text-center text-sm text-gray-600">
+                <p>
+                  © {new Date().getFullYear()} {t("footer.copyright")}
+                </p>
+              </div>
+            </footer>
           </div>
         </main>
       </div>
@@ -65,7 +82,7 @@ export default function AppLayout() {
         <div
           className={`
             fixed inset-y-0 left-0 z-50 w-72 sm:w-80 max-w-[85vw] bg-white shadow-lg transform transition-transform duration-300 ease-in-out
-            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+            ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           `}
         >
           <Sidebar
@@ -76,14 +93,24 @@ export default function AppLayout() {
         </div>
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="p-4 sm:p-6">
-            <DashboardHeader />
-            <div className="mt-6 sm:mt-8">
-              <Outlet />
+          <div className="min-h-full flex flex-col">
+            <div className="flex-1 p-4 sm:p-6">
+              <DashboardHeader />
+              <div className="mt-6 sm:mt-8">
+                <Outlet />
+              </div>
             </div>
+
+            {/* Footer */}
+            <footer className="bg-white border-t border-gray-200 py-4 px-4 sm:px-6 mt-auto">
+              <div className="text-center text-sm text-gray-600">
+                <p>
+                  © {new Date().getFullYear()} {t("footer.copyright")}
+                </p>
+              </div>
+            </footer>
           </div>
         </main>
-      
       </div>
       {/* {!location.pathname.includes('/chat') && (
         <div className='absolute bottom-6 right-10'>
