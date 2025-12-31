@@ -18,6 +18,7 @@ interface RegisterResponse {
 
 export interface UserGroup {
   group_name: string;
+  group_id: number;
   roles: string[];
   abilities: string[];
 }

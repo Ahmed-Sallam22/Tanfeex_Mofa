@@ -749,6 +749,9 @@
     "submit": "إرسال",
     "search": "بحث",
     "filter": "تصفية",
+    "filters": "الفلاتر",
+    "active": "نشط",
+    "clearFilters": "مسح الفلاتر",
     "export": "تصدير",
     "import": "استيراد",
     "upload": "رفع",
@@ -856,6 +859,15 @@
     "enterReason": "سبب هذا التحويل",
     "enterReasonPlaceholder": "أدخل سبب هذا التحويل...",
     "saveReason": "حفظ السبب"
+  },
+  "filters": {
+    "user": "المستخدم",
+    "status": "الحالة",
+    "transactionType": "نوع المعاملة",
+    "date": "التاريخ",
+    "selectUser": "اختر مستخدم...",
+    "selectStatus": "اختر الحالة...",
+    "selectType": "اختر النوع..."
   },
   "transfer": {
     "title": "تحويلات الميزانية",
@@ -1872,6 +1884,7 @@
     "pending": "معلق",
     "rejected": "مرفوض",
     "in_progress": "قيد التنفيذ",
+    "un_holded": "غير محجوز",
     "active": "نشط",
     "stage": "مرحلة",
     "noData": "لا توجد معلومات حالة متاحة",

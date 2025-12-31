@@ -2,7 +2,7 @@ import SearchBar from "@/shared/SearchBar";
 import { SharedTable } from "@/shared/SharedTable";
 import type { TableColumn, TableRow } from "@/shared/SharedTable";
 import { SharedModal } from "@/shared/SharedModal";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -15,6 +15,10 @@ import {
 import type { TransferItem } from "@/api/transfer.api";
 import { useGetAttachmentsQuery } from "@/api/attachments.api";
 import type { Attachment } from "@/api/attachments.api";
+import { useGetUserProfileQuery } from "@/api/auth.api";
+import { useGetGroupMembersQuery } from "@/api/securityGroups.api";
+import Select from "react-select";
+import { Filter, X } from "lucide-react";
 
 export default function AllTransfers() {
   const { t } = useTranslation();
@@ -23,6 +27,67 @@ export default function AllTransfers() {
   // State management
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
+
+  // Filter states
+  const [selectedUserId, setSelectedUserId] = useState<number | undefined>(
+    undefined
+  );
+  const [selectedStatus, setSelectedStatus] = useState<string | undefined>(
+    undefined
+  );
+  const [selectedDate, setSelectedDate] = useState<string | undefined>(
+    undefined
+  );
+  const [selectedCode, setSelectedCode] = useState<string | undefined>(
+    undefined
+  );
+  const [showFilters, setShowFilters] = useState<boolean>(false);
+
+  // Get user profile to get group_id
+  const { data: userProfile } = useGetUserProfileQuery();
+  const groupId = userProfile?.groups?.[0]?.group_id;
+
+  // Get group members for user filter
+  const { data: groupMembersData } = useGetGroupMembersQuery(groupId!, {
+    skip: !groupId,
+  });
+
+  // Prepare filter options
+  const userOptions = useMemo(() => {
+    if (!groupMembersData?.members) return [];
+    return groupMembersData.members.map((member) => ({
+      value: member.user_id,
+      label: member.username,
+    }));
+  }, [groupMembersData]);
+
+  const statusOptions = [
+    { value: "pending", label: t("status.pending") },
+    { value: "in_progress", label: t("status.in_progress") },
+    { value: "approved", label: t("status.approved") },
+    { value: "rejected", label: t("status.rejected") },
+    { value: "un_holded", label: t("status.un_holded") },
+  ];
+
+  const codeOptions = [
+    { value: "FAR", label: "FAR" },
+    { value: "AFR", label: "AFR" },
+    { value: "HFR", label: "HFR" },
+    { value: "DFR", label: "DFR" },
+  ];
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    setSelectedUserId(undefined);
+    setSelectedStatus(undefined);
+    setSelectedDate(undefined);
+    setSelectedCode(undefined);
+    setCurrentPage(1);
+  };
+
+  // Check if any filter is active
+  const hasActiveFilters =
+    selectedUserId || selectedStatus || selectedDate || selectedCode;
 
   // Attachments state
   const [isAttachmentsModalOpen, setIsAttachmentsModalOpen] = useState(false);
@@ -47,11 +112,15 @@ export default function AllTransfers() {
   );
   const [showExportUI, setShowExportUI] = useState(false);
 
-  // API calls - get ALL transfers without code filter
+  // API calls - get ALL transfers with filters
   const { data: transferResponse, isLoading } = useGetAllTransfersListQuery({
     page: currentPage,
     page_size: 10,
     search: searchQuery,
+    user_id: selectedUserId,
+    status: selectedStatus,
+    date: selectedDate,
+    code: selectedCode,
   });
 
   const [deleteTransfer] = useDeleteTransferMutation();
@@ -415,6 +484,157 @@ export default function AllTransfers() {
         />
       </div>
 
+      {/* Filters Section */}
+      <div className="bg-white rounded-2xl mb-6 z-[999999] relative">
+        {/* Filter Toggle Button */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Filter className="h-5 w-5 text-gray-600" />
+            <span className="font-medium text-gray-700">
+              {t("common.filters")}
+            </span>
+            {hasActiveFilters && (
+              <span className="bg-[#4E8476] text-white text-xs px-2 py-0.5 rounded-full">
+                {t("common.active")}
+              </span>
+            )}
+          </div>
+          <svg
+            className={`h-5 w-5 text-gray-400 transition-transform ${
+              showFilters ? "rotate-180" : ""
+            }`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
+
+        {/* Filter Content */}
+        {showFilters && (
+          <div className="p-4 border-t border-gray-200 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* User Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("filters.user")}
+                </label>
+                <Select
+                  options={userOptions}
+                  value={userOptions.find(
+                    (opt) => opt.value === selectedUserId
+                  )}
+                  onChange={(option) => {
+                    setSelectedUserId(option?.value);
+                    setCurrentPage(1);
+                  }}
+                  isClearable
+                  placeholder={t("filters.selectUser")}
+                  className="text-sm"
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      borderColor: "#e5e7eb",
+                      "&:hover": { borderColor: "#4E8476" },
+                    }),
+                  }}
+                />
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("filters.status")}
+                </label>
+                <Select
+                  options={statusOptions}
+                  value={statusOptions.find(
+                    (opt) => opt.value === selectedStatus
+                  )}
+                  onChange={(option) => {
+                    setSelectedStatus(option?.value);
+                    setCurrentPage(1);
+                  }}
+                  isClearable
+                  placeholder={t("filters.selectStatus")}
+                  className="text-sm"
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      borderColor: "#e5e7eb",
+                      "&:hover": { borderColor: "#4E8476" },
+                    }),
+                  }}
+                />
+              </div>
+
+              {/* Transaction Type Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("filters.transactionType")}
+                </label>
+                <Select
+                  options={codeOptions}
+                  value={codeOptions.find((opt) => opt.value === selectedCode)}
+                  onChange={(option) => {
+                    setSelectedCode(option?.value);
+                    setCurrentPage(1);
+                  }}
+                  isClearable
+                  placeholder={t("filters.selectType")}
+                  className="text-sm"
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      borderColor: "#e5e7eb",
+                      "&:hover": { borderColor: "#4E8476" },
+                    }),
+                  }}
+                />
+              </div>
+
+              {/* Date Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("filters.date")}
+                </label>
+                <input
+                  type="date"
+                  value={selectedDate || ""}
+                  onChange={(e) => {
+                    setSelectedDate(e.target.value || undefined);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4E8476] focus:border-transparent text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Clear Filters Button */}
+            {hasActiveFilters && (
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={handleClearFilters}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                  {t("common.clearFilters")}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Transfer Table */}
       {isLoading ? (
         <div className="flex justify-center items-center h-64 bg-white rounded-lg">
@@ -445,8 +665,8 @@ export default function AllTransfers() {
           hasNext={!!transferResponse?.next}
           hasPrevious={!!transferResponse?.previous}
           showActions={true}
-                          showFooter={true}
-                          Edit={false}
+          showFooter={true}
+          Edit={false}
           transactions={true}
           onChat={handleChat}
           onDelete={handleDelete}

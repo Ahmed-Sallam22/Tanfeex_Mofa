@@ -757,6 +757,9 @@
     "previous": "Previous",
     "search": "Search",
     "filter": "Filter",
+    "filters": "Filters",
+    "active": "Active",
+    "clearFilters": "Clear Filters",
     "export": "Export",
     "import": "Import",
     "upload": "Upload",
@@ -856,6 +859,15 @@
     "unhold": "Unhold",
     "transfer": "Transfer",
     "closeModal": "Close modal"
+  },
+  "filters": {
+    "user": "User",
+    "status": "Status",
+    "transactionType": "Transaction Type",
+    "date": "Date",
+    "selectUser": "Select user...",
+    "selectStatus": "Select status...",
+    "selectType": "Select type..."
   },
   "transfer": {
     "title": "Budget Transfers",
@@ -1873,6 +1885,7 @@
     "Pending": "Pending",
     "rejected": "Rejected",
     "in_progress": "In Progress",
+    "un_holded": "Un Holded",
     "active": "Active",
     "stage": "Stage",
     "noData": "No status information available",
