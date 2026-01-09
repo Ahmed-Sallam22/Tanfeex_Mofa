@@ -7,24 +7,7 @@ import { useInactivityDetector } from "../hooks/useInactivityDetector";
 import { useTokenRefresh } from "../hooks/useTokenRefresh";
 import { cn } from "@/utils/cn";
 
-// Clock icon component
-const ClockIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
-  <svg
-    className={className}
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-    <path
-      d="M12 6V12L16 14"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+
 
 // Warning icon component
 const WarningIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
@@ -163,121 +146,47 @@ export default function InactivityWarningModal({
     navigate("/auth/sign-in");
   };
 
-  // Format remaining time as MM:SS
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
-  };
 
-  // Calculate progress percentage for circular timer
-  const progressPercentage = (remainingTime / (warningTimeout / 1000)) * 100;
-  const circumference = 2 * Math.PI * 45; // radius = 45
-  const strokeDashoffset =
-    circumference - (progressPercentage / 100) * circumference;
+
 
   if (!isWarningVisible) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* Backdrop with blur */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-all duration-300" />
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm transition-all duration-300" />
 
       {/* Modal */}
       <div
         className={cn(
-          "relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl mx-4 w-full max-w-md transform transition-all duration-300 animate-in fade-in zoom-in-95",
+          "relative bg-white rounded-lg shadow-xl mx-4 w-full max-w-md transform transition-all duration-300",
           isRTL ? "font-arabic" : ""
         )}
       >
-        {/* Warning Header */}
-        <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-t-2xl p-6 text-center">
-          <div className="mx-auto w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center mb-4">
-            <WarningIcon className="w-8 h-8 text-white" />
+        {/* Header */}
+        <div className="flex items-center gap-3 p-4 border-b border-gray-200">
+          <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+            <WarningIcon className="w-5 h-5 text-amber-600" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-1">
-            {t("inactivity.title", "جلستك على وشك الانتهاء")}
-          </h2>
-          <p className="text-white/90 text-sm">
-            {t("inactivity.subtitle", "Session About to Expire")}
-          </p>
+          <div>
+            <h3 className="text-lg font-semibold text-[#282828]">
+              {t("inactivity.title", "جلستك على وشك الانتهاء")}
+            </h3>
+            <p className="text-sm text-gray-500">
+              {t("inactivity.subtitle", "تم اكتشاف عدم نشاط")}
+            </p>
+          </div>
         </div>
 
         {/* Content */}
         <div className="p-6">
-          {/* Timer Circle */}
-          <div className="flex justify-center mb-6">
-            <div className="relative w-32 h-32">
-              {/* Background circle */}
-              <svg className="w-full h-full transform -rotate-90">
-                <circle
-                  cx="64"
-                  cy="64"
-                  r="45"
-                  stroke="#E5E7EB"
-                  strokeWidth="8"
-                  fill="none"
-                  className="dark:stroke-gray-700"
-                />
-                {/* Progress circle */}
-                <circle
-                  cx="64"
-                  cy="64"
-                  r="45"
-                  stroke={
-                    remainingTime <= 10
-                      ? "#EF4444"
-                      : remainingTime <= 30
-                      ? "#F59E0B"
-                      : "#10B981"
-                  }
-                  strokeWidth="8"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  className="transition-all duration-1000 ease-linear"
-                />
-              </svg>
-              {/* Timer text */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <ClockIcon
-                  className={cn(
-                    "w-6 h-6 mb-1",
-                    remainingTime <= 10
-                      ? "text-red-500"
-                      : remainingTime <= 30
-                      ? "text-amber-500"
-                      : "text-emerald-500"
-                  )}
-                />
-                <span
-                  className={cn(
-                    "text-2xl font-bold",
-                    remainingTime <= 10
-                      ? "text-red-500"
-                      : remainingTime <= 30
-                      ? "text-amber-500"
-                      : "text-gray-900 dark:text-white"
-                  )}
-                >
-                  {formatTime(remainingTime)}
-                </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {t("inactivity.remaining", "متبقي")}
-                </span>
-              </div>
-            </div>
-          </div>
-
+        
           {/* Message */}
           <div className="text-center mb-6">
-            <p className="text-gray-600 dark:text-gray-300 mb-2">
+            <p className="text-[#282828] mb-2">
               {t("inactivity.message", "لقد لاحظنا عدم وجود نشاط على حسابك")}
             </p>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
+            <p className="text-gray-500 text-sm">
               {t(
                 "inactivity.messageDetail",
                 "سيتم تسجيل خروجك تلقائياً عند انتهاء الوقت لحماية حسابك"
@@ -292,9 +201,9 @@ export default function InactivityWarningModal({
               onClick={handleStayLoggedIn}
               disabled={isRefreshing}
               className={cn(
-                "w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200",
-                "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600",
-                "text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40",
+                "w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-200",
+                "bg-[#4E8476] hover:bg-[#3d6b60]",
+                "text-white",
                 "disabled:opacity-50 disabled:cursor-not-allowed"
               )}
             >
@@ -303,16 +212,19 @@ export default function InactivityWarningModal({
               ) : (
                 <RefreshIcon className="w-5 h-5" />
               )}
-              <span>{t("inactivity.stayLoggedIn", "البقاء متصلاً")}</span>
+              <span>
+                {t("inactivity.stayLoggedIn", "البقاء متصلاً")} ({remainingTime}
+                s)
+              </span>
             </button>
 
             {/* Logout Button */}
             <button
               onClick={handleLogout}
               className={cn(
-                "w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200",
-                "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600",
-                "text-gray-700 dark:text-gray-200"
+                "w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-200",
+                "bg-gray-100 hover:bg-gray-200",
+                "text-[#282828]"
               )}
             >
               <LogoutIcon className="w-5 h-5" />
@@ -321,7 +233,7 @@ export default function InactivityWarningModal({
           </div>
 
           {/* Footer note */}
-          <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-4">
+          <p className="text-center text-xs text-gray-400 mt-4">
             {t(
               "inactivity.securityNote",
               "هذا الإجراء لحماية خصوصيتك وأمان حسابك"

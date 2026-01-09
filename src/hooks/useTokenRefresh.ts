@@ -26,7 +26,7 @@ export const useTokenRefresh = () => {
           user_level: userLevel,
           user_level_name: user_level_name || '',
           message: 'Token refreshed successfully',
-          token: result.token,
+          token: result.access,
           refresh: result.refresh,
         }));
         
