@@ -600,6 +600,39 @@ const SecurityGroupsIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const AuditLogsIcon = ({ className }: { className?: string }) => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 20 20"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path
+      d="M5.83333 5.83398H14.1667M5.83333 10.0007H14.1667M5.83333 14.1673H10"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M16.6667 9.16732V6.66732C16.6667 4.8264 16.6667 3.90594 16.1308 3.37009C15.595 2.83398 14.6745 2.83398 12.8333 2.83398H7.16667C5.32573 2.83398 4.40527 2.83398 3.86942 3.37009C3.33333 3.90594 3.33333 4.8264 3.33333 6.66732V13.334C3.33333 15.1749 3.33333 16.0954 3.86942 16.6312C4.40527 17.1673 5.32573 17.1673 7.16667 17.1673H10"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M13.75 14.584L15 15.834L17.5 13.334"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 type SidebarProps = {
   open?: boolean;
   onClose?: () => void;
@@ -727,6 +760,11 @@ const getSections = (
             to: "/app/security-groups",
             label: t("securityGroups.title"),
             icon: SecurityGroupsIcon,
+          },
+          {
+            to: "/app/audit-logs",
+            label: t("logs.title"),
+            icon: AuditLogsIcon,
           },
         ],
       },

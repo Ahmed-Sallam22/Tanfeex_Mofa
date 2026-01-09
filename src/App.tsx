@@ -5,6 +5,7 @@ import { hydrate } from './features/auth/authSlice'
 import AppRoutes from './routes'
 import SessionExpiredModal from './components/SessionExpiredModal'
 import TokenRefreshManager from './components/TokenRefreshManager'
+import InactivityWarningModal from './components/InactivityWarningModal'
 
 function App() {
   const { i18n } = useTranslation()
@@ -24,6 +25,10 @@ function App() {
       <AppRoutes />
       <SessionExpiredModal />
       <TokenRefreshManager />
+      <InactivityWarningModal 
+        inactivityTimeout={60000}  // 1 minute of inactivity before warning
+        warningTimeout={60000}     // 1 minute countdown after warning
+      />
     </>
   )
 }

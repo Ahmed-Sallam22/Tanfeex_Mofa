@@ -79,6 +79,7 @@ const AssumptionBuilder = lazy(
   () => import("@/pages/dashboard/AssumptionBuilder")
 );
 const TableViewPDF = lazy(() => import("@/pages/dashboard/TableViewPDF"));
+const AuditLogsPage = lazy(() => import("@/pages/logs/AuditLogsPage"));
 
 // Report pages
 const AnalyticalReport = lazy(() => import("@/pages/reports/AnalyticalReport"));
@@ -447,6 +448,14 @@ export default function AppRoutes() {
             element={
               <RoleProtectedRoute allowedRoles={["superadmin"]}>
                 <SecurityGroups />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="audit-logs"
+            element={
+              <RoleProtectedRoute allowedRoles={["superadmin", "admin"]}>
+                <AuditLogsPage />
               </RoleProtectedRoute>
             }
           />
