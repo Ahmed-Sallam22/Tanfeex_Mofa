@@ -130,7 +130,7 @@ export default function AddRoleModal({
                           />
                         </div>
                         <div>
-                          <div className="font-semibold text-gray-900">
+                          <div className="text-start font-semibold text-gray-900">
                             {role.role_name}
                           </div>
                           {role.description && (

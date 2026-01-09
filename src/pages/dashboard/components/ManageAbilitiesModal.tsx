@@ -178,7 +178,7 @@ export default function ManageAbilitiesModal({
                             )}
                           </div>
                           <div>
-                            <div className="font-semibold text-gray-900">
+                            <div className="text-start font-semibold text-gray-900">
                               {ability}
                             </div>
                             <div className="text-sm text-gray-500 mt-1">

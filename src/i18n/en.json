@@ -1209,6 +1209,7 @@
     "roleName": "Role Name",
     "roleDescription": "Role Description",
     "abilities": "Abilities",
+    "groupSegments": "Group Segments",
     "manageAbilities": "Manage Abilities",
     "createSuccess": "Group created successfully",
     "groupCreatedSuccess": "Group created successfully",

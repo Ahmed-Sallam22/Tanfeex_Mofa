@@ -1269,6 +1269,7 @@
     "selectSystemRole": "اختيار دور النظام",
     "noSystemRoles": "لا توجد أدوار نظام متاحة",
     "note": "ملاحظة",
+    "groupSegments": "قطاعات المجموعة",
     "roleWillBeAssignedToAllMembers": "سيكون هذا الدور متاحاً لجميع الأعضاء في المجموعة",
     "roleAddedSuccess": "تمت إضافة الدور بنجاح",
     "roleAddedError": "فشلت إضافة الدور",
