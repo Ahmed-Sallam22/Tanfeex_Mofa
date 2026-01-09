@@ -162,13 +162,13 @@ export default function FundAdjustmentsDetails() {
             : "",
           validation_errors: transfer.validation_errors,
           commitments: primaryBudget
-            ? primaryBudget.Commitments.toString()
+            ? primaryBudget.Commitments?.toString()
             : transfer.commitments || "0",
           obligations: primaryBudget
-            ? primaryBudget.Obligation.toString()
+            ? primaryBudget.Obligation?.toString()
             : transfer.obligations || "0",
           other_consumption: primaryBudget
-            ? primaryBudget.Other.toString()
+            ? primaryBudget.Other?.toString()
             : transfer.other_consumption || "0",
           // Calculate cost value ALWAYS from MOFA_COST_2
           costValue: mofaCash ? Number(mofaCash.Total_budget) / 2 : 0,

@@ -130,13 +130,13 @@ export default function PendingReservationsDetails() {
           control_budget_name: mofaCash ? mofaCash.Control_budget_name : "",
           validation_errors: transfer.validation_errors,
           commitments: mofaCash
-            ? mofaCash.Commitments.toString()
+            ? mofaCash.Commitments?.toString()
             : transfer.commitments || "0",
           obligations: mofaCash
-            ? mofaCash.Obligation.toString()
+            ? mofaCash.Obligation?.toString()
             : transfer.obligations || "0",
           other_consumption: mofaCash
-            ? mofaCash.Other.toString()
+            ? mofaCash.Other?.toString()
             : transfer.other_consumption || "0",
           // Calculate cost value from MOFA_COST_2
           costValue: mofaCash ? Number(mofaCash.Total_budget) / 2 : 0,
