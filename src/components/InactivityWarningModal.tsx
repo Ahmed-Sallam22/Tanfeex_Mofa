@@ -180,7 +180,6 @@ export default function InactivityWarningModal({
 
         {/* Content */}
         <div className="p-6">
-        
           {/* Message */}
           <div className="text-center mb-6">
             <p className="text-[#282828] mb-2">
@@ -212,10 +211,7 @@ export default function InactivityWarningModal({
               ) : (
                 <RefreshIcon className="w-5 h-5" />
               )}
-              <span>
-                {t("inactivity.stayLoggedIn", "البقاء متصلاً")} ({remainingTime}
-                s)
-              </span>
+              <span>{t("inactivity.stayLoggedIn", "البقاء متصلاً")}</span>
             </button>
 
             {/* Logout Button */}
@@ -228,7 +224,10 @@ export default function InactivityWarningModal({
               )}
             >
               <LogoutIcon className="w-5 h-5" />
-              <span>{t("inactivity.logout", "تسجيل الخروج")}</span>
+              <span>
+                {t("inactivity.logout", "تسجيل الخروج")}({remainingTime}
+                s)
+              </span>
             </button>
           </div>
 

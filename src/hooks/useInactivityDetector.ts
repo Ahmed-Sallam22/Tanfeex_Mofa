@@ -4,7 +4,7 @@ import { useAppSelector } from '../features/auth/hooks';
 interface UseInactivityDetectorOptions {
   // Time in milliseconds before showing warning (default: 1 minute = 60000ms)
   inactivityTimeout?: number;
-  // Time in milliseconds for countdown after warning (default: 1 minute = 60000ms)
+  // Time in milliseconds for countdown after warning (default: 30 seconds = 30000ms)
   warningTimeout?: number;
   // Events to track for activity
   events?: string[];
@@ -22,7 +22,7 @@ export const useInactivityDetector = (
 ): UseInactivityDetectorReturn => {
   const {
     inactivityTimeout = 60000, // 1 minute of inactivity before warning
-    warningTimeout = 60000,    // 1 minute countdown after warning
+    warningTimeout = 30000,    // 30 seconds countdown after warning
     events = [
       'mousedown',
       'mousemove',
@@ -35,87 +35,117 @@ export const useInactivityDetector = (
   } = options;
 
   const [isWarningVisible, setIsWarningVisible] = useState(false);
-  const [remainingTime, setRemainingTime] = useState(warningTimeout / 1000);
+  const [remainingTime, setRemainingTime] = useState(Math.floor(warningTimeout / 1000));
   
-  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastActivityRef = useRef<number>(Date.now());
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isWarningVisibleRef = useRef(false); // Track warning state in ref for event handlers
   
   // Get authentication state
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
 
-  // Clear all timers
-  const clearAllTimers = useCallback(() => {
+  // Clear inactivity timer only
+  const clearInactivityTimer = useCallback(() => {
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
       inactivityTimerRef.current = null;
     }
-    if (countdownTimerRef.current) {
-      clearInterval(countdownTimerRef.current);
-      countdownTimerRef.current = null;
+  }, []);
+
+  // Clear countdown interval only
+  const clearCountdownInterval = useCallback(() => {
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
     }
   }, []);
+
+  // Clear all timers
+  const clearAllTimers = useCallback(() => {
+    clearInactivityTimer();
+    clearCountdownInterval();
+  }, [clearInactivityTimer, clearCountdownInterval]);
+
+  // Start countdown when modal is shown
+  const startCountdown = useCallback(() => {
+    const totalSeconds = Math.floor(warningTimeout / 1000);
+    setRemainingTime(totalSeconds);
+    
+    // Clear any existing countdown
+    clearCountdownInterval();
+    
+    // Start new countdown
+    countdownIntervalRef.current = setInterval(() => {
+      setRemainingTime((prev) => {
+        const newTime = prev - 1;
+        
+        if (newTime <= 0) {
+          // Time's up - clear interval and dispatch logout event
+          clearCountdownInterval();
+          window.dispatchEvent(new CustomEvent('sessionTimeout'));
+          return 0;
+        }
+        
+        return newTime;
+      });
+    }, 1000);
+  }, [warningTimeout, clearCountdownInterval]);
 
   // Start the inactivity timer
   const startInactivityTimer = useCallback(() => {
     if (!isAuthenticated) return;
     
-    clearAllTimers();
+    // Clear existing inactivity timer
+    clearInactivityTimer();
     
+    // Start new inactivity timer
     inactivityTimerRef.current = setTimeout(() => {
       // Show warning modal
       setIsWarningVisible(true);
-      setRemainingTime(warningTimeout / 1000);
+      isWarningVisibleRef.current = true;
       
-      // Start countdown using functional state update to avoid stale closures
-      countdownTimerRef.current = setInterval(() => {
-        setRemainingTime((prev) => {
-          if (prev <= 1) {
-            clearAllTimers();
-            // Dispatch event for session timeout
-            window.dispatchEvent(new CustomEvent('sessionTimeout'));
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      // Start countdown
+      startCountdown();
     }, inactivityTimeout);
-  }, [isAuthenticated, inactivityTimeout, warningTimeout, clearAllTimers]);
-
-  // Reset the inactivity timer (called on user activity)
-  const resetInactivityTimer = useCallback(() => {
-    lastActivityRef.current = Date.now();
-    
-    if (!isWarningVisible) {
-      startInactivityTimer();
-    }
-  }, [isWarningVisible, startInactivityTimer]);
+  }, [isAuthenticated, inactivityTimeout, clearInactivityTimer, startCountdown]);
 
   // Hide warning and reset timer (user confirmed they're active)
   const hideWarning = useCallback(() => {
     setIsWarningVisible(false);
-    setRemainingTime(warningTimeout / 1000);
+    isWarningVisibleRef.current = false;
+    setRemainingTime(Math.floor(warningTimeout / 1000));
     clearAllTimers();
+    
+    // Restart inactivity detection after modal closes
     startInactivityTimer();
   }, [warningTimeout, clearAllTimers, startInactivityTimer]);
 
-  // Handle user activity
+  // Reset the inactivity timer (called on user activity)
+  const resetInactivityTimer = useCallback(() => {
+    // Only reset if warning modal is NOT visible
+    if (!isWarningVisibleRef.current) {
+      startInactivityTimer();
+    }
+  }, [startInactivityTimer]);
+
+  // Handle user activity - only when modal is NOT visible
   const handleActivity = useCallback(() => {
-    // Only reset if warning is not visible
-    if (!isWarningVisible) {
+    // Don't detect activity while modal is open
+    if (!isWarningVisibleRef.current) {
       resetInactivityTimer();
     }
-  }, [isWarningVisible, resetInactivityTimer]);
+  }, [resetInactivityTimer]);
 
   // Set up event listeners
   useEffect(() => {
     if (!isAuthenticated) {
       clearAllTimers();
       setIsWarningVisible(false);
+      isWarningVisibleRef.current = false;
       return;
     }
 
-    // Start initial timer
+    // Start initial inactivity timer
     startInactivityTimer();
 
     // Add event listeners for activity detection
@@ -123,9 +153,9 @@ export const useInactivityDetector = (
       window.addEventListener(event, handleActivity, { passive: true });
     });
 
-    // Also listen to visibility change
+    // Handle visibility change
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && !isWarningVisible) {
+      if (document.visibilityState === 'visible' && !isWarningVisibleRef.current) {
         resetInactivityTimer();
       }
     };
@@ -138,7 +168,8 @@ export const useInactivityDetector = (
       });
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isAuthenticated, events, handleActivity, startInactivityTimer, clearAllTimers, isWarningVisible, resetInactivityTimer]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]); // Only re-run when auth state changes
 
   return {
     isWarningVisible,

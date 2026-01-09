@@ -27,7 +27,7 @@ function App() {
       <TokenRefreshManager />
       <InactivityWarningModal
         inactivityTimeout={60000} // 1 minute of inactivity before warning
-        warningTimeout={60000} // 1 minute countdown after warning
+        warningTimeout={30000} // 30 seconds countdown after warning
       />
     </>
   );
