@@ -79,7 +79,7 @@ const AssumptionBuilder = lazy(
   () => import("@/pages/dashboard/AssumptionBuilder")
 );
 const TableViewPDF = lazy(() => import("@/pages/dashboard/TableViewPDF"));
-const AuditLogsPage = lazy(() => import("@/pages/logs/AuditLogsPage"));
+const AuditLogsPage = lazy(() => import("@/pages/logsPage/AuditLogsPage"));
 
 // Report pages
 const AnalyticalReport = lazy(() => import("@/pages/reports/AnalyticalReport"));
