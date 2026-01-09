@@ -15,13 +15,7 @@ const ClockIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <circle
-      cx="12"
-      cy="12"
-      r="9"
-      stroke="currentColor"
-      strokeWidth="2"
-    />
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
     <path
       d="M12 6V12L16 14"
       stroke="currentColor"
@@ -123,23 +117,20 @@ interface InactivityWarningModalProps {
 
 export default function InactivityWarningModal({
   inactivityTimeout = 60000, // 1 minute
-  warningTimeout = 60000,    // 1 minute
+  warningTimeout = 60000, // 1 minute
 }: InactivityWarningModalProps) {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
-  
+
   const { refreshToken, isRefreshing } = useTokenRefresh();
-  
-  const {
-    isWarningVisible,
-    remainingTime,
-    hideWarning,
-  } = useInactivityDetector({
-    inactivityTimeout,
-    warningTimeout,
-  });
+
+  const { isWarningVisible, remainingTime, hideWarning } =
+    useInactivityDetector({
+      inactivityTimeout,
+      warningTimeout,
+    });
 
   // Handle session timeout
   useEffect(() => {
@@ -176,13 +167,16 @@ export default function InactivityWarningModal({
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   // Calculate progress percentage for circular timer
   const progressPercentage = (remainingTime / (warningTimeout / 1000)) * 100;
   const circumference = 2 * Math.PI * 45; // radius = 45
-  const strokeDashoffset = circumference - (progressPercentage / 100) * circumference;
+  const strokeDashoffset =
+    circumference - (progressPercentage / 100) * circumference;
 
   if (!isWarningVisible) return null;
 
@@ -232,7 +226,13 @@ export default function InactivityWarningModal({
                   cx="64"
                   cy="64"
                   r="45"
-                  stroke={remainingTime <= 10 ? "#EF4444" : remainingTime <= 30 ? "#F59E0B" : "#10B981"}
+                  stroke={
+                    remainingTime <= 10
+                      ? "#EF4444"
+                      : remainingTime <= 30
+                      ? "#F59E0B"
+                      : "#10B981"
+                  }
                   strokeWidth="8"
                   fill="none"
                   strokeLinecap="round"
@@ -243,14 +243,26 @@ export default function InactivityWarningModal({
               </svg>
               {/* Timer text */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <ClockIcon className={cn(
-                  "w-6 h-6 mb-1",
-                  remainingTime <= 10 ? "text-red-500" : remainingTime <= 30 ? "text-amber-500" : "text-emerald-500"
-                )} />
-                <span className={cn(
-                  "text-2xl font-bold",
-                  remainingTime <= 10 ? "text-red-500" : remainingTime <= 30 ? "text-amber-500" : "text-gray-900 dark:text-white"
-                )}>
+                <ClockIcon
+                  className={cn(
+                    "w-6 h-6 mb-1",
+                    remainingTime <= 10
+                      ? "text-red-500"
+                      : remainingTime <= 30
+                      ? "text-amber-500"
+                      : "text-emerald-500"
+                  )}
+                />
+                <span
+                  className={cn(
+                    "text-2xl font-bold",
+                    remainingTime <= 10
+                      ? "text-red-500"
+                      : remainingTime <= 30
+                      ? "text-amber-500"
+                      : "text-gray-900 dark:text-white"
+                  )}
+                >
                   {formatTime(remainingTime)}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -266,7 +278,10 @@ export default function InactivityWarningModal({
               {t("inactivity.message", "لقد لاحظنا عدم وجود نشاط على حسابك")}
             </p>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              {t("inactivity.messageDetail", "سيتم تسجيل خروجك تلقائياً عند انتهاء الوقت لحماية حسابك")}
+              {t(
+                "inactivity.messageDetail",
+                "سيتم تسجيل خروجك تلقائياً عند انتهاء الوقت لحماية حسابك"
+              )}
             </p>
           </div>
 
@@ -307,7 +322,10 @@ export default function InactivityWarningModal({
 
           {/* Footer note */}
           <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-4">
-            {t("inactivity.securityNote", "هذا الإجراء لحماية خصوصيتك وأمان حسابك")}
+            {t(
+              "inactivity.securityNote",
+              "هذا الإجراء لحماية خصوصيتك وأمان حسابك"
+            )}
           </p>
         </div>
       </div>
