@@ -67,17 +67,17 @@ export const useInactivityDetector = (
       setIsWarningVisible(true);
       setRemainingTime(warningTimeout / 1000);
       
-      // Start countdown
-      let timeLeft = warningTimeout / 1000;
+      // Start countdown using functional state update to avoid stale closures
       countdownTimerRef.current = setInterval(() => {
-        timeLeft -= 1;
-        setRemainingTime(timeLeft);
-        
-        if (timeLeft <= 0) {
-          clearAllTimers();
-          // Dispatch event for session timeout
-          window.dispatchEvent(new CustomEvent('sessionTimeout'));
-        }
+        setRemainingTime((prev) => {
+          if (prev <= 1) {
+            clearAllTimers();
+            // Dispatch event for session timeout
+            window.dispatchEvent(new CustomEvent('sessionTimeout'));
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
     }, inactivityTimeout);
   }, [isAuthenticated, inactivityTimeout, warningTimeout, clearAllTimers]);
